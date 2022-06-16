@@ -12,3 +12,4 @@
 //! generalized to any hashable datatype.
 
 pub mod algorithms;
+pub mod spellcheck;

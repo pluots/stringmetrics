@@ -2,12 +2,12 @@
 //!
 //! This module includes [`modjaccard`] and [`modlevenshtein`], which contain
 //! the various implementations for Levenshthein and Hamming distance, as well
-//! as the Jaccard index. See these modules for in-depth explanation of 
+//! as the Jaccard index. See these modules for in-depth explanation of
 //!
 //! Functions can be directly imported from this alrogithms module, no need to
 //! access them via [`modjaccard`] or [`modlevenshtein`] (see the example
 //! below).
-//! 
+//!
 //! ## Example
 //!
 //! ```
