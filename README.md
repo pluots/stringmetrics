@@ -1,6 +1,12 @@
+# Stringmetrics
+
 This is a Rust library for approximate string matching that implements simple
 algorithms such has Hamming distance, Levenshtein distance, Jaccard similarity,
 and more.
+
+In addition to the basic levenshtein algorithm, it includes a weighted algorithm
+that allows specifying costs of insertions, deletions, and substitutions, as
+well as a maximum limit for optimization.
 
 Get the create info here:
 [https://crates.io/crates/stringmetrics](https://crates.io/crates/stringmetrics)
@@ -12,8 +18,3 @@ Source:
 
 **Note: this project was previously named "textdistance". Please make sure to
 update all references.**
-
-### Future project todo list
-- Implement more algorithms
-- Ensure tests are comprehensive
-- Generalize functions to accept more than just strings
