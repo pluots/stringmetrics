@@ -16,5 +16,13 @@ and see the docs here
 Source:
 [https://github.com/pluots/stringmetrics-rust](https://github.com/pluots/stringmetrics-rust)
 
+
+## License
+
+See the LICENSE file for license information. The provided license does allow
+for proprietary use and adaptation; that being said, I kindly suggest that if
+you come up with an improvement, you submit a pull request and help us all out
+:)
+
 **Note: this project was previously named "textdistance". Please make sure to
 update all references.**
