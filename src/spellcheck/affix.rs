@@ -164,21 +164,24 @@ impl Affix<'_> {
     }
 
     fn load_from_str(&mut self, s: &str) {
-        let mut current_token = String::new();
+        let mut working_token = String::new();
+        // Whether we are operating as normal or in a comment
         let mut accumulating = true;
 
         for c in s.chars() {
             // Stop accoumulating on comment until we hit a newline
             if c == '#' {
                 accumulating = false;
+                continue;
             }
             if !accumulating && c == '\n' {
                 accumulating = true;
             } else if !accumulating {
                 continue;
             }
+            // If table_consumes,
 
-            current_token.push(c);
+            working_token.push(c);
             // if current_token
         }
     }
