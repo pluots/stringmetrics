@@ -123,7 +123,7 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
     TokenClass {
         class: TokenType::AffixFlag,
         key: "AF",
-        table_consumes: None,
+        table_consumes: Some(|s| 6u16),
         set_parent: None,
     },
     TokenClass {
