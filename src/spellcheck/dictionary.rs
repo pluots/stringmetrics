@@ -3,6 +3,7 @@
 //! http://pwet.fr/man/linux/fichiers_speciaux/hunspell/
 
 use std::collections::BTreeSet;
+use crate::spellcheck::affix::{Affix}
 
 // Check 
 // trait RuleTrait {
@@ -24,22 +25,13 @@ struct MapRule{
 }
 
 
-struct ReplaceRule {
-    from: str,
-    to: str
-}
+
 
 
 
 // An entry has a base string and many rules
 struct Entry {
     base: String
-}
-
-impl Entry {
-    fn new(s: &str) -> Entry {
-        Entry{}
-    }
 }
 
 /// A dict has many entries, plus methods
@@ -67,16 +59,18 @@ impl Dictionary{
     /// Ok(io::BufReader::new(file).lines())
     /// 
     /// Can also be done with strings
-    fn load_affix<T:IntoIterator<Item=&str>>(lines:T) {
-        for line in lines {
-            if line.starts_with('#')      { println!("Heading") }
-            else if line.starts_with('>') { println!("Quotation") }
-            else if line.starts_with('-') { println!("Inline list") }
-            else if line.starts_with('`') { println!("Code") }
-            else                          { println!("Other")
+    fn load_affix_from_str(s:&str) {
+        afx = Affix::new();
+        afx.load_from_str(s);
+        // for line in lines {
+        //     if line.starts_with('#')      { println!("Heading") }
+        //     else if line.starts_with('>') { println!("Quotation") }
+        //     else if line.starts_with('-') { println!("Inline list") }
+        //     else if line.starts_with('`') { println!("Code") }
+        //     else                          { println!("Other")
+        // }
         }
-        }
-    }
+    
 
     /// Note: make sure 
     fn load_dictionary<T:IntoIterator<Item=&str>>(lines:T){

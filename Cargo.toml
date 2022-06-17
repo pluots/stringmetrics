@@ -11,6 +11,10 @@ documentation = "https://docs.rs/stringmetrics"
 
 [dependencies]
 # itertools = "0.10.3"
+# isolang = "2.1.0"
+regex = "1"
+lazy_static = "1.4"
+# enum-map = "2"
 
 
 [dev-dependencies]
