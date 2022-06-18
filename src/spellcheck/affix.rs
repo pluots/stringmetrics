@@ -28,7 +28,8 @@ pub struct PhoneRule<'a> {
 
 /// The main affix item
 ///
-/// This holds the entire contents of the affix file, in AST format
+/// This holds the entire contents of the affix file as an AST representation
+/// and is intended to be used throughout program lifetime.
 pub struct Affix<'a> {
     // We want to make sure all these items are mutable so we
     // can append/edit later
@@ -48,37 +49,22 @@ pub struct Affix<'a> {
     // List of e.g. "qwerty", "asdfg" that define neighbors
     pub keys: Vec<&'a str>,
 
-    // TRY xyz
-    // Suggest words that differe by 1 try character
+    /// Suggest words that differe by 1 try character
     pub try_characters: String,
-    // NOSUGGEST x
-    // Flag indicating words should be accepted but not suggested
-    pub nosuggest_flag: String,
-
-    // MAXCPDSUGS
-    pub max_compound_suggestions: i8,
-
-    // MAXNGRAMSUGS
-    pub max_ngram_suggestions: i8,
-
-    // MAXDIFF [0-10]
-    pub max_diff: i8,
-
-    // ONLYMAXDIFF
-
-    // NOSPLITSUGS
-    // Don't suggest words with spaces
+    pub nosuggest_flag: &'a str,
+    pub compound_suggestions_max: i8,
+    pub ngram_suggestions_max: i8,
+    pub ngram_diff_max: i8,
+    pub ngram_limit_to_diff_max: bool,
     pub no_split_suggestions: bool,
+    pub keep_termination_dots: bool,
+    pub warn_rare_flag: &'a str,
+    pub forbid_warn_words: bool,
 
-    // Add dot to suggestion if word terminates with one
-    pub suggest_with_dots: bool, // SUGSWITHDOTS
-
-    pub replacements: Vec<&'a ReplaceRule<'a>>, // REP
-
-                                                // maps: Vec<>, // MAP
-
-                                                // phones: Vec<>
-                                                // Compounding opts
+    pub replacements: Vec<&'a ReplaceRule<'a>>,
+    // maps: Vec<>, // MAP
+    // phones: Vec<>
+    // Compounding opts
 }
 
 impl Affix<'_> {
@@ -91,12 +77,15 @@ impl Affix<'_> {
             afx_flag_vector: Vec::new(),
             keys: vec!["qwertyuiop", "asdfghjkl", "zxcvbnm"],
             try_characters: "esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'".to_string(),
-            nosuggest_flag: "!".to_string(),
-            max_compound_suggestions: 2,
-            max_ngram_suggestions: 2,
-            max_diff: 5,
+            nosuggest_flag: "!",
+            compound_suggestions_max: 2,
+            ngram_suggestions_max: 2,
+            ngram_diff_max: 5,
+            ngram_limit_to_diff_max: true,
+            keep_termination_dots: false,
             no_split_suggestions: false,
-            suggest_with_dots: false,
+            warn_rare_flag
+            forbid_warn_words:bool=false,
             replacements: Vec::new(),
         }
     }

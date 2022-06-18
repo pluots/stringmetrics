@@ -25,10 +25,10 @@ impl EncodingType {
     }
 
     /// Produce the token string of a token class
-    pub fn to_token_str(self) -> &'static str {
+    pub fn to_token_str(&self) -> &'static str {
         ENCODING_CLASS_LIST
             .iter()
-            .find(|x| x.class == self)
+            .find(|x| x.class == *self)
             .unwrap()
             .key
     }

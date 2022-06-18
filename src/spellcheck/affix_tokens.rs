@@ -15,14 +15,14 @@ enum TokenType {
 
     // Suggestion-related
     NeighborKeys,
-    TryChars,
+    TryCharacters,
     NoSuggestFlag,
     CompoundSuggestionsMax,
     NGramSuggestionsMax,
     NGramDiffMax,
-    NGramOnlyKeepOne,
+    NGramLimitToDiffMax,
     NoSpaceSubs,
-    KeepTerminatingDots,
+    KeepTerminationDots,
     Replacement,
     Mapping,
     Phonetic,
@@ -66,7 +66,7 @@ enum TokenType {
     AffixNeededFlag,
     AffixPseudoRootFlagDeprecated,
     AffixSubstandardFlag,
-    AffixWordCharacters,
+    AffixWordChars,
     AffixCheckSharps,
 }
 
@@ -82,10 +82,10 @@ impl TokenType {
     }
 
     /// Produce the token string of a token class
-    fn to_token_str(self) -> &'static str {
+    fn to_token_str(&self) -> &'static str {
         TOKEN_CLASS_LIST
             .iter()
-            .find(|x| x.class == self)
+            .find(|x| x.class == *self)
             .unwrap()
             .key
     }
@@ -141,6 +141,11 @@ impl TokenClass<'_> {
     fn strip_key<'a>(&self, s: &'a str) -> &'a str {
         s.strip_prefix(self.key).unwrap().trim()
     }
+
+    #[inline]
+    fn split_key<'a>(&'a self, s: &'a str) -> impl Iterator<Item = &'a str> {
+        s.split(self.key).map(|x| x.trim())
+    }
 }
 
 /// A collection of all the possible tokens
@@ -153,6 +158,11 @@ impl TokenClass<'_> {
 /// If something is unused, set_parent just has to be None
 ///
 /// Table consumes are implemented
+///
+/// Everything that supplies a table_consumes function will receive all tokens
+/// as `s`, concatenated together.
+/// 
+/// It's macro time!
 const TOKEN_CLASS_LIST: [TokenClass; 57] = [
     TokenClass {
         class: TokenType::Encoding,
@@ -191,7 +201,7 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::AffixFlag,
         key: "AF",
         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::AFFIX_FLAG_RE)),
-        set_parent: None,
+        set_parent: None, //Some(|tc, ax, s| ax.afx_flag_vector.extend(tc.split_key(s))),
     },
     TokenClass {
         class: TokenType::MorphAlias,
@@ -203,55 +213,61 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::NeighborKeys,
         key: "KEY",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| ax.keys.extend(tc.strip_key(s).split('|').map(|x| x.trim()))),
     },
     TokenClass {
-        class: TokenType::TryChars,
+        class: TokenType::TryCharacters,
         key: "TRY",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| ax.try_characters.push_str(tc.strip_key(s))),
     },
     TokenClass {
         class: TokenType::NoSuggestFlag,
         key: "NOSUGGEST",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| ax.nosuggest_flag = tc.strip_key(s)),
     },
     TokenClass {
         class: TokenType::CompoundSuggestionsMax,
         key: "MAXCPDSUGS",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| {
+            ax.compound_suggestions_max = tc.strip_key(s).parse().expect("Bad integer value")
+        }),
     },
     TokenClass {
         class: TokenType::NGramSuggestionsMax,
         key: "MAXNGRAMSUGS",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| {
+            ax.ngram_suggestions_max = tc.strip_key(s).parse().expect("Bad integer value")
+        }),
     },
     TokenClass {
         class: TokenType::NGramDiffMax,
         key: "MAXDIFF",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| {
+            ax.ngram_diff_max = tc.strip_key(s).parse().expect("Bad integer value")
+        }),
     },
     TokenClass {
-        class: TokenType::NGramOnlyKeepOne,
+        class: TokenType::NGramLimitToDiffMax,
         key: "ONLYMAXDIFF",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|_, mut ax, _| ax.ngram_limit_to_diff_max = true),
     },
     TokenClass {
         class: TokenType::NoSpaceSubs,
         key: "NOSPLITSUGS",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|_, mut ax, _| ax.no_split_suggestions = true),
     },
     TokenClass {
-        class: TokenType::KeepTerminatingDots,
+        class: TokenType::KeepTerminationDots,
         key: "SUGSWITHDOTS",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|_, mut ax, _| ax.keep_termination_dots = true),
     },
     TokenClass {
         class: TokenType::Replacement,
@@ -275,13 +291,13 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::WarnRareFlag,
         key: "WARN",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|tc, ax, s| ax.warn_rare_flag = tc.strip_key(s)),
     },
     TokenClass {
         class: TokenType::ForbitWarnWords,
         key: "FORBIDWARN",
         table_consumes: None,
-        set_parent: None,
+        set_parent: Some(|_, mut ax, _| ax.forbid_warn_words = true),
     },
     TokenClass {
         class: TokenType::Breakpoint,
@@ -488,7 +504,7 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         set_parent: None,
     },
     TokenClass {
-        class: TokenType::AffixWordCharacters,
+        class: TokenType::AffixWordChars,
         key: "WORDCHARS",
         table_consumes: None,
         set_parent: None,
@@ -561,7 +577,7 @@ mod tests {
     #[test]
     fn test_to_str() {
         assert_eq!(
-            TokenType::to_token_str(TokenType::NoSuggestFlag),
+            TokenType::to_token_str(&TokenType::NoSuggestFlag),
             "NOSUGGEST"
         );
     }
