@@ -1,6 +1,5 @@
 //! Classes needed for affix attributes
 
-use super::affix_tokens::*;
 use super::affix_types::*;
 use crate::graph_vec;
 use unicode_segmentation::UnicodeSegmentation;
@@ -145,9 +144,7 @@ impl Affix<'_> {
                 graph_vec!("asdfghjkl"),
                 graph_vec!("zxcvbnm"),
             ],
-            try_characters: "esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"
-                .graphemes(true)
-                .collect::<Vec<&str>>(),
+            try_characters: graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"),
             nosuggest_flag: "!",
             compound_suggestions_max: 2,
             ngram_suggestions_max: 2,

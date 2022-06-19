@@ -1,4 +1,97 @@
-use super::affix_tokens::ENCODING_CLASS_LIST;
+use super::affix::Affix;
+use super::affix_serde::{ENCODING_CLASS_LIST, TOKEN_CLASS_LIST};
+
+/// All possible types found in hunspell affix files
+/// This represents a generic token type that will have associated 
+#[derive(PartialEq, Debug)]
+pub enum TokenType {
+    Encoding,
+    FlagType,
+    ComplexPrefixes,
+    Language,
+    IgnoreChars,
+    AffixFlag,
+    MorphAlias,
+
+    // Suggestion-related
+    NeighborKeys,
+    TryCharacters,
+    NoSuggestFlag,
+    CompoundSuggestionsMax,
+    NGramSuggestionsMax,
+    NGramDiffMax,
+    NGramLimitToDiffMax,
+    NoSpaceSubs,
+    KeepTerminationDots,
+    Replacement,
+    Mapping,
+    Phonetic,
+    WarnRareFlag,
+    ForbitWarnWords,
+    Breakpoint,
+
+    // Compound-related
+    CompoundRule,
+    CompoundMinLength,
+    CompoundFlag,
+    CompoundBeginFlag,
+    CompoundEndFlag,
+    CompoundMiddleFlag,
+    CompoundOnlyFlag,
+    CompoundPermitFlag,
+    CompoundForbidFlag,
+    CompoundMoreSuffixes,
+    CompoundRoot,
+    CompoundWordMax,
+    CompoundForbidDuplication,
+    CompoundForbidRepeat,
+    CompoundForbidUpperBoundary,
+    CompoundForbidTriple,
+    CompoundSimplifyTriple,
+    CompoundForbidPatterns,
+    CompoundForceUpper,
+    CompoundForceSyllable,
+    CompoundSyllableNumber,
+
+    // Affix-related
+    Prefix,
+    Suffix,
+    AffixCircumfixFlag,
+    AffixForbiddenWordFlag,
+    AffixFullStrip,
+    AffixKeepCase,
+    AffixInputConversion,
+    AffixOutputConversion,
+    AffixLemmaPresentDeprecated,
+    AffixNeededFlag,
+    AffixPseudoRootFlagDeprecated,
+    AffixSubstandardFlag,
+    AffixWordChars,
+    AffixCheckSharps,
+}
+
+
+/// Basic enum methods to locate from a string
+/// DONE
+impl TokenType {
+    /// Find a `TokenClass` from a token string
+    fn from_token_key(key: &str) -> Option<&TokenType> {
+        match TOKEN_CLASS_LIST.iter().find(|x| x.key == key) {
+            Some(token_class) => Some(&token_class.class),
+            None => None,
+        }
+    }
+
+    /// Produce the token string of a token class
+    fn to_token_str(&self) -> &'static str {
+        TOKEN_CLASS_LIST
+            .iter()
+            .find(|x| x.class == *self)
+            .unwrap()
+            .key
+    }
+}
+
 
 #[derive(PartialEq, Debug)]
 pub enum EncodingType {
@@ -16,10 +109,10 @@ pub enum EncodingType {
 /// Basic enum methods to locate from a string
 /// DONE
 impl EncodingType {
-    /// Find a `TokenClass` from a token string
+    /// Find a `EncodingType` from a token string
     pub fn from_str(key: &str) -> Option<&EncodingType> {
-        match ENCODING_CLASS_LIST.iter().find(|x| x.key == key) {
-            Some(x) => Some(&x.class),
+        match ENCODING_CLASS_LIST.iter().find(|x| x.get_key() == key) {
+            Some(x) => Some(&x.get_class()),
             None => None,
         }
     }
@@ -28,20 +121,31 @@ impl EncodingType {
     pub fn to_token_str(&self) -> &'static str {
         ENCODING_CLASS_LIST
             .iter()
-            .find(|x| x.class == *self)
+            .find(|x| x.get_class() == self)
             .unwrap()
-            .key
+            .get_key()
     }
-}
-
-pub struct EncodingMatch<'a> {
-    pub class: EncodingType,
-    pub key: &'a str,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_token_from_str() {
+        assert_eq!(
+            TokenType::from_token_key("NOSUGGEST").unwrap(),
+            &TokenType::NoSuggestFlag
+        );
+    }
+
+    #[test]
+    fn test_token_to_str() {
+        assert_eq!(
+            TokenType::to_token_str(&TokenType::NoSuggestFlag),
+            "NOSUGGEST"
+        );
+    }
 
     fn test_match_encoding() {
         assert_eq!(
