@@ -1,6 +1,12 @@
+//! Affix tokens
+//!
+//! This module is used for things related to parsing from a file It contains a
+//! lot of ugly syntax and wild macros to attempt to minimize boilerplate
+
 use super::affix::Affix;
 use super::affix_types::*;
 use lazy_static::lazy_static;
+use unicode_segmentation::UnicodeSegmentation;
 
 /// All possible types found in hunspell affix files
 #[derive(PartialEq, Debug)]
@@ -122,7 +128,79 @@ mod re_exprs {
     }
 }
 
+/// Macro that creates a closure based on the relevant type, used for
+/// TokenClass::set_parent
+///
+/// Macros so powerful they should be illegal
+///
+/// All of our finctions return Option<Callable -> Result>
+///
+/// Usage:
+/// `parentify!(field_name, bool)` will just set the relevant field true
+///
+macro_rules! parentify {
+    // Boolean field just assigns true and returns Ok (Flag is just either there
+    // or not)
+    ( $field:ident, bool ) => {
+        Some(|_, mut ax, _| Ok(ax.$field = true))
+    };
+
+    // Integer fields are a bit more complicated
+    // Need to parse the field if possible,
+    ( $field:ident, int ) => {
+        Some(|tc, ax, s| match tc.strip_key(s).parse() {
+            Ok(v) => Ok(ax.$field = v),
+            Err(_) => Err("Bad integer value at {}"),
+        })
+    };
+
+    // Use str_replace for any time we have `&str` as the `Affix` type. We will
+    // replace what exists with our new value
+    ( $field:ident, str_replace ) => {
+        Some(|tc, ax, s| {
+            let s1 = tc.strip_key(s);
+            match s1.is_empty() {
+                false => Ok(ax.$field = s1),
+                true => Err("No values found at field {}"),
+            }
+        })
+    };
+
+    // Same as above but place the result in an option
+    ( $field:ident, str_replace_option ) => {
+        Some(|tc, ax, s| {
+            let s1 = tc.strip_key(s);
+            match s1.is_empty() {
+                false => Ok(ax.$field = Some(s1)),
+                true => Err("No values found at field {}"),
+            }
+        })
+    };
+
+    // Use str_add any time we have a `String` that we want to append to.
+    // Basically the same as above except we append to the existing vector and
+    // sort rather than replacing what's there. Usable for `Vec<&str>`.
+    ( $field:ident, str_add ) => {
+        Some(|tc, ax, s| {
+            let s1 = tc.strip_key(s).to_string();
+            match s1.is_empty() {
+                false => Ok({
+                    let mut tmp = s.graphemes(true).collect::<Vec<&str>>();
+                    tmp.sort();
+                    tmp.dedup();
+                    ax.$field = tmp
+                }),
+                true => Err("No values found at field {}"),
+            }
+        })
+    };
+}
+
 /// A structure holding information about a token and how to use it
+///
+/// This is meant for internal use in parsing the file Note that in parsing via
+/// set_parent, APPEND mode is used wherever possible. Make sure if you come
+/// start with a pre-populated Affix class, you clear the relevant fields first.
 struct TokenClass<'a> {
     // Kind of the token
     class: TokenType,
@@ -133,7 +211,9 @@ struct TokenClass<'a> {
     table_consumes: Option<fn(s: &str) -> u16>,
     // Set the parent when passed the foll text token
     // Idiomatic fn(self, parent, str)
-    set_parent: Option<fn(&TokenClass, &mut Affix, &'a str)>,
+    // Returns a result for nice error handling
+    // Use the macro above to make setting this easy
+    set_parent: Option<fn(&TokenClass, &mut Affix, &'a str) -> Result<(), &'static str>>,
 }
 
 impl TokenClass<'_> {
@@ -161,16 +241,21 @@ impl TokenClass<'_> {
 ///
 /// Everything that supplies a table_consumes function will receive all tokens
 /// as `s`, concatenated together.
-/// 
+///
 /// It's macro time!
+///
+
 const TOKEN_CLASS_LIST: [TokenClass; 57] = [
     TokenClass {
         class: TokenType::Encoding,
         key: "SET",
         table_consumes: None,
-        set_parent: Some(|tc, mut ax, s| {
-            ax.encoding = EncodingType::from_str(tc.strip_key(s)).expect("Encoding type not found")
-        }),
+        set_parent: Some(
+            |tc, mut ax, s| match EncodingType::from_str(tc.strip_key(s)) {
+                Some(et) => Ok(ax.encoding = et),
+                None => Err("Encoding type not found"),
+            },
+        ),
     },
     // Boolean flag, default false
     TokenClass {
@@ -183,19 +268,19 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::ComplexPrefixes,
         key: "COMPLEXPREFIXES",
         table_consumes: None,
-        set_parent: Some(|_, mut ax, _| ax.complex_prefixes = true),
+        set_parent: parentify!(complex_prefixes, bool),
     },
     TokenClass {
         class: TokenType::Language,
         key: "LANG",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(lang, str_replace),
     },
     TokenClass {
         class: TokenType::IgnoreChars,
         key: "IGNORE",
         table_consumes: None,
-        set_parent: Some(|tc, mut ax, s| ax.ignore_chars = tc.strip_key(s).to_string()),
+        set_parent: parentify!(ignore_chars, str_add),
     },
     TokenClass {
         class: TokenType::AffixFlag,
@@ -213,61 +298,76 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::NeighborKeys,
         key: "KEY",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| ax.keys.extend(tc.strip_key(s).split('|').map(|x| x.trim()))),
+        set_parent: Some(|tc, ax, s| {
+            // Ok this looks worse than it is, let's break it down
+            // Remember we start with e.g. qwerty|asdfg|zxcb
+            let mut s1 = tc
+                // Remove "KEY" from the beginning, get a &str
+                .strip_key(s)
+                // Break this up by | into an iterator with Item=&str
+                .split('|')
+                // For each item, 1. remove whitespace 2. split into UTF-8
+                // characters 3. collect this into a vector of &str
+                .map(|x| x.trim().graphemes(true).collect::<Vec<&str>>())
+                // Wind up with a vector of vectors of (unicode) strings
+                .collect::<Vec<Vec<&str>>>();
+            match s1.is_empty() {
+                false => Ok({
+                    s1.sort();
+                    s1.dedup();
+                    ax.keys = s1
+                }),
+                true => Err("No values found at field {}"),
+            }
+        }),
     },
     TokenClass {
         class: TokenType::TryCharacters,
         key: "TRY",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| ax.try_characters.push_str(tc.strip_key(s))),
+        set_parent: parentify!(try_characters, str_add),
     },
     TokenClass {
         class: TokenType::NoSuggestFlag,
         key: "NOSUGGEST",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| ax.nosuggest_flag = tc.strip_key(s)),
+        set_parent: parentify!(nosuggest_flag, str_replace),
     },
     TokenClass {
         class: TokenType::CompoundSuggestionsMax,
         key: "MAXCPDSUGS",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| {
-            ax.compound_suggestions_max = tc.strip_key(s).parse().expect("Bad integer value")
-        }),
+        set_parent: parentify!(compound_suggestions_max, int),
     },
     TokenClass {
         class: TokenType::NGramSuggestionsMax,
         key: "MAXNGRAMSUGS",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| {
-            ax.ngram_suggestions_max = tc.strip_key(s).parse().expect("Bad integer value")
-        }),
+        set_parent: parentify!(ngram_suggestions_max, int),
     },
     TokenClass {
         class: TokenType::NGramDiffMax,
         key: "MAXDIFF",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| {
-            ax.ngram_diff_max = tc.strip_key(s).parse().expect("Bad integer value")
-        }),
+        set_parent: parentify!(ngram_diff_max, int),
     },
     TokenClass {
         class: TokenType::NGramLimitToDiffMax,
         key: "ONLYMAXDIFF",
         table_consumes: None,
-        set_parent: Some(|_, mut ax, _| ax.ngram_limit_to_diff_max = true),
+        set_parent: parentify!(ngram_limit_to_diff_max, bool),
     },
     TokenClass {
         class: TokenType::NoSpaceSubs,
         key: "NOSPLITSUGS",
         table_consumes: None,
-        set_parent: Some(|_, mut ax, _| ax.no_split_suggestions = true),
+        set_parent: parentify!(no_split_suggestions, bool),
     },
     TokenClass {
         class: TokenType::KeepTerminationDots,
         key: "SUGSWITHDOTS",
         table_consumes: None,
-        set_parent: Some(|_, mut ax, _| ax.keep_termination_dots = true),
+        set_parent: parentify!(keep_termination_dots, bool),
     },
     TokenClass {
         class: TokenType::Replacement,
@@ -291,13 +391,13 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::WarnRareFlag,
         key: "WARN",
         table_consumes: None,
-        set_parent: Some(|tc, ax, s| ax.warn_rare_flag = tc.strip_key(s)),
+        set_parent: parentify!(warn_rare_flag, str_replace),
     },
     TokenClass {
         class: TokenType::ForbitWarnWords,
         key: "FORBIDWARN",
         table_consumes: None,
-        set_parent: Some(|_, mut ax, _| ax.forbid_warn_words = true),
+        set_parent: parentify!(forbid_warn_words, bool),
     },
     TokenClass {
         class: TokenType::Breakpoint,
@@ -315,37 +415,37 @@ const TOKEN_CLASS_LIST: [TokenClass; 57] = [
         class: TokenType::CompoundMinLength,
         key: "COMPOUNDMIN",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_min_length, int),
     },
     TokenClass {
         class: TokenType::CompoundFlag,
         key: "COMPOUNDFLAG",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_flag, str_replace_option),
     },
     TokenClass {
         class: TokenType::CompoundBeginFlag,
         key: "COMPOUNDBEGIN",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_begin_flag, str_replace_option),
     },
     TokenClass {
         class: TokenType::CompoundEndFlag,
         key: "COMPOUNDLAST",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_end_flag, str_replace_option),
     },
     TokenClass {
         class: TokenType::CompoundMiddleFlag,
         key: "COMPOUNDMIDDLE",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_middle_flag, str_replace_option),
     },
     TokenClass {
         class: TokenType::CompoundOnlyFlag,
         key: "ONLYINCOMPOUND",
         table_consumes: None,
-        set_parent: None,
+        set_parent: parentify!(compound_only_flag, str_replace_option),
     },
     TokenClass {
         class: TokenType::CompoundPermitFlag,
