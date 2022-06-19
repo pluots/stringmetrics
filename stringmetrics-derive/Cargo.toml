@@ -2,7 +2,13 @@
 name = "stringmetrics-derive"
 version = "0.1.0"
 edition = "2021"
-repository = "https://github.com/pluots/stringmetrics-rust"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+syn = {version = "1.0.98", features = ["extra-traits", "derive", "parsing"] }
+quote = "1.0.19"
+proc-macro2 = "1.0.39"
+
+[lib]
+proc-macro = true

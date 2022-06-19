@@ -11,5 +11,9 @@
 //! on [this wikipedia page](https://en.wikipedia.org/wiki/String_metric),
 //! generalized to any hashable datatype.
 
+#[macro_use]
+extern crate stringmetrics_derive;
+// use stringmetrics_derive;
+
 pub mod algorithms;
 pub mod spellcheck;
