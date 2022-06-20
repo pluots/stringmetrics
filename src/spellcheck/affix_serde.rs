@@ -1,3 +1,89 @@
+use super::affix::Affix;
+use super::affix_types::{EncodingType, TokenType};
+use strum::VariantNames;
+
+// struct
+
+pub fn load_str(ax: &mut Affix, s: &str) -> () {
+    let working_str = remove_comments(s);
+    let split = working_str.split_whitespace();
+
+    for s in split {
+        // if TokenType::VARIANTS.contains(s) {
+
+        // }
+    }
+}
+
+/// Strip "#" comments from a &str. Breaks from a found "#" to the next newline;
+/// does not remove the newlines
+fn remove_comments(s: &str) -> String {
+    let mut newstr = String::new();
+    let mut paused = false;
+    // Logic to skip from # to newline
+    for ch in s.chars() {
+        if paused && ch == '\n' {
+            paused = false;
+        } else if paused {
+            continue;
+        } else if ch == '#' {
+            paused = true;
+            continue;
+        }
+        newstr.push(ch);
+    }
+    newstr
+}
+
+/// A token for a specific affix option
+/// Holds a type and the stream of characters that follow
+struct OptionToken<'a> {
+    pub ttype: TokenType,
+    pub content: Vec<&'a str>,
+}
+
+impl OptionToken<'_> {
+    pub fn new<'a>(ttype:TokenType,content:Vec<&'a str>) ->OptionToken<'a>{
+        OptionToken { ttype: ttype, content: content }
+    }
+}
+
+/// 
+fn create_tokens<'a>(s: &'a str) -> Vec<&'a OptionToken> {
+    // Temporarially hold the "next vector" rather than working one, blank until
+    // needed
+    let mut next_vec: Vec<&'a str> = Vec::new();
+    let mut ret: Vec<&'a OptionToken> = Vec::new();
+
+    for token in s.split_whitespace() {
+        if TokenType::VARIANTS.contains(&token) {
+            // Start a new token
+
+            let ttype: TokenType= TokenType::try_from(token).unwrap();
+
+            let working_t:OptionToken<'a> = OptionToken::new(ttype, next_vec);
+
+            ret.push(&working_t);
+            next_vec = Vec::new();
+        } else {
+            // next_vec.push(token);
+        }
+    }
+
+    ret
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encoding_deser() {
+        let s = "abc\ndef\n# comment\nline with # comment\nendline";
+        assert_eq!(remove_comments(s), "abc\ndef\n\nline with \nendline");
+    }
+}
+
 // //! Affix tokens
 // //!
 // //! This module is used for things related to parsing from an affix file. It

@@ -2,8 +2,8 @@
 
 // use super::affix_types::*;
 use crate::graph_vec;
+use crate::spellcheck::affix_types::EncodingType;
 use unicode_segmentation::UnicodeSegmentation;
-use crate::spellcheck::affix_types::{EncodingType};
 
 // // lines that are
 // trait LineClassThing {
@@ -168,8 +168,8 @@ pub struct Affix<'a> {
 
 //     fn load_from_str(&mut self, s: &str) {
 //         let mut working_token = String::new();
-//         // Whether we are operating as normal or in a comment
-//         let mut accumulating = true;
+// // Whether we are operating as normal or in a comment
+// let mut accumulating = true;
 
 //         for c in s.chars() {
 //             // Stop accoumulating on comment until we hit a newline
