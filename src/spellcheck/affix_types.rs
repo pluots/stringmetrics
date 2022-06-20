@@ -184,6 +184,9 @@ pub enum TokenType {
 
     #[strum(to_string = "CHECKSHARPS")]
     AffixCheckSharps,
+
+    // Used to indicate start of token stream
+    FileStart,
 }
 
 #[derive(

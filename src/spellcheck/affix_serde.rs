@@ -37,38 +37,44 @@ fn remove_comments(s: &str) -> String {
 
 /// A token for a specific affix option
 /// Holds a type and the stream of characters that follow
-struct OptionToken<'a> {
+#[derive(Debug, PartialEq)]
+struct AffixFileToken<'a> {
     pub ttype: TokenType,
     pub content: Vec<&'a str>,
 }
 
-impl OptionToken<'_> {
-    pub fn new<'a>(ttype:TokenType,content:Vec<&'a str>) ->OptionToken<'a>{
-        OptionToken { ttype: ttype, content: content }
+impl AffixFileToken<'_> {
+    pub fn new<'a>(ttype: TokenType, content: Vec<&'a str>) -> AffixFileToken<'a> {
+        AffixFileToken {
+            ttype: ttype,
+            content: content,
+        }
     }
 }
 
-/// 
-fn create_tokens<'a>(s: &'a str) -> Vec<&'a OptionToken> {
+/// Create a list of tokens; do not do anything to analyze them
+fn create_tokens<'a>(s: &'a str) -> Vec<AffixFileToken> {
     // Temporarially hold the "next vector" rather than working one, blank until
     // needed
-    let mut next_vec: Vec<&'a str> = Vec::new();
-    let mut ret: Vec<&'a OptionToken> = Vec::new();
+    let mut working_vec: Vec<&'a str> = Vec::new();
+    let mut working_type = TokenType::FileStart;
+    // let mut working_t: OptionToken<'a> = OptionToken::new(TokenType::FileStart, Vec::new());
 
+    let mut ret: Vec<AffixFileToken> = Vec::new();
+
+    // Each token is a word, split by UTF-8 boundaries
     for token in s.split_whitespace() {
         if TokenType::VARIANTS.contains(&token) {
-            // Start a new token
-
-            let ttype: TokenType= TokenType::try_from(token).unwrap();
-
-            let working_t:OptionToken<'a> = OptionToken::new(ttype, next_vec);
-
-            ret.push(&working_t);
-            next_vec = Vec::new();
+            // Push this token and start a new one
+            ret.push(AffixFileToken::new(working_type, working_vec));
+            working_vec = Vec::new();
+            working_type = TokenType::try_from(token).unwrap();
         } else {
-            // next_vec.push(token);
+            working_vec.push(token);
         }
     }
+
+    ret.push(AffixFileToken::new(working_type, working_vec));
 
     ret
 }
@@ -81,6 +87,19 @@ mod tests {
     fn test_encoding_deser() {
         let s = "abc\ndef\n# comment\nline with # comment\nendline";
         assert_eq!(remove_comments(s), "abc\ndef\n\nline with \nendline");
+    }
+
+    #[test]
+    fn test_create_tokens() {
+        let s = "SYLLABLENUM a b c PFX prefix CIRCUMFIX COMPOUNDLAST";
+        let test_vec = vec![
+            AffixFileToken::new(TokenType::FileStart, vec![]),
+            AffixFileToken::new(TokenType::CompoundSyllableNumber, vec!["a", "b", "c"]),
+            AffixFileToken::new(TokenType::Prefix, vec!["prefix"]),
+            AffixFileToken::new(TokenType::AffixCircumfixFlag, vec![]),
+            AffixFileToken::new(TokenType::CompoundEndFlag, vec![]),
+        ];
+        assert_eq!(create_tokens(s), test_vec);
     }
 }
 
