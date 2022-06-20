@@ -2,6 +2,15 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
 
+
+/// We expect something like this for usage:
+///
+/// ```
+/// #[derive(AffixToken)]
+/// #[affix_key = "MYKEY"]
+/// #[affix_format = "bool"]
+/// ```
+/// 
 #[proc_macro_derive(AffixToken, attributes(affix_key, affix_format))]
 pub fn affix_macro(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
@@ -36,12 +45,12 @@ fn impl_affix_bool(ast: DeriveInput) -> TokenStream {
     }
 
     let token0: String = attr0.tokens.to_string();
-    let val0 = token0.strip_prefix("= \"").expect("Bad format");
+    let affix_key = token0.strip_prefix("= \"").expect("Bad format").strip_suffix("\"").expect("Bad format");
 
     let token1: String = attr1.tokens.to_string();
-    let val1 = token0.strip_prefix("= \"").expect("Bad format");
+    let affix_format = token1.strip_prefix("= \"").expect("Bad format").strip_suffix("\"").expect("Bad format");
 
-    panic!("{:#?}\n{:#?}\n\n{:#?}\n{:#?}", path0, path1, token0, token1);
+    panic!("{:#?} and {:#?}\n", affix_key, affix_format);
 
     quote! {
         impl AffixToken for #name {

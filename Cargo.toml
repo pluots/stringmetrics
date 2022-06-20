@@ -16,7 +16,8 @@ regex = "1"
 lazy_static = "1.4"
 unicode-segmentation = "1.9.0"
 stringmetrics-derive = { path = "stringmetrics-derive" }
-
+strum_macros = "0.24"
+strum = { version = "0.24", features = ["derive"] }
 # enum-map = "2"
 
 
