@@ -32,7 +32,7 @@ fn strip_comments(s: &str) -> String {
 
 /// A token for a specific affix option
 /// Holds a type and the stream of words that follow
-/// Words have been split on whitespace
+/// Words have been split on whitespace and the token prefix has been stripped
 #[derive(Debug, PartialEq)]
 struct AffixRawToken<'a> {
     pub ttype: TokenType,
@@ -50,6 +50,8 @@ impl AffixRawToken<'_> {
 
 /// Create a list of tokens with matched type and string content; do not do
 /// anything to analyze them
+///
+/// Note: this strips prefixes
 fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
     // Temporarially hold the "next vector" rather than working one, blank until
     // needed
@@ -77,12 +79,14 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
     ret
 }
 
+#[derive(Debug, PartialEq)]
 enum ProcessedTokenData<'a> {
     Bool(bool),
     String(Vec<&'a str>),
     Table(Vec<Vec<&'a str>>),
 }
 
+#[derive(Debug, PartialEq)]
 struct AffixProcessedToken<'a> {
     pub ttype: TokenType,
     pub data: ProcessedTokenData<'a>,
@@ -91,31 +95,33 @@ struct AffixProcessedToken<'a> {
 /// Use the first raw token to determine how many more to read into the table
 /// Returns a u16 if successful, error otherwise
 fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
+    // Recall: our tokens have the token prefix stripped
+
     let temp = match token.ttype {
         // AF [n]
-        TokenType::AffixFlag => token.content.get(1),
+        TokenType::AffixFlag => token.content.get(0),
         // AM [n]
-        TokenType::MorphAlias => token.content.get(1),
+        TokenType::MorphAlias => token.content.get(0),
         // REP [n]
-        TokenType::Replacement => token.content.get(1),
+        TokenType::Replacement => token.content.get(0),
         // MAP [n]
-        TokenType::Mapping => token.content.get(1),
+        TokenType::Mapping => token.content.get(0),
         // PHONE [n]
-        TokenType::Phonetic => token.content.get(1),
+        TokenType::Phonetic => token.content.get(0),
         // BREAK [n]
-        TokenType::Breakpoint => token.content.get(1),
+        TokenType::Breakpoint => token.content.get(0),
         // COMPOUNDRULE [n]
-        TokenType::CompoundRule => token.content.get(1),
+        TokenType::CompoundRule => token.content.get(0),
         // CHECKCOMPOUNDPATTERN [n]
-        TokenType::CompoundForbidPatterns => token.content.get(1),
+        TokenType::CompoundForbidPatterns => token.content.get(0),
         // PFX flag cross_product number
-        TokenType::Prefix => token.content.get(3),
+        TokenType::Prefix => token.content.get(2),
         // SFX flag cross_product number
-        TokenType::Suffix => token.content.get(3),
+        TokenType::Suffix => token.content.get(2),
         // ICONV [n]
-        TokenType::AffixInputConversion => token.content.get(1),
+        TokenType::AffixInputConversion => token.content.get(0),
         // OCONV [n]
-        TokenType::AffixOutputConversion => token.content.get(1),
+        TokenType::AffixOutputConversion => token.content.get(0),
         // Any tokens types that don't have a table
         _ => return Ok(0),
     };
@@ -131,8 +137,7 @@ fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
 
 /// Loop through a vector of raw tokens and create the processed version
 ///
-fn create_processed_tokens(tokens: Vec<AffixRawToken>) 
--> Result<Vec<AffixProcessedToken>, String> {
+fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProcessedToken>, String> {
     // Vector to hold what we will return
     let mut retvec = Vec::new();
     // If we need to accumulate values for a table, use these items
@@ -149,8 +154,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>)
             // Validate token type first
             if token.ttype != table_accum_type {
                 return Err(format!(
-                    "Token of type {} did not match {} before \
-                    table ended. Expected {} more token.",
+                    "Token of type {} did not match {}. Expected {} more token.",
                     token.ttype, table_accum_type, table_accum_count
                 ));
             }
@@ -169,7 +173,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>)
             });
             // And reset our status
             table_accum_vec = Vec::new();
-            continue
+            continue;
         }
 
         // If we're not accumulating, just match based on token type
@@ -204,13 +208,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_encoding_deser() {
+    fn test_strip_comments() {
         let s = "abc\ndef\n# comment\nline with # comment\nendline";
         assert_eq!(strip_comments(s), "abc\ndef\n\nline with \nendline");
     }
 
     #[test]
-    fn test_create_tokens() {
+    fn test_create_raw_token() {
         let s = "SYLLABLENUM a b c PFX prefix CIRCUMFIX COMPOUNDLAST";
         let test_vec = vec![
             AffixRawToken::new(TokenType::FileStart, vec![]),
@@ -220,6 +224,77 @@ mod tests {
             AffixRawToken::new(TokenType::CompoundEndFlag, vec![]),
         ];
         assert_eq!(create_raw_tokens(s), test_vec);
+    }
+
+    #[test]
+    fn test_get_table_item_count() {
+        let count_res0 = get_table_item_count(&AffixRawToken {
+            ttype: TokenType::Mapping,
+            content: vec!["1"],
+        });
+        assert_eq!(count_res0, Ok(1));
+
+        let count_res1 = get_table_item_count(&AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["A", "Y", "6"],
+        });
+        assert_eq!(count_res1, Ok(6));
+
+        let count_res2 = get_table_item_count(&AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["A", "Y"],
+        });
+        assert_eq!(count_res2, Err("Incorrect syntax at PFX".to_string()));
+
+        let count_res3 = get_table_item_count(&AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["A", "Y", "-80"],
+        });
+        assert_eq!(count_res3, Err("Bad number at PFX".to_string()));
+    }
+
+    #[test]
+    fn test_create_processed_tokens() {
+        // Test boolean
+        let t0 = AffixRawToken {
+            ttype: TokenType::NoSpaceSubs,
+            content: vec![],
+        };
+        let res0 = Ok(vec![AffixProcessedToken {
+            ttype: TokenType::NoSpaceSubs,
+            data: ProcessedTokenData::Bool(true),
+        }]);
+        assert_eq!(create_processed_tokens(vec![t0]), res0);
+
+        // Test string
+        let t1 = AffixRawToken {
+            ttype: TokenType::Language,
+            content: vec!["mylanguage"],
+        };
+        let res1 = Ok(vec![AffixProcessedToken {
+            ttype: TokenType::Language,
+            data: ProcessedTokenData::String(vec!["mylanguage"]),
+        }]);
+        assert_eq!(create_processed_tokens(vec![t1]), res1);
+
+        // Test table
+        let t20 = AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["V", "N", "2"],
+        };
+        let t21 = AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["V", "e"],
+        };
+        let t22 = AffixRawToken {
+            ttype: TokenType::Prefix,
+            content: vec!["V", "0"],
+        };
+        let res1 = Ok(vec![ AffixProcessedToken {
+            ttype: TokenType::Prefix,
+            data: ProcessedTokenData::Table(vec![vec!["V","N","2"],vec!["V","e"],vec!["V","0"]]),
+        }]);
+        assert_eq!(create_processed_tokens(vec![t20,t21,t22]), res1);
     }
 }
 
