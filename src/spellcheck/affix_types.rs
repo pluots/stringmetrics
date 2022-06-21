@@ -2,187 +2,193 @@
 // use super::affix_serde::{ENCODING_CLASS_LIST, TOKEN_CLASS_LIST};
 
 // use std::string::ToString;
-use strum::{EnumString, VariantNames};
+use strum::{EnumProperty, EnumString, VariantNames};
 use strum_macros;
 
 /// All possible types found in hunspell affix files
 /// This represents a generic token type that will have associated
 #[derive(
-    Debug, Eq, PartialEq, EnumString, strum_macros::Display, strum_macros::EnumVariantNames,
+    Debug,
+    Eq,
+    PartialEq,
+    EnumString,
+    strum_macros::Display,
+    strum_macros::EnumVariantNames,
+    strum_macros::EnumProperty,
 )]
 pub enum TokenType {
-    #[strum(to_string = "SET")]
+    #[strum(to_string = "SET", props(dtype = "str"))]
     Encoding,
 
-    #[strum(to_string = "FLAG")]
+    #[strum(to_string = "FLAG", props(dtype = "str"))]
     FlagType,
 
-    #[strum(to_string = "COMPLEXPREFIXES")]
+    #[strum(to_string = "COMPLEXPREFIXES", props(dtype = "bool"))]
     ComplexPrefixes,
 
-    #[strum(to_string = "LANG")]
+    #[strum(to_string = "LANG", props(dtype = "str"))]
     Language,
 
-    #[strum(to_string = "IGNORE")]
+    #[strum(to_string = "IGNORE", props(dtype = "str"))]
     IgnoreChars,
 
-    #[strum(to_string = "AF")]
+    #[strum(to_string = "AF", props(dtype = "table"))]
     AffixFlag,
 
-    #[strum(to_string = "AM")]
+    #[strum(to_string = "AM", props(dtype = "table"))]
     MorphAlias,
 
     // Suggestion-related
-    #[strum(to_string = "KEY")]
+    #[strum(to_string = "KEY", props(dtype = "str"))]
     NeighborKeys,
 
-    #[strum(to_string = "TRY")]
+    #[strum(to_string = "TRY", props(dtype = "str"))]
     TryCharacters,
 
-    #[strum(to_string = "NOSUGGEST")]
+    #[strum(to_string = "NOSUGGEST", props(dtype = "str"))]
     NoSuggestFlag,
 
-    #[strum(to_string = "MAXCPDSUGS")]
+    #[strum(to_string = "MAXCPDSUGS", props(dtype = "int"))]
     CompoundSuggestionsMax,
 
-    #[strum(to_string = "MAXNGRAMSUGS")]
+    #[strum(to_string = "MAXNGRAMSUGS", props(dtype = "int"))]
     NGramSuggestionsMax,
 
-    #[strum(to_string = "MAXDIFF")]
+    #[strum(to_string = "MAXDIFF", props(dtype = "int"))]
     NGramDiffMax,
 
-    #[strum(to_string = "ONLYMAXDIFF")]
+    #[strum(to_string = "ONLYMAXDIFF", props(dtype = "bool"))]
     NGramLimitToDiffMax,
 
-    #[strum(to_string = "NOSPLITSUGS")]
+    #[strum(to_string = "NOSPLITSUGS", props(dtype = "bool"))]
     NoSpaceSubs,
 
-    #[strum(to_string = "SUGSWITHDOTS")]
+    #[strum(to_string = "SUGSWITHDOTS", props(dtype = "bool"))]
     KeepTerminationDots,
 
-    #[strum(to_string = "REP")]
+    #[strum(to_string = "REP", props(dtype = "table"))]
     Replacement,
 
-    #[strum(to_string = "MAP")]
+    #[strum(to_string = "MAP", props(dtype = "table"))]
     Mapping,
 
-    #[strum(to_string = "PHONE")]
+    #[strum(to_string = "PHONE", props(dtype = "table"))]
     Phonetic,
 
-    #[strum(to_string = "WARN")]
+    #[strum(to_string = "WARN", props(dtype = "str"))]
     WarnRareFlag,
 
-    #[strum(to_string = "FORBIDWARN")]
+    #[strum(to_string = "FORBIDWARN", props(dtype = "bool"))]
     ForbitWarnWords,
 
-    #[strum(to_string = "BREAK")]
+    #[strum(to_string = "BREAK", props(dtype = "table"))]
     Breakpoint,
 
     // Compound-related
-    #[strum(to_string = "COMPOUNDRULE")]
+    #[strum(to_string = "COMPOUNDRULE", props(dtype = "table"))]
     CompoundRule,
 
-    #[strum(to_string = "COMPOUNDMIN")]
+    #[strum(to_string = "COMPOUNDMIN", props(dtype = "int"))]
     CompoundMinLength,
 
-    #[strum(to_string = "COMPOUNDFLAG")]
+    #[strum(to_string = "COMPOUNDFLAG", props(dtype = "str"))]
     CompoundFlag,
 
-    #[strum(to_string = "COMPOUNDBEGIN")]
+    #[strum(to_string = "COMPOUNDBEGIN", props(dtype = "str"))]
     CompoundBeginFlag,
 
-    #[strum(to_string = "COMPOUNDLAST")]
+    #[strum(to_string = "COMPOUNDLAST", props(dtype = "str"))]
     CompoundEndFlag,
 
-    #[strum(to_string = "COMPOUNDMIDDLE")]
+    #[strum(to_string = "COMPOUNDMIDDLE", props(dtype = "str"))]
     CompoundMiddleFlag,
 
-    #[strum(to_string = "ONLYINCOMPOUND")]
+    #[strum(to_string = "ONLYINCOMPOUND", props(dtype = "str"))]
     CompoundOnlyFlag,
 
-    #[strum(to_string = "COMPOUNDPERMITFLAG")]
+    #[strum(to_string = "COMPOUNDPERMITFLAG", props(dtype = "str"))]
     CompoundPermitFlag,
 
-    #[strum(to_string = "COMPOUNDFORBIDFLAG")]
+    #[strum(to_string = "COMPOUNDFORBIDFLAG", props(dtype = "str"))]
     CompoundForbidFlag,
 
-    #[strum(to_string = "COMPOUNDMORESUFFIXES")]
+    #[strum(to_string = "COMPOUNDMORESUFFIXES", props(dtype = "bool"))]
     CompoundMoreSuffixes,
 
-    #[strum(to_string = "COMPOUNDROOT")]
+    #[strum(to_string = "COMPOUNDROOT", props(dtype = "str"))]
     CompoundRoot,
 
-    #[strum(to_string = "COMPOUNDWORDMAX")]
+    #[strum(to_string = "COMPOUNDWORDMAX", props(dtype = "int"))]
     CompoundWordMax,
 
-    #[strum(to_string = "CHECKCOMPOUNDDUP")]
+    #[strum(to_string = "CHECKCOMPOUNDDUP", props(dtype = "bool"))]
     CompoundForbidDuplication,
 
-    #[strum(to_string = "CHECKCOMPOUNDREP")]
+    #[strum(to_string = "CHECKCOMPOUNDREP", props(dtype = "bool"))]
     CompoundForbidRepeat,
 
-    #[strum(to_string = "CHECKCOMPOUNDCASE")]
+    #[strum(to_string = "CHECKCOMPOUNDCASE", props(dtype = "bool"))]
     CompoundForbidUpperBoundary,
 
-    #[strum(to_string = "CHECKCOMPOUNDTRIPLE")]
+    #[strum(to_string = "CHECKCOMPOUNDTRIPLE", props(dtype = "bool"))]
     CompoundForbidTriple,
 
-    #[strum(to_string = "SIMPLIFIEDTRIPLE")]
+    #[strum(to_string = "SIMPLIFIEDTRIPLE", props(dtype = "bool"))]
     CompoundSimplifyTriple,
 
-    #[strum(to_string = "CHECKCOMPOUNDPATTERN")]
+    #[strum(to_string = "CHECKCOMPOUNDPATTERN", props(dtype = "table"))]
     CompoundForbidPatterns,
 
-    #[strum(to_string = "FORCEUCASE")]
+    #[strum(to_string = "FORCEUCASE", props(dtype = "str"))]
     CompoundForceUpper,
 
-    #[strum(to_string = "COMPOUNDSYLLABLE")]
+    #[strum(to_string = "COMPOUNDSYLLABLE", props(dtype = "str"))]
     CompoundForceSyllable,
 
-    #[strum(to_string = "SYLLABLENUM")]
+    #[strum(to_string = "SYLLABLENUM", props(dtype = "str"))]
     CompoundSyllableNumber,
 
     // Affix-related
-    #[strum(to_string = "PFX")]
+    #[strum(to_string = "PFX", props(dtype = "table"))]
     Prefix,
 
-    #[strum(to_string = "SFX")]
+    #[strum(to_string = "SFX", props(dtype = "table"))]
     Suffix,
 
-    #[strum(to_string = "CIRCUMFIX")]
+    #[strum(to_string = "CIRCUMFIX", props(dtype = "str"))]
     AffixCircumfixFlag,
 
-    #[strum(to_string = "FORBIDDENWORD")]
+    #[strum(to_string = "FORBIDDENWORD", props(dtype = "str"))]
     AffixForbiddenWordFlag,
 
-    #[strum(to_string = "FULLSTRIP")]
+    #[strum(to_string = "FULLSTRIP", props(dtype = "bool"))]
     AffixFullStrip,
 
-    #[strum(to_string = "KEEPCASE")]
+    #[strum(to_string = "KEEPCASE", props(dtype = "str"))]
     AffixKeepCase,
 
-    #[strum(to_string = "ICONV")]
+    #[strum(to_string = "ICONV", props(dtype = "table"))]
     AffixInputConversion,
 
-    #[strum(to_string = "OCONV")]
+    #[strum(to_string = "OCONV", props(dtype = "table"))]
     AffixOutputConversion,
 
-    #[strum(to_string = "LEMMA_PRESENT")]
+    #[strum(to_string = "LEMMA_PRESENT", props(dtype = "str"))]
     AffixLemmaPresentDeprecated,
 
-    #[strum(to_string = "NEEDAFFIX")]
+    #[strum(to_string = "NEEDAFFIX", props(dtype = "str"))]
     AffixNeededFlag,
 
-    #[strum(to_string = "PSEUDOROOT")]
+    #[strum(to_string = "PSEUDOROOT", props(dtype = "str"))]
     AffixPseudoRootFlagDeprecated,
 
-    #[strum(to_string = "SUBSTANDARD")]
+    #[strum(to_string = "SUBSTANDARD", props(dtype = "str"))]
     AffixSubstandardFlag,
 
-    #[strum(to_string = "WORDCHARS")]
+    #[strum(to_string = "WORDCHARS", props(dtype = "str"))]
     AffixWordChars,
 
-    #[strum(to_string = "CHECKSHARPS")]
+    #[strum(to_string = "CHECKSHARPS", props(dtype = "bool"))]
     AffixCheckSharps,
 
     // Used to indicate start of token stream
@@ -250,5 +256,11 @@ mod tests {
         assert_eq!(TokenType::IgnoreChars.to_string(), "IGNORE");
         assert_eq!(TokenType::MorphAlias.to_string(), "AM");
         println!("{:?}", TokenType::VARIANTS);
+    }
+
+    // Spot check serializatino of tokens
+    #[test]
+    fn test_token_props() {
+        assert_eq!(TokenType::Encoding.get_str("dtype"), Some("bool"));
     }
 }

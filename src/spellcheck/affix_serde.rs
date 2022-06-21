@@ -1,23 +1,18 @@
 use super::affix::Affix;
 use super::affix_types::{EncodingType, TokenType};
-use strum::VariantNames;
+use strum::{EnumProperty, VariantNames};
 
-// struct
-
-pub fn load_str(ax: &mut Affix, s: &str) -> () {
-    let working_str = remove_comments(s);
-    let split = working_str.split_whitespace();
-
-    for s in split {
-        // if TokenType::VARIANTS.contains(s) {
-
-        // }
-    }
+/// Populate an Affix class from the string version of a file
+pub fn load_affix_from_str(_ax: &mut Affix, s: &str) -> () {
+    // This will give us a list of tokens with no processing applied
+    let raw_stripped = strip_comments(s);
+    let raw_tokens = create_raw_tokens(raw_stripped.as_str());
+    let processed_tokens = create_processed_tokens(raw_tokens);
 }
 
 /// Strip "#" comments from a &str. Breaks from a found "#" to the next newline;
 /// does not remove the newlines
-fn remove_comments(s: &str) -> String {
+fn strip_comments(s: &str) -> String {
     let mut newstr = String::new();
     let mut paused = false;
     // Logic to skip from # to newline
@@ -36,47 +31,172 @@ fn remove_comments(s: &str) -> String {
 }
 
 /// A token for a specific affix option
-/// Holds a type and the stream of characters that follow
+/// Holds a type and the stream of words that follow
+/// Words have been split on whitespace
 #[derive(Debug, PartialEq)]
-struct AffixFileToken<'a> {
+struct AffixRawToken<'a> {
     pub ttype: TokenType,
     pub content: Vec<&'a str>,
 }
 
-impl AffixFileToken<'_> {
-    pub fn new<'a>(ttype: TokenType, content: Vec<&'a str>) -> AffixFileToken<'a> {
-        AffixFileToken {
+impl AffixRawToken<'_> {
+    pub fn new<'a>(ttype: TokenType, content: Vec<&'a str>) -> AffixRawToken<'a> {
+        AffixRawToken {
             ttype: ttype,
             content: content,
         }
     }
 }
 
-/// Create a list of tokens; do not do anything to analyze them
-fn create_tokens<'a>(s: &'a str) -> Vec<AffixFileToken> {
+/// Create a list of tokens with matched type and string content; do not do
+/// anything to analyze them
+fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
     // Temporarially hold the "next vector" rather than working one, blank until
     // needed
     let mut working_vec: Vec<&'a str> = Vec::new();
     let mut working_type = TokenType::FileStart;
     // let mut working_t: OptionToken<'a> = OptionToken::new(TokenType::FileStart, Vec::new());
 
-    let mut ret: Vec<AffixFileToken> = Vec::new();
+    let mut ret: Vec<AffixRawToken> = Vec::new();
 
-    // Each token is a word, split by UTF-8 boundaries
-    for token in s.split_whitespace() {
-        if TokenType::VARIANTS.contains(&token) {
+    // Each token is a "word", split by UTF-8 boundaries
+    for word in s.split_whitespace() {
+        if TokenType::VARIANTS.contains(&word) {
             // Push this token and start a new one
-            ret.push(AffixFileToken::new(working_type, working_vec));
+            ret.push(AffixRawToken::new(working_type, working_vec));
             working_vec = Vec::new();
-            working_type = TokenType::try_from(token).unwrap();
+            working_type = TokenType::try_from(word).unwrap();
         } else {
-            working_vec.push(token);
+            // Not a delimiting key; just add this to our current token
+            working_vec.push(word);
         }
     }
 
-    ret.push(AffixFileToken::new(working_type, working_vec));
+    ret.push(AffixRawToken::new(working_type, working_vec));
 
     ret
+}
+
+enum ProcessedTokenData<'a> {
+    Bool(bool),
+    String(Vec<&'a str>),
+    Table(Vec<Vec<&'a str>>),
+}
+
+struct AffixProcessedToken<'a> {
+    pub ttype: TokenType,
+    pub data: ProcessedTokenData<'a>,
+}
+
+/// Use the first raw token to determine how many more to read into the table
+/// Returns a u16 if successful, error otherwise
+fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
+    let temp = match token.ttype {
+        // AF [n]
+        TokenType::AffixFlag => token.content.get(1),
+        // AM [n]
+        TokenType::MorphAlias => token.content.get(1),
+        // REP [n]
+        TokenType::Replacement => token.content.get(1),
+        // MAP [n]
+        TokenType::Mapping => token.content.get(1),
+        // PHONE [n]
+        TokenType::Phonetic => token.content.get(1),
+        // BREAK [n]
+        TokenType::Breakpoint => token.content.get(1),
+        // COMPOUNDRULE [n]
+        TokenType::CompoundRule => token.content.get(1),
+        // CHECKCOMPOUNDPATTERN [n]
+        TokenType::CompoundForbidPatterns => token.content.get(1),
+        // PFX flag cross_product number
+        TokenType::Prefix => token.content.get(3),
+        // SFX flag cross_product number
+        TokenType::Suffix => token.content.get(3),
+        // ICONV [n]
+        TokenType::AffixInputConversion => token.content.get(1),
+        // OCONV [n]
+        TokenType::AffixOutputConversion => token.content.get(1),
+        // Any tokens types that don't have a table
+        _ => return Ok(0),
+    };
+
+    match temp {
+        Some(num) => match num.parse() {
+            Ok(val) => Ok(val),
+            Err(_) => Err(format!("Bad number at {}", token.ttype).into()),
+        },
+        None => Err(format!("Incorrect syntax at {}", token.ttype).into()),
+    }
+}
+
+/// Loop through a vector of raw tokens and create the processed version
+///
+fn create_processed_tokens(tokens: Vec<AffixRawToken>) 
+-> Result<Vec<AffixProcessedToken>, String> {
+    // Vector to hold what we will return
+    let mut retvec = Vec::new();
+    // If we need to accumulate values for a table, use these items
+    let mut table_accum_count = 0u16;
+    let mut table_accum_type = TokenType::FileStart; // FileStart is kind of a dummy token
+    let mut table_accum_vec = Vec::new();
+
+    for token in tokens {
+        // Check accumulate logic first
+
+        if table_accum_count > 0 {
+            // If we ar eaccumulating, just push this token and go on to the next
+            // one to our temp working vector
+            // Validate token type first
+            if token.ttype != table_accum_type {
+                return Err(format!(
+                    "Token of type {} did not match {} before \
+                    table ended. Expected {} more token.",
+                    token.ttype, table_accum_type, table_accum_count
+                ));
+            }
+
+            table_accum_vec.push(token.content);
+            table_accum_count -= 1;
+            if table_accum_count > 0 {
+                continue;
+            }
+
+            // If we are here, that means we are on our last token.
+            // Finalie it to the return vec
+            retvec.push(AffixProcessedToken {
+                ttype: token.ttype,
+                data: ProcessedTokenData::Table(table_accum_vec),
+            });
+            // And reset our status
+            table_accum_vec = Vec::new();
+            continue
+        }
+
+        // If we're not accumulating, just match based on token type
+        match token.ttype.get_str("dtype").unwrap() {
+            // String or bool are straightforward
+            "str" => retvec.push(AffixProcessedToken {
+                ttype: token.ttype,
+                data: ProcessedTokenData::String(token.content),
+            }),
+            "bool" => retvec.push(AffixProcessedToken {
+                ttype: token.ttype,
+                data: ProcessedTokenData::Bool(true),
+            }),
+            // For table - figure out item count, push this token,
+            "table" => {
+                table_accum_count = match get_table_item_count(&token) {
+                    Ok(val) => val,
+                    Err(s) => return Err(s),
+                };
+                table_accum_vec.push(token.content);
+                table_accum_type = token.ttype;
+            }
+            _ => panic!("Unexpected token type"),
+        }
+    }
+
+    Ok(retvec)
 }
 
 #[cfg(test)]
@@ -86,20 +206,20 @@ mod tests {
     #[test]
     fn test_encoding_deser() {
         let s = "abc\ndef\n# comment\nline with # comment\nendline";
-        assert_eq!(remove_comments(s), "abc\ndef\n\nline with \nendline");
+        assert_eq!(strip_comments(s), "abc\ndef\n\nline with \nendline");
     }
 
     #[test]
     fn test_create_tokens() {
         let s = "SYLLABLENUM a b c PFX prefix CIRCUMFIX COMPOUNDLAST";
         let test_vec = vec![
-            AffixFileToken::new(TokenType::FileStart, vec![]),
-            AffixFileToken::new(TokenType::CompoundSyllableNumber, vec!["a", "b", "c"]),
-            AffixFileToken::new(TokenType::Prefix, vec!["prefix"]),
-            AffixFileToken::new(TokenType::AffixCircumfixFlag, vec![]),
-            AffixFileToken::new(TokenType::CompoundEndFlag, vec![]),
+            AffixRawToken::new(TokenType::FileStart, vec![]),
+            AffixRawToken::new(TokenType::CompoundSyllableNumber, vec!["a", "b", "c"]),
+            AffixRawToken::new(TokenType::Prefix, vec!["prefix"]),
+            AffixRawToken::new(TokenType::AffixCircumfixFlag, vec![]),
+            AffixRawToken::new(TokenType::CompoundEndFlag, vec![]),
         ];
-        assert_eq!(create_tokens(s), test_vec);
+        assert_eq!(create_raw_tokens(s), test_vec);
     }
 }
 
@@ -604,37 +724,6 @@ mod tests {
 //         set_parent: None,
 //     },
 // ];
-
-// mod re_exprs {
-//     use lazy_static::lazy_static;
-//     use regex::Regex;
-//     lazy_static! {
-//         /// All possible keys collected into a vector
-//         ///
-//         pub static ref AFFIX_FLAG_RE: Regex = Regex::new(r"AF\s+(\d+)").unwrap();
-//         pub static ref MORPH_ALIAS_RE: Regex = Regex::new(r"AM\s+(\d+)").unwrap();
-//         pub static ref REPLACE_DEF_RE: Regex = Regex::new(r"REP\s+(\d+)").unwrap();
-//         pub static ref MAP_DEF_RE: Regex = Regex::new(r"MAP\s+(\d+)").unwrap();
-//         pub static ref PHONETIC_DEF_RE: Regex = Regex::new(r"PHONE\s+(\d+)").unwrap();
-//         pub static ref BREAK_DEF_RE: Regex = Regex::new(r"BREAK\s+(\d+)").unwrap();
-//         pub static ref COMPOUND_RULE_DEF_RE: Regex = Regex::new(r"COMPOUNDRULE\s+(\d+)").unwrap();
-//         pub static ref COMPOUND_PATTERN_DEF_RE: Regex = Regex::new(r"CHECKCOMPOUNDPATTERN\s+(\d+)").unwrap();
-//         pub static ref ICONV_DEF_RE: Regex = Regex::new(r"ICONV\s+(\d+)").unwrap();
-//         pub static ref OCONV_DEF_RE: Regex = Regex::new(r"OCONV\s+(\d+)").unwrap();
-//         pub static ref PFX_DEF_RE: Regex = Regex::new(r"PFX\s+\w+\s+\w+\s+(\d+)").unwrap();
-//         pub static ref SFX_DEF_RE: Regex = Regex::new(r"SFX\s+\w+\s+\w+\s+(\d+)").unwrap();
-
-//     }
-
-//     /// Apply a regex pattern to a string, return integer capturing group
-//     pub fn apply_re_count(s: &str, re: &Regex) -> u16 {
-//         re.captures_iter(s)
-//             .next()
-//             .unwrap_or_else(|| panic!("Bad formatting at {}", s))[1]
-//             .parse()
-//             .unwrap()
-//     }
-// }
 
 // pub struct EncodingMatch<'a> {
 //     class: EncodingType,
