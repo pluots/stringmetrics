@@ -5,6 +5,7 @@
 use strum::{EnumProperty, EnumString, VariantNames};
 use strum_macros;
 
+
 /// All possible types found in hunspell affix files
 /// This represents a generic token type that will have associated
 #[derive(

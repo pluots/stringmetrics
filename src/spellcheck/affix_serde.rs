@@ -1,13 +1,60 @@
 use super::affix::Affix;
 use super::affix_types::{EncodingType, TokenType};
 use strum::{EnumProperty, VariantNames};
+use unicode_segmentation::UnicodeSegmentation;
+
+macro_rules! parentify {
+    // Boolean field just assigns true and returns Ok (Flag is just either there
+    // or not)
+    ( $parent:ident.$field:ident, $token:ident, bool ) => {
+        match $token.data {
+            ProcessedTokenData::Bool(b) => $parent.$field = b,
+            _ => panic!("Bad token type specified!"),
+        }
+    };
+    ( $parent:ident.$field:ident, $token:ident, str_replace ) => {
+        match $token.data {
+            ProcessedTokenData::String(s) => $parent.$field = s,
+            _ => panic!("Bad token type specified!"),
+        }
+    }; 
+
+    // Use str_add any time we have a `String` that we want to append to.
+    // Basically the same as above except we append to the existing vector and
+    // sort rather than replacing what's there. Usable for `Vec<&str>`.
+    ( $parent:ident.$field:ident, $token:ident, str_append ) => {
+        match $token.data {
+            ProcessedTokenData::String(s) => {
+                let mut tmp = s.graphemes(true).collect::<Vec<&str>>();
+                    tmp.sort();
+                    tmp.dedup();
+                $parent.$field.append(&mut tmp)
+
+            },
+            _ => panic!("Bad token type specified!"),
+        }
+    };
+}
+
+// Unwrap a TokenData type
+macro_rules! t_data_unwrap {
+    ( $token:ident, $field:ident ) => {
+        match $token.data {
+            ProcessedTokenData::$field(f) => f,
+            _ => panic!("Bad token type specified!"),
+        }
+    };
+}
 
 /// Populate an Affix class from the string version of a file
-pub fn load_affix_from_str(_ax: &mut Affix, s: &str) -> () {
+pub fn load_affix_from_str<'a>(ax: &mut Affix, s: &str) -> Result<(), String> {
     // This will give us a list of tokens with no processing applied
     let raw_stripped = strip_comments(s);
     let raw_tokens = create_raw_tokens(raw_stripped.as_str());
-    let processed_tokens = create_processed_tokens(raw_tokens);
+    match create_processed_tokens(raw_tokens) {
+        Ok(tokens) => set_parent(ax, tokens),
+        Err(e) => Err(e),
+    }
 }
 
 /// Strip "#" comments from a &str. Breaks from a found "#" to the next newline;
@@ -57,7 +104,6 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
     // needed
     let mut working_vec: Vec<&'a str> = Vec::new();
     let mut working_type = TokenType::FileStart;
-    // let mut working_t: OptionToken<'a> = OptionToken::new(TokenType::FileStart, Vec::new());
 
     let mut ret: Vec<AffixRawToken> = Vec::new();
 
@@ -82,7 +128,7 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
 #[derive(Debug, PartialEq)]
 enum ProcessedTokenData<'a> {
     Bool(bool),
-    String(Vec<&'a str>),
+    String(&'a str),
     Table(Vec<Vec<&'a str>>),
 }
 
@@ -94,7 +140,7 @@ struct AffixProcessedToken<'a> {
 
 /// Use the first raw token to determine how many more to read into the table
 /// Returns a u16 if successful, error otherwise
-fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
+fn get_table_item_count<'a>(token: &AffixRawToken) -> Result<u16, String> {
     // Recall: our tokens have the token prefix stripped
 
     let temp = match token.ttype {
@@ -129,14 +175,13 @@ fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
     match temp {
         Some(num) => match num.parse() {
             Ok(val) => Ok(val),
-            Err(_) => Err(format!("Bad number at {}", token.ttype).into()),
+            Err(_) => Err(format!("Bad number at {}", token.ttype)),
         },
-        None => Err(format!("Incorrect syntax at {}", token.ttype).into()),
+        None => Err(format!("Incorrect syntax at {}", token.ttype)),
     }
 }
 
 /// Loop through a vector of raw tokens and create the processed version
-///
 fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProcessedToken>, String> {
     // Vector to hold what we will return
     let mut retvec = Vec::new();
@@ -179,14 +224,32 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
         // If we're not accumulating, just match based on token type
         match token.ttype.get_str("dtype").unwrap() {
             // String or bool are straightforward
-            "str" => retvec.push(AffixProcessedToken {
-                ttype: token.ttype,
-                data: ProcessedTokenData::String(token.content),
-            }),
-            "bool" => retvec.push(AffixProcessedToken {
-                ttype: token.ttype,
-                data: ProcessedTokenData::Bool(true),
-            }),
+            "str" => {
+                if token.content.len() != 1 {
+                    return Err(format!(
+                        "{} is a sting; only one value allowed on line",
+                        token.ttype
+                    )
+);
+                };
+                retvec.push(AffixProcessedToken {
+                    ttype: token.ttype,
+                    data: ProcessedTokenData::String(token.content[0]),
+                })
+            }
+            "bool" => {
+                if token.content.len() != 0 {
+                    return Err(format!(
+                        "{} is a boolean; nothing else allowed on line",
+                        token.ttype
+                    )
+);
+                };
+                retvec.push(AffixProcessedToken {
+                    ttype: token.ttype,
+                    data: ProcessedTokenData::Bool(true),
+                })
+            }
             // For table - figure out item count, push this token,
             "table" => {
                 table_accum_count = match get_table_item_count(&token) {
@@ -201,6 +264,83 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
     }
 
     Ok(retvec)
+}
+
+// Actually go through and set the parent here
+fn set_parent<'a>(ax: &mut Affix<'a>, tokens: Vec<AffixProcessedToken>) -> Result<(), String> {
+    for token in tokens {
+        match token.ttype {
+            TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
+                Ok(et) => ax.encoding = &et,
+                Err(e) => return Err("Bad encoding type specified".to_string()),
+            },
+            TokenType::FlagType => todo!(),
+            TokenType::ComplexPrefixes => {
+                parentify!(ax.complex_prefixes, token,bool)
+                // match token.data {
+                //     ProcessedTokenData::Bool(b)=>ax.complex_prefixes = b,
+                //     _ => panic!("Bad token type specified!")
+                // }
+            }
+            TokenType::Language => parentify!(ax.lang,token, str_replace),
+            TokenType::IgnoreChars => parentify!(ax.ignore_chars,token, str_append),
+            TokenType::AffixFlag => parentify!(ax.afx_flag_vector,token, str_append),
+            TokenType::MorphAlias => todo!(),
+            TokenType::NeighborKeys => todo!(),
+            TokenType::TryCharacters => todo!(),
+            TokenType::NoSuggestFlag => todo!(),
+            TokenType::CompoundSuggestionsMax => todo!(),
+            TokenType::NGramSuggestionsMax => todo!(),
+            TokenType::NGramDiffMax => todo!(),
+            TokenType::NGramLimitToDiffMax => todo!(),
+            TokenType::NoSpaceSubs => todo!(),
+            TokenType::KeepTerminationDots => todo!(),
+            TokenType::Replacement => todo!(),
+            TokenType::Mapping => todo!(),
+            TokenType::Phonetic => todo!(),
+            TokenType::WarnRareFlag => todo!(),
+            TokenType::ForbitWarnWords => todo!(),
+            TokenType::Breakpoint => todo!(),
+            TokenType::CompoundRule => todo!(),
+            TokenType::CompoundMinLength => todo!(),
+            TokenType::CompoundFlag => todo!(),
+            TokenType::CompoundBeginFlag => todo!(),
+            TokenType::CompoundEndFlag => todo!(),
+            TokenType::CompoundMiddleFlag => todo!(),
+            TokenType::CompoundOnlyFlag => todo!(),
+            TokenType::CompoundPermitFlag => todo!(),
+            TokenType::CompoundForbidFlag => todo!(),
+            TokenType::CompoundMoreSuffixes => todo!(),
+            TokenType::CompoundRoot => todo!(),
+            TokenType::CompoundWordMax => todo!(),
+            TokenType::CompoundForbidDuplication => todo!(),
+            TokenType::CompoundForbidRepeat => todo!(),
+            TokenType::CompoundForbidUpperBoundary => todo!(),
+            TokenType::CompoundForbidTriple => todo!(),
+            TokenType::CompoundSimplifyTriple => todo!(),
+            TokenType::CompoundForbidPatterns => todo!(),
+            TokenType::CompoundForceUpper => todo!(),
+            TokenType::CompoundForceSyllable => todo!(),
+            TokenType::CompoundSyllableNumber => todo!(),
+            TokenType::Prefix => todo!(),
+            TokenType::Suffix => todo!(),
+            TokenType::AffixCircumfixFlag => todo!(),
+            TokenType::AffixForbiddenWordFlag => todo!(),
+            TokenType::AffixFullStrip => todo!(),
+            TokenType::AffixKeepCase => todo!(),
+            TokenType::AffixInputConversion => todo!(),
+            TokenType::AffixOutputConversion => todo!(),
+            TokenType::AffixLemmaPresentDeprecated => todo!(),
+            TokenType::AffixNeededFlag => todo!(),
+            TokenType::AffixPseudoRootFlagDeprecated => todo!(),
+            TokenType::AffixSubstandardFlag => todo!(),
+            TokenType::AffixWordChars => todo!(),
+            TokenType::AffixCheckSharps => todo!(),
+            TokenType::FileStart => todo!(),
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -273,7 +413,7 @@ mod tests {
         };
         let res1 = Ok(vec![AffixProcessedToken {
             ttype: TokenType::Language,
-            data: ProcessedTokenData::String(vec!["mylanguage"]),
+            data: ProcessedTokenData::String("mylanguage"),
         }]);
         assert_eq!(create_processed_tokens(vec![t1]), res1);
 
@@ -290,11 +430,15 @@ mod tests {
             ttype: TokenType::Prefix,
             content: vec!["V", "0"],
         };
-        let res1 = Ok(vec![ AffixProcessedToken {
+        let res1 = Ok(vec![AffixProcessedToken {
             ttype: TokenType::Prefix,
-            data: ProcessedTokenData::Table(vec![vec!["V","N","2"],vec!["V","e"],vec!["V","0"]]),
+            data: ProcessedTokenData::Table(vec![
+                vec!["V", "N", "2"],
+                vec!["V", "e"],
+                vec!["V", "0"],
+            ]),
         }]);
-        assert_eq!(create_processed_tokens(vec![t20,t21,t22]), res1);
+        assert_eq!(create_processed_tokens(vec![t20, t21, t22]), res1);
     }
 }
 
@@ -307,7 +451,7 @@ mod tests {
 // use super::affix_types::{EncodingType, TokenType};
 // use super::affix::Affix;
 // use lazy_static::lazy_static;
-// use unicode_segmentation::UnicodeSegmentation;
+
 
 // /// Macro that creates a closure based on the relevant type, used for
 // /// TokenClass::set_parent
@@ -319,82 +463,38 @@ mod tests {
 // /// Usage:
 // /// `parentify!(field_name, bool)` will just set the relevant field true
 // ///
-// macro_rules! parentify {
-//     // Boolean field just assigns true and returns Ok (Flag is just either there
-//     // or not)
-//     ( $field:ident, bool ) => {
-//         Some(|_, mut ax, _| Ok(ax.$field = true))
-//     };
 
-//     // Integer fields are a bit more complicated
-//     // Need to parse the field if possible,
-//     ( $field:ident, int ) => {
-//         Some(|tc, ax, s| match tc.strip_key(s).parse() {
-//             Ok(v) => Ok(ax.$field = v),
-//             Err(_) => Err("Bad integer value at {}"),
-//         })
-//     };
+// // Integer fields are a bit more complicated
+// // Need to parse the field if possible,
+// ( $field:ident, int ) => {
+//     Some(|tc, ax, s| match tc.strip_key(s).parse() {
+//         Ok(v) => Ok(ax.$field = v),
+//         Err(_) => Err("Bad integer value at {}"),
+//     })
+// };
 
-//     // Use str_replace for any time we have `&str` as the `Affix` type. We will
-//     // replace what exists with our new value
-//     ( $field:ident, str_replace ) => {
-//         Some(|tc, ax, s| {
-//             let s1 = tc.strip_key(s);
-//             match s1.is_empty() {
-//                 false => Ok(ax.$field = s1),
-//                 true => Err("No values found at field {}"),
-//             }
-//         })
-//     };
+// // Use str_replace for any time we have `&str` as the `Affix` type. We will
+// // replace what exists with our new value
+// ( $field:ident, str_replace ) => {
+//     Some(|tc, ax, s| {
+//         let s1 = tc.strip_key(s);
+//         match s1.is_empty() {
+//             false => Ok(ax.$field = s1),
+//             true => Err("No values found at field {}"),
+//         }
+//     })
+// };
 
-//     // Same as above but place the result in an option
-//     ( $field:ident, str_replace_option ) => {
-//         Some(|tc, ax, s| {
-//             let s1 = tc.strip_key(s);
-//             match s1.is_empty() {
-//                 false => Ok(ax.$field = Some(s1)),
-//                 true => Err("No values found at field {}"),
-//             }
-//         })
-//     };
-
-//     // Use str_add any time we have a `String` that we want to append to.
-//     // Basically the same as above except we append to the existing vector and
-//     // sort rather than replacing what's there. Usable for `Vec<&str>`.
-//     ( $field:ident, str_add ) => {
-//         Some(|tc, ax, s| {
-//             let s1 = tc.strip_key(s).to_string();
-//             match s1.is_empty() {
-//                 false => Ok({
-//                     let mut tmp = s.graphemes(true).collect::<Vec<&str>>();
-//                     tmp.sort();
-//                     tmp.dedup();
-//                     ax.$field = tmp
-//                 }),
-//                 true => Err("No values found at field {}"),
-//             }
-//         })
-//     };
-// }
-
-// /// A structure holding information about a token and how to use it
-// ///
-// /// This is meant for internal use in parsing the file Note that in parsing via
-// /// set_parent, APPEND mode is used wherever possible. Make sure if you come
-// /// start with a pre-populated Affix class, you clear the relevant fields first.
-//  struct TokenMatch<'a> {
-//     // Kind of the token
-//     class: TokenType,
-//     // Token's name in the dict
-//      key: &'a str,
-//     // A function that takes in the token's string and determines
-//     // how many of the following tokens to consume. If none, not a table.
-//      table_consumes: Option<fn(s: &str) -> u16>,
-//     // Set the parent when passed the foll text token
-//     // Idiomatic fn(self, parent, str)
-//     // Returns a result for nice error handling
-//     // Use the macro above to make setting this easy
-//      set_parent: Option<fn(&TokenMatch, &mut Affix, &'a str) -> Result<(), &'static str>>,
+// // Same as above but place the result in an option
+// ( $field:ident, str_replace_option ) => {
+//     Some(|tc, ax, s| {
+//         let s1 = tc.strip_key(s);
+//         match s1.is_empty() {
+//             false => Ok(ax.$field = Some(s1)),
+//             true => Err("No values found at field {}"),
+//         }
+//     })
+// };
 // }
 
 // impl TokenMatch<'_> {
