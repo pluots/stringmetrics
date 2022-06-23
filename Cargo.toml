@@ -8,21 +8,31 @@ repository = "https://github.com/pluots/stringmetrics-rust"
 # This won't auto link for some reason, no harm in having it manual
 documentation = "https://docs.rs/stringmetrics"
 
+# [lib]
+# name = "mylib"
+# path = "src/lib.rs"
+
+# [[bin]]
+# name = "mybin"
+# path = "src/bin.rs"
 
 [dependencies]
 # itertools = "0.10.3"
 # isolang = "2.1.0"
-regex = "1"
-lazy_static = "1.4"
-unicode-segmentation = "1.9.0"
+futures = "0.3"             # async tools
+lazy_static = "1.4"         # late-evaluated statics
+regex = "1"                 # rust core regex
+# This crate's proc macros (unused)
 stringmetrics-derive = { path = "stringmetrics-derive" }
-strum_macros = "0.24"
+# Enum ser/des operations
 strum = { version = "0.24", features = ["derive"] }
-# enum-map = "2"
+strum_macros = "0.24"        # Macros for ser/de
+# Splitting on graphemes rather than chars
+unicode-segmentation = "1.9.0"
 
 
 [dev-dependencies]
-# more-asserts = "0.2.2"
+#
 criterion = "0.3"
 
 [[bench]]

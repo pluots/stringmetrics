@@ -205,7 +205,9 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
 
     for token in tokens {
         // FileStart is just a dummy token
-        if token.ttype == TokenType::FileStart {continue;}
+        if token.ttype == TokenType::FileStart {
+            continue;
+        }
 
         // Check accumulate logic first
         if table_accum_count > 0 {
@@ -276,13 +278,8 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                         ttype: token.ttype,
                         data: ProcessedTokenData::Int(v),
                     }),
-                    Err(_) => return Err(format!(
-                        "Bad integer value at {}",
-                        token.ttype
-                    ))
+                    Err(_) => return Err(format!("Bad integer value at {}", token.ttype)),
                 }
-
-
             }
             // For table - figure out item count, push this token,
             "table" => {
