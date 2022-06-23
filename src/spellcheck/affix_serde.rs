@@ -17,6 +17,12 @@ macro_rules! parentify {
             _ => panic!("Bad token type specified!"),
         }
     };
+    ( $parent:ident.$field:ident, $token:ident, int ) => {
+        match $token.data {
+            ProcessedTokenData::Int(b) => $parent.$field = b,
+            _ => panic!("Bad token type specified!"),
+        }
+    };
     ( $parent:ident.$field:ident, $token:ident, str_replace ) => {
         match $token.data {
             ProcessedTokenData::String(s) => $parent.$field = s.to_string(),
@@ -58,6 +64,7 @@ pub fn load_affix_from_str(ax: &mut Affix, s: &str) -> Result<(), String> {
     let raw_stripped = strip_comments(s);
     let raw_str = raw_stripped.as_str();
     let raw_tokens = create_raw_tokens(raw_str);
+
     match create_processed_tokens(raw_tokens) {
         Ok(tokens) => set_parent(ax, tokens),
         Err(e) => Err(e),
@@ -257,7 +264,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                 })
             }
             "int" => {
-                if !token.content.is_empty() {
+                if token.content.len() != 1 {
                     return Err(format!(
                         "{} is a integer; nothing else allowed on the line",
                         token.ttype
@@ -307,9 +314,9 @@ fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), St
             TokenType::IgnoreChars => parentify!(ax.ignore_chars, token, str_append),
             TokenType::AffixFlag => parentify!(ax.afx_flag_vector, token, str_append),
             TokenType::MorphAlias => todo!(),
-            TokenType::NeighborKeys => todo!(),
-            TokenType::TryCharacters => todo!(),
-            TokenType::NoSuggestFlag => todo!(),
+            TokenType::NeighborKeys => todo!(), // DO NOT SORT
+            TokenType::TryCharacters => parentify!(ax.try_characters, token, str_append),
+            TokenType::NoSuggestFlag => parentify!(ax.nosuggest_flag, token, str_replace),
             TokenType::CompoundSuggestionsMax => todo!(),
             TokenType::NGramSuggestionsMax => todo!(),
             TokenType::NGramDiffMax => todo!(),
@@ -323,7 +330,7 @@ fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), St
             TokenType::ForbitWarnWords => todo!(),
             TokenType::Breakpoint => todo!(),
             TokenType::CompoundRule => todo!(),
-            TokenType::CompoundMinLength => todo!(),
+            TokenType::CompoundMinLength => parentify!(ax.compound_min_length, token, int),
             TokenType::CompoundFlag => todo!(),
             TokenType::CompoundBeginFlag => todo!(),
             TokenType::CompoundEndFlag => todo!(),

@@ -23,6 +23,12 @@ strum = { version = "0.24", features = ["derive"] }
 
 [dev-dependencies]
 # more-asserts = "0.2.2"
+criterion = "0.3"
+
+[[bench]]
+name = "dict_hashset"
+harness = false
+
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]

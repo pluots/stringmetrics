@@ -59,13 +59,13 @@ pub struct Affix {
     pub nosuggest_flag: String,
 
     /// Maximum compound word suggestions
-    pub compound_suggestions_max: u8,
+    pub compound_suggestions_max: u16,
 
     /// Max number of ngram suggestions
-    pub ngram_suggestions_max: u8,
+    pub ngram_suggestions_max: u16,
 
     /// N-gram similarity limit
-    pub ngram_diff_max: u8,
+    pub ngram_diff_max: u16,
 
     /// Remove all suggestions except the diff max
     pub ngram_limit_to_diff_max: bool,
@@ -90,7 +90,7 @@ pub struct Affix {
     // compound_rules: Vec<>
 
     /// Minimum length of words used in a compound
-    pub compound_min_length: u8,
+    pub compound_min_length: u16,
 
     /// Words with this flag may be in compounds
     pub compound_flag: Option<String>,
@@ -129,7 +129,7 @@ impl Affix {
                 graph_vec!("zxcvbnm"),
             ],
             try_characters: graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"),
-            nosuggest_flag: String::from("!"),
+            nosuggest_flag: String::from("AHOHOIH"),
             compound_suggestions_max: 2,
             ngram_suggestions_max: 2,
             ngram_diff_max: 5,
