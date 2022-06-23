@@ -53,7 +53,7 @@ macro_rules! t_data_unwrap {
 /// Populate an Affix class from the string version of a file.
 /// This is the main function exported from this module.
 /// `ax` is the [`Affix`] object to load, `s` is the file raw string to load in
-pub fn load_affix_from_str<'a>(ax: &mut Affix, s: &str) -> Result<(), String> {
+pub fn load_affix_from_str(ax: &mut Affix, s: &str) -> Result<(), String> {
     // This will give us a list of tokens with no processing applied
     let raw_stripped = strip_comments(s);
     let raw_str = raw_stripped.as_str();
@@ -94,11 +94,8 @@ struct AffixRawToken<'a> {
 }
 
 impl AffixRawToken<'_> {
-    pub fn new<'a>(ttype: TokenType, content: Vec<&'a str>) -> AffixRawToken<'a> {
-        AffixRawToken {
-            ttype: ttype,
-            content: content,
-        }
+    pub fn new(ttype: TokenType, content: Vec<&str>) -> AffixRawToken {
+        AffixRawToken { ttype, content }
     }
 }
 
@@ -148,34 +145,34 @@ struct AffixProcessedToken<'a> {
 
 /// Use the first raw token to determine how many more to read into the table
 /// Returns a u16 if successful, error otherwise
-fn get_table_item_count<'a>(token: &AffixRawToken) -> Result<u16, String> {
+fn get_table_item_count(token: &AffixRawToken) -> Result<u16, String> {
     // Recall: our tokens have the token prefix stripped
 
     let temp = match token.ttype {
         // AF [n]
-        TokenType::AffixFlag => token.content.get(0),
+        TokenType::AffixFlag => token.content.first(),
         // AM [n]
-        TokenType::MorphAlias => token.content.get(0),
+        TokenType::MorphAlias => token.content.first(),
         // REP [n]
-        TokenType::Replacement => token.content.get(0),
+        TokenType::Replacement => token.content.first(),
         // MAP [n]
-        TokenType::Mapping => token.content.get(0),
+        TokenType::Mapping => token.content.first(),
         // PHONE [n]
-        TokenType::Phonetic => token.content.get(0),
+        TokenType::Phonetic => token.content.first(),
         // BREAK [n]
-        TokenType::Breakpoint => token.content.get(0),
+        TokenType::Breakpoint => token.content.first(),
         // COMPOUNDRULE [n]
-        TokenType::CompoundRule => token.content.get(0),
+        TokenType::CompoundRule => token.content.first(),
         // CHECKCOMPOUNDPATTERN [n]
-        TokenType::CompoundForbidPatterns => token.content.get(0),
+        TokenType::CompoundForbidPatterns => token.content.first(),
         // PFX flag cross_product number
         TokenType::Prefix => token.content.get(2),
         // SFX flag cross_product number
         TokenType::Suffix => token.content.get(2),
         // ICONV [n]
-        TokenType::AffixInputConversion => token.content.get(0),
+        TokenType::AffixInputConversion => token.content.first(),
         // OCONV [n]
-        TokenType::AffixOutputConversion => token.content.get(0),
+        TokenType::AffixOutputConversion => token.content.first(),
         // Any tokens types that don't have a table
         _ => return Ok(0),
     };
@@ -235,7 +232,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
             "str" => {
                 if token.content.len() != 1 {
                     return Err(format!(
-                        "{} is a sting; only one value allowed on line",
+                        "{} is a sting; only one value allowed on the line",
                         token.ttype
                     ));
                 };
@@ -245,9 +242,9 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                 })
             }
             "bool" => {
-                if token.content.len() != 0 {
+                if !token.content.is_empty() {
                     return Err(format!(
-                        "{} is a boolean; nothing else allowed on line",
+                        "{} is a boolean; nothing else allowed on the line",
                         token.ttype
                     ));
                 };
@@ -273,7 +270,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
 }
 
 // Actually go through and set the parent here
-fn set_parent<'a>(ax: &mut Affix, tokens: Vec<AffixProcessedToken<'a>>) -> Result<(), String> {
+fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), String> {
     for token in tokens {
         match token.ttype {
             TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
@@ -282,8 +279,8 @@ fn set_parent<'a>(ax: &mut Affix, tokens: Vec<AffixProcessedToken<'a>>) -> Resul
             },
             TokenType::FlagType => todo!(),
             TokenType::ComplexPrefixes => parentify!(ax.complex_prefixes, token, bool),
-            TokenType::Language =>  parentify!(ax.lang, token, str_replace),
-            TokenType::IgnoreChars =>parentify!(ax.ignore_chars, token, str_append),
+            TokenType::Language => parentify!(ax.lang, token, str_replace),
+            TokenType::IgnoreChars => parentify!(ax.ignore_chars, token, str_append),
             TokenType::AffixFlag => parentify!(ax.afx_flag_vector, token, str_append),
             TokenType::MorphAlias => todo!(),
             TokenType::NeighborKeys => todo!(),
