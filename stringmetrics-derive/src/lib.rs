@@ -2,7 +2,6 @@
 // use quote::quote;
 // use syn::{parse_macro_input, DeriveInput};
 
-
 // /// We expect something like this for usage:
 // ///
 // /// ```
@@ -10,7 +9,7 @@
 // /// #[affix_key = "MYKEY"]
 // /// #[affix_format = "bool"]
 // /// ```
-// /// 
+// ///
 // #[proc_macro_derive(AffixToken, attributes(affix_key, affix_format))]
 // pub fn affix_macro(input: TokenStream) -> TokenStream {
 //     // Parse the input tokens into a syntax tree

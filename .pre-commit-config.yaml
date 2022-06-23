@@ -22,4 +22,5 @@ repos:
         name: Cargo format
         language: system
         entry: cargo fmt
+        args: ["--"]
         types_or: ["rust"]
