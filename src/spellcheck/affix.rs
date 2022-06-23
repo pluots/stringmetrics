@@ -26,6 +26,7 @@ use super::affix_serde::load_affix_from_str;
 /// because we frequently work with individual characers.
 ///
 /// So, an actual vector of strings is Vec<Vec<&str>>
+#[derive(Debug, PartialEq)]
 pub struct Affix {
     // We want to make sure all these items are mutable so we
     // can append/edit later

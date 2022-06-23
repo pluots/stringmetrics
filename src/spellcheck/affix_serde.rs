@@ -133,6 +133,7 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken<'a>> {
 #[derive(Debug, PartialEq)]
 enum ProcessedTokenData<'a> {
     Bool(bool),
+    Int(u16),
     String(&'a str),
     Table(Vec<Vec<&'a str>>),
 }
@@ -196,8 +197,10 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
     let mut table_accum_vec = Vec::new();
 
     for token in tokens {
-        // Check accumulate logic first
+        // FileStart is just a dummy token
+        if token.ttype == TokenType::FileStart {continue;}
 
+        // Check accumulate logic first
         if table_accum_count > 0 {
             // If we ar eaccumulating, just push this token and go on to the next
             // one to our temp working vector
@@ -252,6 +255,27 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                     ttype: token.ttype,
                     data: ProcessedTokenData::Bool(true),
                 })
+            }
+            "int" => {
+                if !token.content.is_empty() {
+                    return Err(format!(
+                        "{} is a integer; nothing else allowed on the line",
+                        token.ttype
+                    ));
+                };
+                let val = token.content[0].parse();
+                match val {
+                    Ok(v) => retvec.push(AffixProcessedToken {
+                        ttype: token.ttype,
+                        data: ProcessedTokenData::Int(v),
+                    }),
+                    Err(_) => return Err(format!(
+                        "Bad integer value at {}",
+                        token.ttype
+                    ))
+                }
+
+
             }
             // For table - figure out item count, push this token,
             "table" => {
