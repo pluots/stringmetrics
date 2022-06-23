@@ -19,7 +19,7 @@ macro_rules! parentify {
     };
     ( $parent:ident.$field:ident, $token:ident, str_replace ) => {
         match $token.data {
-            ProcessedTokenData::String(s) => $parent.$field = s,
+            ProcessedTokenData::String(s) => $parent.$field = s.to_string(),
             _ => panic!("Bad token type specified!"),
         }
     };
@@ -30,10 +30,10 @@ macro_rules! parentify {
     ( $parent:ident.$field:ident, $token:ident, str_append ) => {
         match $token.data {
             ProcessedTokenData::String(s) => {
-                let mut tmp = s.graphemes(true).collect::<Vec<&str>>();
-                tmp.sort();
-                tmp.dedup();
-                $parent.$field.append(&mut tmp)
+                let mut tmp = graph_vec!(s);
+                $parent.$field.append(&mut tmp);
+                $parent.$field.sort();
+                $parent.$field.dedup();
             }
             _ => panic!("Bad token type specified!"),
         }
@@ -276,22 +276,15 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
 fn set_parent<'a>(ax: &mut Affix, tokens: Vec<AffixProcessedToken<'a>>) -> Result<(), String> {
     for token in tokens {
         match token.ttype {
-            // TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
-            //     Ok(et) => ax.encoding = et,
-            //     Err(_) => return Err("Bad encoding type specified".to_string()),
-            // },
-            TokenType::Encoding => todo!(),
+            TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
+                Ok(et) => ax.encoding = et,
+                Err(_) => return Err("Bad encoding type specified".to_string()),
+            },
             TokenType::FlagType => todo!(),
-            TokenType::ComplexPrefixes => {
-                todo!() //parentify!(ax.complex_prefixes, token, bool)
-                // match token.data {
-                //     ProcessedTokenData::Bool(b)=>ax.complex_prefixes = b,
-                //     _ => panic!("Bad token type specified!")
-                // }
-            }
-            TokenType::Language => todo!(), //parentify!(ax.lang, token, str_replace),
-            TokenType::IgnoreChars => todo!(), //parentify!(ax.ignore_chars, token, str_append),
-            TokenType::AffixFlag => todo!(), //parentify!(ax.afx_flag_vector, token, str_append),
+            TokenType::ComplexPrefixes => parentify!(ax.complex_prefixes, token, bool),
+            TokenType::Language =>  parentify!(ax.lang, token, str_replace),
+            TokenType::IgnoreChars =>parentify!(ax.ignore_chars, token, str_append),
+            TokenType::AffixFlag => parentify!(ax.afx_flag_vector, token, str_append),
             TokenType::MorphAlias => todo!(),
             TokenType::NeighborKeys => todo!(),
             TokenType::TryCharacters => todo!(),

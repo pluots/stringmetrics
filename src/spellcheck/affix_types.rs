@@ -3,7 +3,7 @@
 
 // use std::string::ToString;
 // use strum::{EnumProperty, EnumString, VariantNames};
-use strum::{EnumString};
+use strum::EnumString;
 use strum_macros;
 
 /// All possible types found in hunspell affix files
@@ -223,7 +223,7 @@ pub enum EncodingType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use strum::{ EnumProperty, VariantNames};
+    use strum::{EnumProperty, VariantNames};
 
     // Spot check deserialization of encoding
     #[test]
@@ -252,7 +252,7 @@ mod tests {
         );
     }
 
-    // Spot check serializatino of tokens
+    // Spot check serialization of tokens
     #[test]
     fn test_token_ser() {
         assert_eq!(TokenType::IgnoreChars.to_string(), "IGNORE");
@@ -260,9 +260,9 @@ mod tests {
         println!("{:?}", TokenType::VARIANTS);
     }
 
-    // Spot check serializatino of tokens
+    // Spot check deserialization of tokens
     #[test]
     fn test_token_props() {
-        assert_eq!(TokenType::Encoding.get_str("dtype"), Some("bool"));
+        assert_eq!(TokenType::Encoding.get_str("dtype"), Some("str"));
     }
 }

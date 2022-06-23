@@ -147,7 +147,7 @@ impl Affix {
     }
 
     /// Load this affix from a string, i.e. one loaded from an affix file
-    fn load_from_str(&mut self, s: &str) {
-        load_affix_from_str(self, s);
+    fn load_from_str(&mut self, s: &str) -> Result<(), String> {
+        load_affix_from_str(self, s)
     }
 }

@@ -5,27 +5,6 @@
 use std::collections::BTreeSet;
 use crate::spellcheck::affix::{Affix}
 
-// Check 
-// trait RuleTrait {
-//     fn apply
-// }
-
-struct PrefixRule {
-
-}
-
-struct SuffixRule {
-
-}
-
-/// MAP 1
-/// MAP uü
-struct MapRule{
-
-}
-
-
-
 
 
 
@@ -62,13 +41,6 @@ impl Dictionary{
     fn load_affix_from_str(s:&str) {
         afx = Affix::new();
         afx.load_from_str(s);
-        // for line in lines {
-        //     if line.starts_with('#')      { println!("Heading") }
-        //     else if line.starts_with('>') { println!("Quotation") }
-        //     else if line.starts_with('-') { println!("Inline list") }
-        //     else if line.starts_with('`') { println!("Code") }
-        //     else                          { println!("Other")
-        // }
         }
     
 

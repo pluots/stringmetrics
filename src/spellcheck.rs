@@ -4,7 +4,11 @@
 #[macro_export]
 macro_rules! graph_vec {
     ($ex:expr) => {
-        $ex.graphemes(true).collect::<Vec<&str>>().iter().map(|s| s.to_string()).collect()
+        $ex.graphemes(true)
+            .collect::<Vec<&str>>()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
     };
 }
 
