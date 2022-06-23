@@ -24,5 +24,15 @@ for proprietary use and adaptation; that being said, I kindly suggest that if
 you come up with an improvement, you submit a pull request and help us all out
 :)
 
+### Dictionary data license
+
+The dictionaries provided in this repository for testing purposed have been
+obtained under license. These files have been sourced from here:
+[https://github.com/wooorm/dictionaries](https://github.com/wooorm/dictionaries)
+
+These dictionaries are licensed under various licenses, different from that of
+this project. Please see the applicable `.license` file withing the
+`dictionaries/` directory.
+
 **Note: this project was previously named "textdistance". Please make sure to
 update all references.**
