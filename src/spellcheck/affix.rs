@@ -5,26 +5,7 @@ use crate::graph_vec;
 use crate::spellcheck::affix_types::EncodingType;
 use unicode_segmentation::UnicodeSegmentation;
 
-// // lines that are
-// trait LineClassThing {
-//     // From a string
-//     fn from_str() -> Self;
-// }
-
-// pub struct ReplaceRule<'a> {
-//     from: &'a str,
-//     to: &'a str,
-// }
-
-// pub struct PhoneRule<'a> {
-//     from: &'a str,
-//     to: &'a str,
-// }
-// // impl ReplaceRule <'_> {
-// //     fn new<'a>(from: &'a str, to: &'a str) -> ReplaceRule<'a> {
-// //         ReplaceRule { from: from, to: to }
-// //     }
-// // }
+use super::affix_serde::load_affix_from_str;
 
 /// The main affix item
 ///
@@ -45,36 +26,36 @@ use unicode_segmentation::UnicodeSegmentation;
 /// because we frequently work with individual characers.
 ///
 /// So, an actual vector of strings is Vec<Vec<&str>>
-pub struct Affix<'a> {
+pub struct Affix {
     // We want to make sure all these items are mutable so we
     // can append/edit later
     /// Charset to use, reference to an EncodingType Currently this is unused;
     /// only UTF-8 is supported. However, the affix file must still have an
     /// accurate definition.
-    pub encoding: &'a EncodingType,
+    pub encoding: EncodingType,
 
     /// Twofold prefix skipping for e.g. right-to-left languages
     pub complex_prefixes: bool,
 
     /// Language code, currently unused. Consider this unstable as it may change
     /// to be an object reference.
-    pub lang: &'a str,
+    pub lang: String,
 
     /// List of characters to ignore
-    pub ignore_chars: Vec<&'a str>,
+    pub ignore_chars: Vec<String>,
 
     /// List of usable flag vectors. Defaults to all things after "/"" in a dict.
-    pub afx_flag_vector: Vec<&'a str>,
+    pub afx_flag_vector: Vec<String>,
 
     /// ## Suggestion-related items
     // List of e.g. "qwerty", "asdfg" that define neighbors
-    pub keys: Vec<Vec<&'a str>>,
+    pub keys: Vec<Vec<String>>,
 
     /// Suggest words that differe by 1 try character
-    pub try_characters: Vec<&'a str>,
+    pub try_characters: Vec<String>,
 
     /// Flag used to indicate words that should not be suggested
-    pub nosuggest_flag: &'a str,
+    pub nosuggest_flag: String,
 
     /// Maximum compound word suggestions
     pub compound_suggestions_max: u8,
@@ -95,7 +76,7 @@ pub struct Affix<'a> {
     pub keep_termination_dots: bool,
 
     /// Note rare (i.e. commonly misspelled) words with this flag
-    pub warn_rare_flag: &'a str,
+    pub warn_rare_flag: String,
 
     /// Whether to never suggest words with the warn flag (above)
     pub forbid_warn_words: bool,
@@ -111,19 +92,19 @@ pub struct Affix<'a> {
     pub compound_min_length: u8,
 
     /// Words with this flag may be in compounds
-    pub compound_flag: Option<&'a str>,
+    pub compound_flag: Option<String>,
 
     /// Words with this flag may start a compound
-    pub compound_begin_flag: Option<&'a str>,
+    pub compound_begin_flag: Option<String>,
 
     /// Words with this flag may end a compound
-    pub compound_end_flag: Option<&'a str>,
+    pub compound_end_flag: Option<String>,
 
     /// Words with this flag may be in the middle of a compound
-    pub compound_middle_flag: Option<&'a str>,
+    pub compound_middle_flag: Option<String>,
 
     /// Words with this flag can't be on their own, only in compounds
-    pub compound_only_flag: Option<&'a str>,
+    pub compound_only_flag: Option<String>,
     // There are lots of compound flags that haven't yet been implemented
 
     // ## Affix-related items
@@ -132,70 +113,41 @@ pub struct Affix<'a> {
     // affix_rules: Vec<>
 }
 
-// impl Affix<'_> {
-//     /// Create an empty affix object
-//     fn new() -> Affix<'static> {
-//         Affix {
-//             encoding: &EncodingType::Utf8,
-//             complex_prefixes: false,
-//             ignore_chars: Vec::new(),
-//             afx_flag_vector: Vec::new(),
-//             keys: vec![
-//                 graph_vec!("qwertyuiop"),
-//                 graph_vec!("asdfghjkl"),
-//                 graph_vec!("zxcvbnm"),
-//             ],
-//             try_characters: graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"),
-//             nosuggest_flag: "!",
-//             compound_suggestions_max: 2,
-//             ngram_suggestions_max: 2,
-//             ngram_diff_max: 5,
-//             ngram_limit_to_diff_max: true,
-//             keep_termination_dots: false,
-//             no_split_suggestions: false,
-//             warn_rare_flag: "",
-//             forbid_warn_words: false,
-//             replacements: Vec::new(),
-//             lang: "",
-//             compound_min_length: 3,
-//             compound_flag: None,
-//             compound_begin_flag: None,
-//             compound_end_flag: None,
-//             compound_middle_flag: None,
-//             compound_only_flag: None,
-//         }
-//     }
+impl Affix {
+    /// Create an empty affix object
+    fn new() -> Affix {
+        Affix {
+            encoding: EncodingType::Utf8,
+            complex_prefixes: false,
+            lang: String::new(),
+            ignore_chars: Vec::new(),
+            afx_flag_vector: Vec::new(),
+            keys: vec![
+                graph_vec!("qwertyuiop"),
+                graph_vec!("asdfghjkl"),
+                graph_vec!("zxcvbnm"),
+            ],
+            try_characters: graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"),
+            nosuggest_flag: String::from("!"),
+            compound_suggestions_max: 2,
+            ngram_suggestions_max: 2,
+            ngram_diff_max: 5,
+            ngram_limit_to_diff_max: false,
+            no_split_suggestions: false,
+            keep_termination_dots: false,
+            warn_rare_flag: String::new(),
+            forbid_warn_words: false,
+            compound_min_length: 3,
+            compound_flag: None,
+            compound_begin_flag: None,
+            compound_end_flag: None,
+            compound_middle_flag: None,
+            compound_only_flag: None,
+        }
+    }
 
-//     fn load_from_str(&mut self, s: &str) {
-//         let mut working_token = String::new();
-// // Whether we are operating as normal or in a comment
-// let mut accumulating = true;
-
-//         for c in s.chars() {
-//             // Stop accoumulating on comment until we hit a newline
-//             if c == '#' {
-//                 accumulating = false;
-//                 continue;
-//             }
-//             if !accumulating && c == '\n' {
-//                 accumulating = true;
-//             } else if !accumulating {
-//                 continue;
-//             }
-//             // If table_consumes,
-
-//             working_token.push(c);
-//             // if current_token
-//         }
-//     }
-
-//     // /// Accept a list of keys
-//     // fn load_keys_list<T:IntoIterator<Item=str>>(&mut self, keys: T) ->Result<(), &str>{
-
-//     // }
-
-//     // fn load_keys_aff(&mut self, line: &str) ->Result<(), &str>{
-
-//     //     self.load_keys_list()
-//     // }
-// }
+    /// Load this affix from a string, i.e. one loaded from an affix file
+    fn load_from_str(&mut self, s: &str) {
+        load_affix_from_str(self, s);
+    }
+}

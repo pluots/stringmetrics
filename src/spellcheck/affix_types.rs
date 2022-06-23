@@ -2,9 +2,9 @@
 // use super::affix_serde::{ENCODING_CLASS_LIST, TOKEN_CLASS_LIST};
 
 // use std::string::ToString;
-use strum::{EnumProperty, EnumString, VariantNames};
+// use strum::{EnumProperty, EnumString, VariantNames};
+use strum::{EnumString};
 use strum_macros;
-
 
 /// All possible types found in hunspell affix files
 /// This represents a generic token type that will have associated
@@ -223,6 +223,7 @@ pub enum EncodingType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use strum::{ EnumProperty, VariantNames};
 
     // Spot check deserialization of encoding
     #[test]

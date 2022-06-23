@@ -1,3 +1,8 @@
+//! Affix Ser/Des module
+//!
+//! This module handles loading in an affix file to an [`Affix`] object. Usually
+//! it is not accessed directly.
+
 use super::affix::Affix;
 use super::affix_types::{EncodingType, TokenType};
 use strum::{EnumProperty, VariantNames};
@@ -17,7 +22,7 @@ macro_rules! parentify {
             ProcessedTokenData::String(s) => $parent.$field = s,
             _ => panic!("Bad token type specified!"),
         }
-    }; 
+    };
 
     // Use str_add any time we have a `String` that we want to append to.
     // Basically the same as above except we append to the existing vector and
@@ -26,11 +31,10 @@ macro_rules! parentify {
         match $token.data {
             ProcessedTokenData::String(s) => {
                 let mut tmp = s.graphemes(true).collect::<Vec<&str>>();
-                    tmp.sort();
-                    tmp.dedup();
+                tmp.sort();
+                tmp.dedup();
                 $parent.$field.append(&mut tmp)
-
-            },
+            }
             _ => panic!("Bad token type specified!"),
         }
     };
@@ -46,11 +50,14 @@ macro_rules! t_data_unwrap {
     };
 }
 
-/// Populate an Affix class from the string version of a file
+/// Populate an Affix class from the string version of a file.
+/// This is the main function exported from this module.
+/// `ax` is the [`Affix`] object to load, `s` is the file raw string to load in
 pub fn load_affix_from_str<'a>(ax: &mut Affix, s: &str) -> Result<(), String> {
     // This will give us a list of tokens with no processing applied
     let raw_stripped = strip_comments(s);
-    let raw_tokens = create_raw_tokens(raw_stripped.as_str());
+    let raw_str = raw_stripped.as_str();
+    let raw_tokens = create_raw_tokens(raw_str);
     match create_processed_tokens(raw_tokens) {
         Ok(tokens) => set_parent(ax, tokens),
         Err(e) => Err(e),
@@ -99,7 +106,7 @@ impl AffixRawToken<'_> {
 /// anything to analyze them
 ///
 /// Note: this strips prefixes
-fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
+fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken<'a>> {
     // Temporarially hold the "next vector" rather than working one, blank until
     // needed
     let mut working_vec: Vec<&'a str> = Vec::new();
@@ -110,12 +117,13 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken> {
     // Each token is a "word", split by UTF-8 boundaries
     for word in s.split_whitespace() {
         if TokenType::VARIANTS.contains(&word) {
-            // Push this token and start a new one
+            // Push this token...
             ret.push(AffixRawToken::new(working_type, working_vec));
+            // ...And start a new one
             working_vec = Vec::new();
             working_type = TokenType::try_from(word).unwrap();
         } else {
-            // Not a delimiting key; just add this to our current token
+            // Not at a delimiting key; just add this to our current token
             working_vec.push(word);
         }
     }
@@ -229,8 +237,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                     return Err(format!(
                         "{} is a sting; only one value allowed on line",
                         token.ttype
-                    )
-);
+                    ));
                 };
                 retvec.push(AffixProcessedToken {
                     ttype: token.ttype,
@@ -242,8 +249,7 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
                     return Err(format!(
                         "{} is a boolean; nothing else allowed on line",
                         token.ttype
-                    )
-);
+                    ));
                 };
                 retvec.push(AffixProcessedToken {
                     ttype: token.ttype,
@@ -267,24 +273,25 @@ fn create_processed_tokens(tokens: Vec<AffixRawToken>) -> Result<Vec<AffixProces
 }
 
 // Actually go through and set the parent here
-fn set_parent<'a>(ax: &mut Affix<'a>, tokens: Vec<AffixProcessedToken>) -> Result<(), String> {
+fn set_parent<'a>(ax: &mut Affix, tokens: Vec<AffixProcessedToken<'a>>) -> Result<(), String> {
     for token in tokens {
         match token.ttype {
-            TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
-                Ok(et) => ax.encoding = &et,
-                Err(e) => return Err("Bad encoding type specified".to_string()),
-            },
+            // TokenType::Encoding => match EncodingType::try_from(t_data_unwrap!(token, String)) {
+            //     Ok(et) => ax.encoding = et,
+            //     Err(_) => return Err("Bad encoding type specified".to_string()),
+            // },
+            TokenType::Encoding => todo!(),
             TokenType::FlagType => todo!(),
             TokenType::ComplexPrefixes => {
-                parentify!(ax.complex_prefixes, token,bool)
+                todo!() //parentify!(ax.complex_prefixes, token, bool)
                 // match token.data {
                 //     ProcessedTokenData::Bool(b)=>ax.complex_prefixes = b,
                 //     _ => panic!("Bad token type specified!")
                 // }
             }
-            TokenType::Language => parentify!(ax.lang,token, str_replace),
-            TokenType::IgnoreChars => parentify!(ax.ignore_chars,token, str_append),
-            TokenType::AffixFlag => parentify!(ax.afx_flag_vector,token, str_append),
+            TokenType::Language => todo!(), //parentify!(ax.lang, token, str_replace),
+            TokenType::IgnoreChars => todo!(), //parentify!(ax.ignore_chars, token, str_append),
+            TokenType::AffixFlag => todo!(), //parentify!(ax.afx_flag_vector, token, str_append),
             TokenType::MorphAlias => todo!(),
             TokenType::NeighborKeys => todo!(),
             TokenType::TryCharacters => todo!(),
@@ -417,7 +424,7 @@ mod tests {
         }]);
         assert_eq!(create_processed_tokens(vec![t1]), res1);
 
-        // Test table
+        // Test table creations
         let t20 = AffixRawToken {
             ttype: TokenType::Prefix,
             content: vec!["V", "N", "2"],
@@ -451,7 +458,6 @@ mod tests {
 // use super::affix_types::{EncodingType, TokenType};
 // use super::affix::Affix;
 // use lazy_static::lazy_static;
-
 
 // /// Macro that creates a closure based on the relevant type, used for
 // /// TokenClass::set_parent
