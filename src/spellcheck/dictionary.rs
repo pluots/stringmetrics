@@ -3,7 +3,7 @@
 //! http://pwet.fr/man/linux/fichiers_speciaux/hunspell/
 
 use crate::spellcheck::affix::Affix;
-use std::collections::BTreeSet;
+use std::collections::HashSet;
 
 // An entry has a base string and many rules
 struct Entry {
@@ -14,13 +14,16 @@ struct Entry {
 /// try_chars: allowed to suggest words that replace these chars
 /// nosuggest_flag:
 struct Dictionary {
-    entries: BTreeSet<Entry>,
+    entries: HashSet<Entry>,
+    affix: &Affix,
     rules: vec<Rule>,
     try_chars: str, // from TRY
     nosuggest_flag: str,
 }
 
 impl Dictionary {
+    pub fn new() -> Dictionary {}
+
     // Match rules to the relevant entries
     fn match_rules() {}
 
@@ -31,8 +34,8 @@ impl Dictionary {
     /// Ok(io::BufReader::new(file).lines())
     ///
     /// Can also be done with strings
-    fn load_affix_from_str(s: &str) {
-        afx = Affix::new();
+    fn load_affix_from_str(&self, s: &str) {
+        let afx = Affix::new();
         afx.load_from_str(s);
     }
 
@@ -44,6 +47,8 @@ impl Dictionary {
         for line in lines {}
     }
 
+    fn check(&self) {}
+
     /// Match affixes, personal dict, etc
-    fn prepare() {}
+    fn compile(&self) {}
 }

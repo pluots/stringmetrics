@@ -220,6 +220,39 @@ pub enum EncodingType {
     IsciiDevanagari, // ISCII-DEVANAGARI
 }
 
+/// ICONV and OCONV representations
+/// Takes an input character (grapheme) or sequence, convert it before checking
+#[derive(Debug, PartialEq)]
+pub struct Conversion {
+    input: String,
+    output: String,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum AffixRuleType {
+    Prefix,
+    Suffix,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AffixRuleDef {
+    stripping_chars: Option<String>,
+    affix: String,
+    condition: String,
+    morph_info: Vec<String>, // Eventually may need its own type
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AffixRule {
+    atype: AffixRuleType,
+    /// Character identifier for this specific affix
+    ident: String,
+    // Whether or not this can be combined with others
+    combine_pfx_sfx: bool,
+
+    rules: Vec<AffixRuleDef>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
