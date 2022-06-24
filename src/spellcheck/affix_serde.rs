@@ -138,15 +138,16 @@ fn create_raw_tokens<'a>(s: &'a str) -> Vec<AffixRawToken<'a>> {
 }
 
 #[derive(Debug, PartialEq)]
-enum ProcessedTokenData<'a> {
+pub enum ProcessedTokenData<'a> {
     Bool(bool),
     Int(u16),
     String(&'a str),
+    // Splits each line by whitespace, then again by lines
     Table(Vec<Vec<&'a str>>),
 }
 
 #[derive(Debug, PartialEq)]
-struct AffixProcessedToken<'a> {
+pub struct AffixProcessedToken<'a> {
     pub ttype: TokenType,
     pub data: ProcessedTokenData<'a>,
 }

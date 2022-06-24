@@ -2,7 +2,7 @@
 
 // use super::affix_types::*;
 use crate::graph_vec;
-use crate::spellcheck::affix_types::{Conversion, EncodingType};
+use crate::spellcheck::affix_types::{AffixRule, Conversion, EncodingType};
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::affix_serde::load_affix_from_str;
@@ -110,8 +110,9 @@ pub struct Affix {
 
     // ## Affix-related items
     pub input_conversions: Vec<Conversion>,
+
     // Rules for setting prefixes and suffixes
-    // affix_rules: Vec<>
+    pub affix_rules: Vec<AffixRule>,
 }
 
 impl Affix {
@@ -145,6 +146,7 @@ impl Affix {
             compound_middle_flag: None,
             compound_only_flag: None,
             input_conversions: Vec::new(),
+            affix_rules: Vec::new(),
         }
     }
 

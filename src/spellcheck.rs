@@ -12,9 +12,11 @@ macro_rules! graph_vec {
     };
 }
 
-pub mod affix;
 mod affix_serde;
-pub mod dictionary;
-// mod affix_tokens;
 mod affix_types;
-// pub mod dictionary;
+
+pub mod affix;
+pub mod dictionary;
+
+pub use affix::Affix;
+pub use dictionary::Dictionary;

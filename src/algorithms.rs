@@ -26,5 +26,6 @@ pub use self::modbasic::hamming;
 // pub use self::damerau::damerau_levenshtein;
 pub use self::modjaccard::{jaccard, jaccard_set};
 pub use self::modlevenshtein::{
-    levenshtein, levenshtein_limit, levenshtein_limit_weight, levenshtein_weight,
+    levenshtein, levenshtein_limit, levenshtein_limit_weight, levenshtein_limit_weight_iter,
+    levenshtein_weight,
 };

@@ -105,19 +105,97 @@
 
 use std::cmp::{max, min};
 
+use unicode_segmentation::UnicodeSegmentation;
+
+/// Basic Levenshtein distance computation
+///
+/// This runs the levenshtein distance algorithm on all strings with all costs
+/// equal to 1 and with no limits, which is suitable for cases where an exact
+/// distance is needed. Use cases are usually those where the strings are known
+/// to not be "very different" (e.g., strings have similar lengths). In most
+/// cases it is better to use [`levenshtein_limit`] to avoid unnecessary
+/// computation.
+///
+/// Behind the scenes, this wraps [`levenshtein_limit_weight`]. For details on
+/// operation, see the [algorithms](crate::algorithms) page.
+///
+/// # Example
+///
+/// ```
+/// use stringmetrics::algorithms::levenshtein;
+/// let a = "this is a book";
+/// let b = "i am a cook";
+/// assert_eq!(levenshtein(a, b), 6);
+/// ```
+///
+/// Note that sometimes the levenshtein distance is defined as having a default
+/// weight of 2 for substitutions. That isn't the case for this implementation -
+/// if you need that functionality, please use [`levenshtein_weight`].
+#[inline]
+pub fn levenshtein(a: &str, b: &str) -> u32 {
+    levenshtein_limit_weight(a, b, u32::MAX, 1, 1, 1)
+}
+
+/// Levenshtein distance computation with a limit
+///
+/// This will limitate the levshtein distance up to a given maximum value. The
+/// usual reason for wanting to do this is to avoid unnecessary computation when
+/// a match between two strings can quickly be pruned as "different".
+///
+/// Behind the scenes, this wraps [`levenshtein_limit_weight`].
+///
+/// # Example
+///
+/// ```
+/// use stringmetrics::algorithms::levenshtein_limit;
+/// let a = "abcdefg";
+/// let b = "mmmmmmm";
+/// assert_eq!(levenshtein_limit(a, b, 3), 3);
+/// ```
+///
+#[inline]
+pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
+    levenshtein_limit_weight(a, b, limit, 1, 1, 1)
+}
+
+/// Levenshtein distance computation with weights
+///
+/// Allows setting costs for inserts, deletes and substitutions. See
+/// [algorithms](crate::algorithms) for details on weight computation.
+///
+/// Behind the scenes, this wraps [`levenshtein_limit_weight`].
+///
+/// # Example
+///
+/// In this example, an insertion weight of 4, deletion weight of 3, and
+/// substitution weight of 2 are used.
+///
+/// ```
+/// use stringmetrics::algorithms::levenshtein_weight;
+/// assert_eq!(levenshtein_weight("kitten", "sitting", 4, 3, 2), 8);
+/// ```
+#[inline]
+pub fn levenshtein_weight(a: &str, b: &str, w_ins: u32, w_del: u32, w_sub: u32) -> u32 {
+    levenshtein_limit_weight(a, b, u32::MAX, w_ins, w_del, w_sub)
+}
+
 /// Levenshtein distance computations with adjustable weights and a limit
 ///
 /// This function implements calculation of the [levenshtein
 /// distance](https://en.wikipedia.org/wiki/Levenshtein_distance) between two
 /// strings, with specified costs for insertion, deletion, and substitution, and
-/// a limit. The other functions in this module simply wrap it, and it's
-/// generally easier to use any of those (e.g. [`levenshtein_limit`]) unless you
-/// need all the functionality that this has to offer.
+/// a limit. The other non-iterator functions in this module simply wrap it, and
+/// it's generally easier to use any of those (e.g. [`levenshtein_limit`])
+/// unless you need all the functionality that this has to offer.
 ///
-/// Note that this algorithm does not apply any sort of per-character weights,
-/// as some may allow for. Instead, it assumes that all substitutions have a
-/// cost of 0 if the characters are equal, and the specified weight if the
-/// characters are not equal.
+/// This function accepts two strings, which are then split on `.graphemes`
+/// rather than `.chars`. This ensures that multibyte UTF sequences come with
+/// the expected results.
+///
+/// Note that this algorithm does not (yet) apply any sort of per-character
+/// weights, as some implementations may allow for. Instead, it assumes that all
+/// substitutions have a cost of 0 if the characters are equal, and the
+/// specified weight if the characters are not equal.
 ///
 /// See [algorithms](crate::algorithms) for a detailed description of the
 /// algorithm in use.
@@ -149,8 +227,58 @@ pub fn levenshtein_limit_weight(
     w_del: u32,
     w_sub: u32,
 ) -> u32 {
-    let a_len = a.len() as u32;
-    let b_len = b.len() as u32;
+    levenshtein_limit_weight_iter(
+        a.graphemes(true),
+        b.graphemes(true),
+        limit,
+        w_ins,
+        w_del,
+        w_sub,
+    )
+}
+/// Levenshthein distance computation on anything iterable that implementes
+/// [`PartialEq`].
+///
+/// This can be used when Levenshthein distance is applicable to something other
+/// than strings, or when you wish to iterate on characters rather than
+/// graphemes (which is a somewhat rare case).
+///
+/// # Examples
+///
+/// An example for the above function, using a 4-byte character and splitting by
+/// graphemes:
+///
+/// ```
+/// use stringmetrics::algorithms::levenshtein_limit_weight;
+/// assert_eq!(levenshtein_limit_weight("🏴‍☠️", "A", 100, 1, 1, 1), 1);
+/// ```
+///
+/// Using the below function to split on byte ("char") boundaries instead:
+///
+/// ```
+/// use stringmetrics::algorithms::levenshtein_limit_weight_iter;
+/// let iter1 = "🏴‍☠️".chars();   // ['🏴', '\u{200d}', '☠', '\u{fe0f}']
+/// let iter2 = "A".chars();    // ['A']
+/// assert_eq!(levenshtein_limit_weight_iter(iter1, iter2, 100, 1, 1, 1), 1);
+/// ```
+pub fn levenshtein_limit_weight_iter<T, I>(
+    a: T,
+    b: T,
+    limit: u32,
+    w_ins: u32,
+    w_del: u32,
+    w_sub: u32,
+) -> u32
+where
+    T: IntoIterator<Item = I>,
+    I: PartialEq,
+{
+    // Need to collect to vectors first so we get a finite length
+    let a_vec: Vec<I> = a.into_iter().collect();
+    let b_vec: Vec<I> = b.into_iter().collect();
+
+    let a_len = a_vec.len() as u32;
+    let b_len = b_vec.len() as u32;
 
     // Start with some shortcut solution optimizations
     if a_len == 0 {
@@ -180,13 +308,13 @@ pub fn levenshtein_limit_weight(
     // i holds our "vertical" position, j our "horizontal". We fill the table
     // top to bottom. Note there is actually an offset of 1 from i to the "true"
     // array position (since we start one row down).
-    for (i, a_char) in a.chars().enumerate() {
+    for (i, a_item) in a_vec.iter().enumerate() {
         v_curr[0] = ((i + 1) * w_del as usize) as u32;
         // Fill out the rest of the row
-        for (j, b_char) in b.chars().enumerate() {
+        for (j, b_item) in b_vec.iter().enumerate() {
             ins_cost = v_curr[j] + w_ins;
             del_cost = v_prev[j + 1] + w_del;
-            sub_cost = match a_char == b_char {
+            sub_cost = match a_item == b_item {
                 true => v_prev[j],
                 false => v_prev[j] + w_sub,
             };
@@ -206,78 +334,6 @@ pub fn levenshtein_limit_weight(
     }
 
     current_max
-}
-
-/// Levenshtein distance computation with weights
-///
-/// Allows setting costs for inserts, deletes and substitutions. See
-/// [algorithms](crate::algorithms) for details on weight computation.
-///
-/// Behind the scenes, this wraps [`levenshtein_limit_weight`].
-///
-/// # Example
-///
-/// In this example, an insertion weight of 4, deletion weight of 3, and
-/// substitution weight of 2 are used.
-///
-/// ```
-/// use stringmetrics::algorithms::levenshtein_weight;
-/// assert_eq!(levenshtein_weight("kitten", "sitting", 4, 3, 2), 8);
-/// ```
-#[inline]
-pub fn levenshtein_weight(a: &str, b: &str, w_ins: u32, w_del: u32, w_sub: u32) -> u32 {
-    levenshtein_limit_weight(a, b, u32::MAX, w_ins, w_del, w_sub)
-}
-
-/// Levenshtein distance computation with a limit
-///
-/// This will limitate the levshtein distance up to a given maximum value. The
-/// usual reason for wanting to do this is to avoid unnecessary computation when
-/// a match between two strings can quickly be pruned as "different".
-///
-/// Behind the scenes, this wraps [`levenshtein_limit_weight`].
-///
-/// # Example
-///
-/// ```
-/// use stringmetrics::algorithms::levenshtein_limit;
-/// let a = "abcdefg";
-/// let b = "mmmmmmm";
-/// assert_eq!(levenshtein_limit(a, b, 3), 3);
-/// ```
-///
-#[inline]
-pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
-    levenshtein_limit_weight(a, b, limit, 1, 1, 1)
-}
-
-/// Basic Levenshtein distance computation
-///
-/// This runs the levenshtein distance algorithm on all strings with all costs
-/// equal to 1 and with no limits, which is suitable for cases where an exact
-/// distance is needed. Use cases are usually those where the strings are known
-/// to not be "very different" (e.g., strings have similar lengths). In many
-/// cases it is better to use [`levenshtein_limit`] to avoid unnecessary
-/// computation.
-///
-/// Behind the scenes, this wraps [`levenshtein_limit_weight`]. For details on
-/// operation, see the [algorithms](crate::algorithms) page.
-///
-/// # Example
-///
-/// ```
-/// use stringmetrics::algorithms::levenshtein;
-/// let a = "this is a book";
-/// let b = "i am a cook";
-/// assert_eq!(levenshtein(a, b), 6);
-/// ```
-///
-/// Note that sometimes the levenshtein distance is defined as having a default
-/// weight of 2 for substitutions. That isn't the case for this implementation -
-/// if you need that functionality, please use [`levenshtein_weight`].
-#[inline]
-pub fn levenshtein(a: &str, b: &str) -> u32 {
-    levenshtein_limit_weight(a, b, u32::MAX, 1, 1, 1)
 }
 
 #[cfg(test)]

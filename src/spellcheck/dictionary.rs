@@ -5,50 +5,67 @@
 use crate::spellcheck::affix::Affix;
 use std::collections::HashSet;
 
-// An entry has a base string and many rules
-struct Entry {
-    base: String,
-}
-
 /// A dict has many entries, plus methods
 /// try_chars: allowed to suggest words that replace these chars
 /// nosuggest_flag:
-struct Dictionary {
-    entries: HashSet<Entry>,
-    affix: &Affix,
-    rules: vec<Rule>,
-    try_chars: str, // from TRY
-    nosuggest_flag: str,
+pub struct Dictionary {
+    // General word list
+    wordlist: HashSet<String>,
+    // Words to accept but never suggest
+    wordlist_nosuggest: HashSet<String>,
+    // Words forbidden by the personal dictionary
+    wordlist_forbidden: HashSet<String>,
+    pub affix: Affix,
+
+    // These hold the files as loaded
+    // Will be emptied upon compile
+    raw_wordlist: Vec<String>,
+    raw_wordlist_personal: Vec<String>,
 }
 
 impl Dictionary {
-    pub fn new() -> Dictionary {}
+    pub fn new() -> Dictionary {
+        Dictionary {
+            wordlist: HashSet::new(),
+            wordlist_nosuggest: HashSet::new(),
+            wordlist_forbidden: HashSet::new(),
+            affix: Affix::new(),
+            raw_wordlist: Vec::new(),
+            raw_wordlist_personal: Vec::new(),
+        }
+    }
 
-    // Match rules to the relevant entries
-    fn match_rules() {}
-
-    /// Read the dict in from an iterator
-    /// Usually with something like
-    ///
-    /// let file = File::open(filename)?;
-    /// Ok(io::BufReader::new(file).lines())
-    ///
     /// Can also be done with strings
-    fn load_affix_from_str(&self, s: &str) {
-        let afx = Affix::new();
-        afx.load_from_str(s);
+    pub fn load_affix_from_str(&mut self, s: &str) -> Result<(), String> {
+        self.affix.load_from_str(s)
     }
 
-    /// Note: make sure
-    fn load_dictionary<T: IntoIterator<Item = &str>>(lines: T) {
-        for line in lines {}
+    pub fn load_dictionar_from_str(&mut self, s: &str) {
+        self.raw_wordlist = s.lines().map(|l| l.to_string()).collect()
     }
-    fn load_personal_dict<T: IntoIterator<Item = &str>>(lines: T) {
-        for line in lines {}
+    pub fn load_personal_dict_from_str(&mut self, s: &str) {
+        self.raw_wordlist_personal = s.lines().map(|l| l.to_string()).collect()
     }
-
-    fn check(&self) {}
 
     /// Match affixes, personal dict, etc
-    fn compile(&self) {}
+    pub fn compile(&mut self) {
+        // for word in self.raw_wordlist_personal.iter() {
+        //     let split:Vec<&str> = word.split('/').collect();
+        //     let forbidden = word.starts_with('*');
+
+        //     match split.get(1) {
+        //         Some(sfx) => {
+
+        //         },
+        //         None => ()
+        //     }
+
+        // }
+
+        for word in self.raw_wordlist.iter() {
+            let split: Vec<&str> = word.split('/').collect();
+        }
+    }
+
+    pub fn check(&self) {}
 }

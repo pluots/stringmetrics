@@ -3,6 +3,7 @@
 
 // use std::string::ToString;
 // use strum::{EnumProperty, EnumString, VariantNames};
+use super::affix_serde::{AffixProcessedToken, ProcessedTokenData};
 use strum::EnumString;
 use strum_macros;
 
@@ -251,6 +252,62 @@ pub struct AffixRule {
     combine_pfx_sfx: bool,
 
     rules: Vec<AffixRuleDef>,
+}
+
+impl AffixRule {
+    fn from_processed_token(pt: AffixProcessedToken) -> Result<AffixRule, String> {
+        let tab = match pt.data {
+            ProcessedTokenData::Table(t) => t,
+            _ => panic!(),
+        };
+
+        let iter = tab.iter();
+        let start = iter.next().unwrap();
+
+        let ruledefs = Vec::new();
+
+        for rule in iter {
+            ruledefs.push(AffixRuleDef {
+                stripping_chars: match rule.get(1) {
+                    Some(v) => match *v {
+                        "0" => None,
+                        _ => Some(v.to_string()),
+                    },
+                    None => return Err("Bad stripping characters".to_string()),
+                },
+                affix: match rule.get(2) {
+                    Some(v) => v.to_string(),
+                    None => return Err("Bad affix given".to_string()),
+                },
+                condition: match rule.get(3) {
+                    Some(v) => v.to_string(),
+                    None => return Err("Bad condition given".to_string()),
+                },
+                morph_info: rule.as_slice()[4..],
+            })
+        }
+
+        Ok(AffixRule {
+            atype: match pt.ttype {
+                TokenType::Prefix => AffixRuleType::Prefix,
+                TokenType::Suffix => AffixRuleType::Suffix,
+                _ => panic!(),
+            },
+            ident: match start.get(0) {
+                Some(v) => v.to_string(),
+                None => return Err("No identifier found".to_string()),
+            },
+            combine_pfx_sfx: match start.get(1) {
+                Some(v) => match *v {
+                    "Y" => true,
+                    "N" => false,
+                    _ => return Err("Bad cross product info".to_string()),
+                },
+                None => return Err("No cross product info found".to_string()),
+            },
+            rules: ruledefs,
+        })
+    }
 }
 
 #[cfg(test)]

@@ -2,7 +2,7 @@ use std::collections::{BTreeSet, HashSet};
 use std::fs;
 use std::fs::File;
 use std::io::{self, BufRead};
-use stringmetrics::spellcheck::affix::Affix;
+use stringmetrics::spellcheck::Affix;
 use stringmetrics::spellcheck::Dictionary;
 
 #[test]
