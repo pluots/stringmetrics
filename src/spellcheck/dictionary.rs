@@ -3,6 +3,7 @@
 //! http://pwet.fr/man/linux/fichiers_speciaux/hunspell/
 
 use crate::spellcheck::affix::Affix;
+use core::hash::Hash;
 use std::collections::HashSet;
 
 /// A dict has many entries, plus methods
@@ -79,6 +80,19 @@ impl Dictionary {
 
         for word in self.raw_wordlist.iter() {
             let split: Vec<&str> = word.split('/').collect();
+            let rootword = split[0];
+            match split.get(1) {
+                Some(rule_keys) => {
+                    let wordlist = self.affix.create_affixed_words(rootword, rule_keys);
+                    match rule_keys.contains(&self.affix.nosuggest_flag) {
+                        true => iter_to_hashset(wordlist, &mut self.wordlist_nosuggest),
+                        false => iter_to_hashset(wordlist, &mut self.wordlist),
+                    }
+                }
+                None => {
+                    self.wordlist.insert(rootword.to_string());
+                }
+            }
         }
 
         Ok(())
@@ -93,4 +107,14 @@ fn generate_wordlist_from_afx(rootword: &str, tokens: &str, affix: &Affix) -> Ve
         if tokens.contains(&rule.ident) {}
     }
     Vec::new()
+}
+
+fn iter_to_hashset<I, T>(items: I, hs: &mut HashSet<T>)
+where
+    I: IntoIterator<Item = T>,
+    T: Eq + Hash,
+{
+    for item in items {
+        hs.insert(item);
+    }
 }
