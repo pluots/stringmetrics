@@ -6,6 +6,7 @@ use crate::spellcheck::affix_types::{AffixRule, Conversion, EncodingType};
 use unicode_segmentation::UnicodeSegmentation;
 
 use super::affix_serde::load_affix_from_str;
+use super::affix_types::AffixRuleType;
 
 /// The main affix item
 ///
@@ -113,6 +114,9 @@ pub struct Affix {
 
     // Rules for setting prefixes and suffixes
     pub affix_rules: Vec<AffixRule>,
+
+    // Rules for suggestion replacements to try
+    pub replacements: Vec<Conversion>,
 }
 
 impl Affix {
@@ -147,12 +151,60 @@ impl Affix {
             compound_only_flag: None,
             input_conversions: Vec::new(),
             affix_rules: Vec::new(),
+            replacements: Vec::new(),
         }
     }
 
     /// Load this affix from a string, i.e. one loaded from an affix file
     pub fn load_from_str(&mut self, s: &str) -> Result<(), String> {
         load_affix_from_str(self, s)
+    }
+
+    /// Create a vector of roods from a single root word by applying rules in
+    /// this affix
+    ///
+    /// May contain duplicates
+    pub fn create_affixed_words(&self, rootword: &str, keys: &str) -> Vec<String> {
+        let mut ret = vec![rootword.to_string()];
+        // We will build applicable words here to help for the cross-fixable
+        // rules
+        let mut prefixed_words: Vec<String> = Vec::new();
+
+        let idents: Vec<String> = graph_vec!(keys.to_uppercase());
+
+        // Loop through rules where the identifiers are correct
+        // Then apply them
+        self.affix_rules
+            .iter()
+            .filter(|ar| idents.contains(&ar.ident))
+            .for_each(|rule| match rule.apply(rootword) {
+                Some(newword) => {
+                    if rule.combine_pfx_sfx && &rule.atype == &AffixRuleType::Prefix {
+                        prefixed_words.push(newword.clone())
+                    }
+                    ret.push(newword);
+                }
+                None => (),
+            });
+
+        // Redo the same thing for rules that allow chaining
+        self.affix_rules
+            .iter()
+            .filter(|ar| {
+                ar.combine_pfx_sfx
+                    && idents.contains(&ar.ident)
+                    && &ar.atype == &AffixRuleType::Suffix
+            })
+            .for_each(|rule| {
+                for pfxword in &prefixed_words {
+                    match rule.apply(pfxword) {
+                        Some(newword) => ret.push(newword),
+                        None => (),
+                    }
+                }
+            });
+
+        ret
     }
 }
 

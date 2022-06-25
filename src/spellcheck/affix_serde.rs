@@ -4,7 +4,7 @@
 //! it is not accessed directly.
 
 use super::affix::Affix;
-use super::affix_types::{AffixRule, EncodingType, TokenType};
+use super::affix_types::{AffixRule, Conversion, EncodingType, TokenType};
 use strum::{EnumProperty, VariantNames};
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -323,7 +323,9 @@ fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), St
             TokenType::NGramLimitToDiffMax => todo!(),
             TokenType::NoSpaceSubs => todo!(),
             TokenType::KeepTerminationDots => todo!(),
-            TokenType::Replacement => todo!(),
+            TokenType::Replacement => {
+                ax.replacements = Conversion::from_table(t_data_unwrap!(token, Table), false)?
+            }
             TokenType::Mapping => todo!(),
             TokenType::Phonetic => todo!(),
             TokenType::WarnRareFlag => todo!(),

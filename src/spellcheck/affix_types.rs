@@ -221,12 +221,37 @@ pub enum EncodingType {
     IsciiDevanagari, // ISCII-DEVANAGARI
 }
 
-/// ICONV and OCONV representations
-/// Takes an input character (grapheme) or sequence, convert it before checking
+/// REP, ICONV and OCONV representations
+/// Simple input to output mapping
 #[derive(Debug, PartialEq)]
 pub struct Conversion {
     input: String,
     output: String,
+    bidirectional: bool,
+}
+
+impl Conversion {
+    pub fn from_table(
+        table: Vec<Vec<&str>>,
+        bidirectional: bool,
+    ) -> Result<Vec<Conversion>, String> {
+        let mut ret = Vec::new();
+
+        for row in table {
+            ret.push(Conversion {
+                input: match row.get(0) {
+                    Some(v) => v.to_string(),
+                    None => return Err("No conversion input found".to_string()),
+                },
+                output: match row.get(1) {
+                    Some(v) => v.to_string(),
+                    None => return Err("No conversion output found".to_string()),
+                },
+                bidirectional,
+            })
+        }
+        Ok(ret)
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -317,11 +342,12 @@ impl AffixRuleDef {
 /// A prefix or suffix rule
 #[derive(Debug, PartialEq)]
 pub struct AffixRule {
-    atype: AffixRuleType,
     /// Character identifier for this specific affix
     pub ident: String,
+    /// Prefix or suffix
+    pub atype: AffixRuleType,
     // Whether or not this can be combined with others
-    combine_pfx_sfx: bool,
+    pub combine_pfx_sfx: bool,
 
     rules: Vec<AffixRuleDef>,
 }
@@ -383,24 +409,15 @@ impl AffixRule {
 
     /// Apply this rule to a root string
     /// Do not pay attention to prf/sfx combinations, that must be done earlier
-    pub fn apply(&self, rootword: &str) -> Vec<String> {
-        // let ret = Vec::new();
-        match self.atype {
-            AffixRuleType::Prefix => {
-                for rule in &self.rules {
-                    let mut working = rootword.to_string();
-                    working = match &rule.stripping_chars {
-                        Some(strip) => match working.strip_prefix(strip) {
-                            Some(stripped) => stripped.to_string(),
-                            None => working,
-                        },
-                        None => working,
-                    }
-                }
+    pub fn apply(&self, rootword: &str) -> Option<String> {
+        for rule in &self.rules {
+            match rule.apply_pattern(rootword, &self.atype) {
+                Some(applied) => return Some(applied),
+                None => (),
             }
-            AffixRuleType::Suffix => for rule in &self.rules {},
-        };
-        Vec::new()
+        }
+
+        None
     }
 }
 
@@ -514,5 +531,38 @@ mod tests {
             ard.apply_pattern("xxx", &AffixRuleType::Suffix),
             Some("xxxzzz".to_string())
         );
+    }
+
+    #[test]
+    fn test_affix_rule_apply_words() {
+        let ar = AffixRule {
+            atype: AffixRuleType::Suffix,
+            ident: "A".into(),
+            combine_pfx_sfx: true,
+            rules: vec![
+                AffixRuleDef {
+                    stripping_chars: Some("y".into()),
+                    affix: "iness".into(),
+                    condition: "[^aeiou]y".into(),
+                    morph_info: Vec::new(),
+                },
+                AffixRuleDef {
+                    stripping_chars: None,
+                    affix: "ness".into(),
+                    condition: "[aeiou]y".into(),
+                    morph_info: Vec::new(),
+                },
+                AffixRuleDef {
+                    stripping_chars: None,
+                    affix: "ness".into(),
+                    condition: "[^y]".into(),
+                    morph_info: Vec::new(),
+                },
+            ],
+        };
+
+        assert_eq!(ar.apply("blurry"), Some("blurriness".to_string()));
+        assert_eq!(ar.apply("coy"), Some("coyness".to_string()));
+        assert_eq!(ar.apply("acute"), Some("acuteness".to_string()));
     }
 }
