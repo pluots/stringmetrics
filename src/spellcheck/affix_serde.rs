@@ -4,9 +4,19 @@
 //! it is not accessed directly.
 
 use super::affix::Affix;
-use super::affix_types::{EncodingType, TokenType};
+use super::affix_types::{AffixRule, EncodingType, TokenType};
 use strum::{EnumProperty, VariantNames};
 use unicode_segmentation::UnicodeSegmentation;
+
+// Unwrap a TokenData type
+macro_rules! t_data_unwrap {
+    ( $token:ident, $field:ident ) => {
+        match $token.data {
+            ProcessedTokenData::$field(f) => f,
+            _ => panic!("Bad token type specified!"),
+        }
+    };
+}
 
 macro_rules! parentify {
     // Boolean field just assigns true and returns Ok (Flag is just either there
@@ -46,15 +56,7 @@ macro_rules! parentify {
     };
 }
 
-// Unwrap a TokenData type
-macro_rules! t_data_unwrap {
-    ( $token:ident, $field:ident ) => {
-        match $token.data {
-            ProcessedTokenData::$field(f) => f,
-            _ => panic!("Bad token type specified!"),
-        }
-    };
-}
+pub(crate) use t_data_unwrap;
 
 /// Populate an Affix class from the string version of a file.
 /// This is the main function exported from this module.
@@ -325,7 +327,7 @@ fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), St
             TokenType::Mapping => todo!(),
             TokenType::Phonetic => todo!(),
             TokenType::WarnRareFlag => todo!(),
-            TokenType::ForbitWarnWords => todo!(),
+            TokenType::ForbidWarnWords => todo!(),
             TokenType::Breakpoint => todo!(),
             TokenType::CompoundRule => todo!(),
             TokenType::CompoundMinLength => parentify!(ax.compound_min_length, token, int),
@@ -348,8 +350,14 @@ fn set_parent(ax: &mut Affix, tokens: Vec<AffixProcessedToken>) -> Result<(), St
             TokenType::CompoundForceUpper => todo!(),
             TokenType::CompoundForceSyllable => todo!(),
             TokenType::CompoundSyllableNumber => todo!(),
-            TokenType::Prefix => todo!(),
-            TokenType::Suffix => todo!(),
+            TokenType::Prefix => match AffixRule::from_processed_token(token) {
+                Ok(ar) => ax.affix_rules.push(ar),
+                Err(s) => return Err(s),
+            },
+            TokenType::Suffix => match AffixRule::from_processed_token(token) {
+                Ok(ar) => ax.affix_rules.push(ar),
+                Err(s) => return Err(s),
+            },
             TokenType::AffixCircumfixFlag => todo!(),
             TokenType::AffixForbiddenWordFlag => todo!(),
             TokenType::AffixFullStrip => todo!(),
@@ -467,473 +475,3 @@ mod tests {
         assert_eq!(create_processed_tokens(vec![t20, t21, t22]), res1);
     }
 }
-
-// //! Affix tokens
-// //!
-// //! This module is used for things related to parsing from an affix file. It
-// //! contains a lot of ugly syntax and wild macros to attempt to minimize
-// //! boilerplate
-
-// use super::affix_types::{EncodingType, TokenType};
-// use super::affix::Affix;
-// use lazy_static::lazy_static;
-
-// /// Macro that creates a closure based on the relevant type, used for
-// /// TokenClass::set_parent
-// ///
-// /// Macros so powerful they should be illegal
-// ///
-// /// All of our finctions return Option<Callable -> Result>
-// ///
-// /// Usage:
-// /// `parentify!(field_name, bool)` will just set the relevant field true
-// ///
-
-// // Integer fields are a bit more complicated
-// // Need to parse the field if possible,
-// ( $field:ident, int ) => {
-//     Some(|tc, ax, s| match tc.strip_key(s).parse() {
-//         Ok(v) => Ok(ax.$field = v),
-//         Err(_) => Err("Bad integer value at {}"),
-//     })
-// };
-
-// // Use str_replace for any time we have `&str` as the `Affix` type. We will
-// // replace what exists with our new value
-// ( $field:ident, str_replace ) => {
-//     Some(|tc, ax, s| {
-//         let s1 = tc.strip_key(s);
-//         match s1.is_empty() {
-//             false => Ok(ax.$field = s1),
-//             true => Err("No values found at field {}"),
-//         }
-//     })
-// };
-
-// // Same as above but place the result in an option
-// ( $field:ident, str_replace_option ) => {
-//     Some(|tc, ax, s| {
-//         let s1 = tc.strip_key(s);
-//         match s1.is_empty() {
-//             false => Ok(ax.$field = Some(s1)),
-//             true => Err("No values found at field {}"),
-//         }
-//     })
-// };
-// }
-
-// impl TokenMatch<'_> {
-//     #[inline]
-//     pub fn strip_key<'a>(&self, s: &'a str) -> &'a str {
-//         s.strip_prefix(self.key).unwrap().trim()
-//     }
-
-//     #[inline]
-//     pub fn split_key<'a>(&'a self, s: &'a str) -> impl Iterator<Item = &'a str> {
-//         s.split(self.key).map(|x| x.trim())
-//     }
-// }
-
-// lazy_static! {
-//     /// All possible keys collected into a vector
-//     static ref TOKEN_KEYS:Vec<&'static str> =
-//         TOKEN_CLASS_LIST.into_iter().map(|x| x.key).collect();
-// }
-
-// /// A collection of all the possible tokens
-// ///
-// /// We don't use all of these, but that's OK. Just need to have the tokens
-// /// defined so that we don't miss one. This is relevant because unfortunately,
-// /// it seems like line breaks aren't strictly necesary
-// /// http://pwet.fr/man/linux/fichiers_speciaux/hunspell/
-// ///
-// /// If something is unused, set_parent just has to be None
-// ///
-// /// Table consumes are implemented
-// ///
-// /// Everything that supplies a table_consumes function will receive all tokens
-// /// as `s`, concatenated together.
-// pub const TOKEN_CLASS_LIST: [TokenMatch; 57] = [
-//     TokenMatch {
-//         class: TokenType::Encoding,
-//         key: "SET",
-//         table_consumes: None,
-//         set_parent: Some(
-//             |tc, mut ax, s| match EncodingType::from_str(tc.strip_key(s)) {
-//                 Some(et) => Ok(ax.encoding = et),
-//                 None => Err("Encoding type not found"),
-//             },
-//         ),
-//     },
-//     // Boolean flag, default false
-//     TokenMatch {
-//         class: TokenType::FlagType,
-//         key: "FLAG",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::ComplexPrefixes,
-//         key: "COMPLEXPREFIXES",
-//         table_consumes: None,
-//         set_parent: parentify!(complex_prefixes, bool),
-//     },
-//     TokenMatch {
-//         class: TokenType::Language,
-//         key: "LANG",
-//         table_consumes: None,
-//         set_parent: parentify!(lang, str_replace),
-//     },
-//     TokenMatch {
-//         class: TokenType::IgnoreChars,
-//         key: "IGNORE",
-//         table_consumes: None,
-//         set_parent: parentify!(ignore_chars, str_add),
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixFlag,
-//         key: "AF",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::AFFIX_FLAG_RE)),
-//         set_parent: None, //Some(|tc, ax, s| ax.afx_flag_vector.extend(tc.split_key(s))),
-//     },
-//     TokenMatch {
-//         class: TokenType::MorphAlias,
-//         key: "AM",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::MORPH_ALIAS_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::NeighborKeys,
-//         key: "KEY",
-//         table_consumes: None,
-//         set_parent: Some(|tc, ax, s| {
-//             // Ok this looks worse than it is, let's break it down
-//             // Remember we start with e.g. qwerty|asdfg|zxcb
-//             let mut s1 = tc
-//                 // Remove "KEY" from the beginning, get a &str
-//                 .strip_key(s)
-//                 // Break this up by | into an iterator with Item=&str
-//                 .split('|')
-//                 // For each item, 1. remove whitespace 2. split into UTF-8
-//                 // characters 3. collect this into a vector of &str
-//                 .map(|x| x.trim().graphemes(true).collect::<Vec<&str>>())
-//                 // Wind up with a vector of vectors of (unicode) strings
-//                 .collect::<Vec<Vec<&str>>>();
-//             match s1.is_empty() {
-//                 false => Ok({
-//                     s1.sort();
-//                     s1.dedup();
-//                     ax.keys = s1
-//                 }),
-//                 true => Err("No values found at field {}"),
-//             }
-//         }),
-//     },
-//     TokenMatch {
-//         class: TokenType::TryCharacters,
-//         key: "TRY",
-//         table_consumes: None,
-//         set_parent: parentify!(try_characters, str_add),
-//     },
-//     TokenMatch {
-//         class: TokenType::NoSuggestFlag,
-//         key: "NOSUGGEST",
-//         table_consumes: None,
-//         set_parent: parentify!(nosuggest_flag, str_replace),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundSuggestionsMax,
-//         key: "MAXCPDSUGS",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_suggestions_max, int),
-//     },
-//     TokenMatch {
-//         class: TokenType::NGramSuggestionsMax,
-//         key: "MAXNGRAMSUGS",
-//         table_consumes: None,
-//         set_parent: parentify!(ngram_suggestions_max, int),
-//     },
-//     TokenMatch {
-//         class: TokenType::NGramDiffMax,
-//         key: "MAXDIFF",
-//         table_consumes: None,
-//         set_parent: parentify!(ngram_diff_max, int),
-//     },
-//     TokenMatch {
-//         class: TokenType::NGramLimitToDiffMax,
-//         key: "ONLYMAXDIFF",
-//         table_consumes: None,
-//         set_parent: parentify!(ngram_limit_to_diff_max, bool),
-//     },
-//     TokenMatch {
-//         class: TokenType::NoSpaceSubs,
-//         key: "NOSPLITSUGS",
-//         table_consumes: None,
-//         set_parent: parentify!(no_split_suggestions, bool),
-//     },
-//     TokenMatch {
-//         class: TokenType::KeepTerminationDots,
-//         key: "SUGSWITHDOTS",
-//         table_consumes: None,
-//         set_parent: parentify!(keep_termination_dots, bool),
-//     },
-//     TokenMatch {
-//         class: TokenType::Replacement,
-//         key: "REP",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::REPLACE_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::Mapping,
-//         key: "MAP",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::MAP_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::Phonetic,
-//         key: "PHONE",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::PHONETIC_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::WarnRareFlag,
-//         key: "WARN",
-//         table_consumes: None,
-//         set_parent: parentify!(warn_rare_flag, str_replace),
-//     },
-//     TokenMatch {
-//         class: TokenType::ForbitWarnWords,
-//         key: "FORBIDWARN",
-//         table_consumes: None,
-//         set_parent: parentify!(forbid_warn_words, bool),
-//     },
-//     TokenMatch {
-//         class: TokenType::Breakpoint,
-//         key: "BREAK",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::BREAK_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundRule,
-//         key: "COMPOUNDRULE",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::COMPOUND_RULE_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundMinLength,
-//         key: "COMPOUNDMIN",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_min_length, int),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundFlag,
-//         key: "COMPOUNDFLAG",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_flag, str_replace_option),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundBeginFlag,
-//         key: "COMPOUNDBEGIN",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_begin_flag, str_replace_option),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundEndFlag,
-//         key: "COMPOUNDLAST",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_end_flag, str_replace_option),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundMiddleFlag,
-//         key: "COMPOUNDMIDDLE",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_middle_flag, str_replace_option),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundOnlyFlag,
-//         key: "ONLYINCOMPOUND",
-//         table_consumes: None,
-//         set_parent: parentify!(compound_only_flag, str_replace_option),
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundPermitFlag,
-//         key: "COMPOUNDPERMITFLAG",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidFlag,
-//         key: "COMPOUNDFORBIDFLAG",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundMoreSuffixes,
-//         key: "COMPOUNDMORESUFFIXES",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundRoot,
-//         key: "COMPOUNDROOT",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundWordMax,
-//         key: "COMPOUNDWORDMAX",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidDuplication,
-//         key: "CHECKCOMPOUNDDUP",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidRepeat,
-//         key: "CHECKCOMPOUNDREP",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidUpperBoundary,
-//         key: "CHECKCOMPOUNDCASE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidTriple,
-//         key: "CHECKCOMPOUNDTRIPLE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundSimplifyTriple,
-//         key: "SIMPLIFIEDTRIPLE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForbidPatterns,
-//         key: "CHECKCOMPOUNDPATTERN",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::COMPOUND_PATTERN_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForceUpper,
-//         key: "FORCEUCASE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundForceSyllable,
-//         key: "COMPOUNDSYLLABLE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::CompoundSyllableNumber,
-//         key: "SYLLABLENUM",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::Prefix,
-//         key: "PFX",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::PFX_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::Suffix,
-//         key: "SFX",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::SFX_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixCircumfixFlag,
-//         key: "CIRCUMFIX",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixForbiddenWordFlag,
-//         key: "FORBIDDENWORD",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixFullStrip,
-//         key: "FULLSTRIP",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixKeepCase,
-//         key: "KEEPCASE",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixInputConversion,
-//         key: "ICONV",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::ICONV_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixOutputConversion,
-//         key: "OCONV",
-//         table_consumes: Some(|s| re_exprs::apply_re_count(s, &re_exprs::OCONV_DEF_RE)),
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixLemmaPresentDeprecated,
-//         key: "LEMMA_PRESENT",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixNeededFlag,
-//         key: "NEEDAFFIX",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixPseudoRootFlagDeprecated,
-//         key: "PSEUDOROOT",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixSubstandardFlag,
-//         key: "SUBSTANDARD",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixWordChars,
-//         key: "WORDCHARS",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-//     TokenMatch {
-//         class: TokenType::AffixCheckSharps,
-//         key: "CHECKSHARPS",
-//         table_consumes: None,
-//         set_parent: None,
-//     },
-// ];
-
-// pub struct EncodingMatch<'a> {
-//     class: EncodingType,
-//     key: &'a str,
-// }
-// impl EncodingMatch<'_> {
-//     pub fn get_key(&self) -> &str {
-//         self.key
-//     }
-//     pub fn get_class(&self)->&EncodingType{
-//         &self.class
-//     }
-// }

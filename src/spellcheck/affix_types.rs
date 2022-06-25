@@ -3,10 +3,10 @@
 
 // use std::string::ToString;
 // use strum::{EnumProperty, EnumString, VariantNames};
-use super::affix_serde::{AffixProcessedToken, ProcessedTokenData};
+use super::affix_serde::{t_data_unwrap, AffixProcessedToken, ProcessedTokenData};
+use regex::Regex;
 use strum::EnumString;
 use strum_macros;
-
 /// All possible types found in hunspell affix files
 /// This represents a generic token type that will have associated
 #[derive(
@@ -81,7 +81,7 @@ pub enum TokenType {
     WarnRareFlag,
 
     #[strum(to_string = "FORBIDWARN", props(dtype = "bool"))]
-    ForbitWarnWords,
+    ForbidWarnWords,
 
     #[strum(to_string = "BREAK", props(dtype = "table"))]
     Breakpoint,
@@ -243,11 +243,41 @@ pub struct AffixRuleDef {
     morph_info: Vec<String>, // Eventually may need its own type
 }
 
+impl AffixRuleDef {
+    pub fn check_condition(&self, s: &str, rtype: AffixRuleType) -> bool {
+        if &self.condition == "." {
+            return true;
+        }
+
+        // Position at start
+        let mut re_pattern = "^".to_string();
+
+        // Build the rest of the pattern
+        match rtype {
+            AffixRuleType::Prefix => {
+                re_pattern.push_str(self.condition.clone().as_str());
+                re_pattern.push_str(".*");
+            }
+            AffixRuleType::Suffix => {
+                re_pattern.push_str(".*");
+                re_pattern.push_str(self.condition.clone().as_str());
+            }
+        };
+
+        // Position at end
+        re_pattern.push_str("$");
+
+        let re = Regex::new(re_pattern.as_str()).unwrap();
+        re.is_match(s)
+    }
+}
+
+/// A prefix or suffix rule
 #[derive(Debug, PartialEq)]
 pub struct AffixRule {
     atype: AffixRuleType,
     /// Character identifier for this specific affix
-    ident: String,
+    pub ident: String,
     // Whether or not this can be combined with others
     combine_pfx_sfx: bool,
 
@@ -255,17 +285,16 @@ pub struct AffixRule {
 }
 
 impl AffixRule {
-    fn from_processed_token(pt: AffixProcessedToken) -> Result<AffixRule, String> {
-        let tab = match pt.data {
-            ProcessedTokenData::Table(t) => t,
-            _ => panic!(),
-        };
+    pub fn from_processed_token(pt: AffixProcessedToken) -> Result<AffixRule, String> {
+        let tab = t_data_unwrap!(pt, Table);
+        let mut iter = tab.iter();
 
-        let iter = tab.iter();
+        // First line contains general info about the rule
         let start = iter.next().unwrap();
 
-        let ruledefs = Vec::new();
+        let mut ruledefs = Vec::new();
 
+        // Create rule definitions for that identifier
         for rule in iter {
             ruledefs.push(AffixRuleDef {
                 stripping_chars: match rule.get(1) {
@@ -283,10 +312,11 @@ impl AffixRule {
                     Some(v) => v.to_string(),
                     None => return Err("Bad condition given".to_string()),
                 },
-                morph_info: rule.as_slice()[4..],
+                morph_info: rule.as_slice()[4..].iter().map(|s| s.to_string()).collect(),
             })
         }
 
+        // Populate with informatino from the first line
         Ok(AffixRule {
             atype: match pt.ttype {
                 TokenType::Prefix => AffixRuleType::Prefix,
@@ -307,6 +337,28 @@ impl AffixRule {
             },
             rules: ruledefs,
         })
+    }
+
+    /// Apply this rule to a root string
+    /// Do not pay attention to prf/sfx combinations, that must be done earlier
+    pub fn apply(&self, rootword: &str) -> Vec<String> {
+        // let ret = Vec::new();
+        match self.atype {
+            AffixRuleType::Prefix => {
+                for rule in &self.rules {
+                    let mut working = rootword.to_string();
+                    working = match &rule.stripping_chars {
+                        Some(strip) => match working.strip_prefix(strip) {
+                            Some(stripped) => stripped.to_string(),
+                            None => working,
+                        },
+                        None => working,
+                    }
+                }
+            }
+            AffixRuleType::Suffix => for rule in &self.rules {},
+        };
+        Vec::new()
     }
 }
 
@@ -354,5 +406,41 @@ mod tests {
     #[test]
     fn test_token_props() {
         assert_eq!(TokenType::Encoding.get_str("dtype"), Some("str"));
+    }
+
+    #[test]
+    fn test_rule_def_condition() {
+        let mut ard = AffixRuleDef {
+            stripping_chars: None,
+            affix: "".into(),
+            condition: "[^aeiou]y".into(),
+            morph_info: Vec::new(),
+        };
+
+        // General tests, including with pattern in the middle
+        assert_eq!(ard.check_condition("xxxy", AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("xxxay", AffixRuleType::Suffix), false);
+        assert_eq!(ard.check_condition("xxxyxx", AffixRuleType::Suffix), false);
+
+        // Test with prefix
+        ard.condition = "y[^aeiou]".into();
+        assert_eq!(ard.check_condition("yxxx", AffixRuleType::Prefix), true);
+        assert_eq!(ard.check_condition("yaxxx", AffixRuleType::Prefix), false);
+        assert_eq!(ard.check_condition("xxxyxxx", AffixRuleType::Prefix), false);
+
+        // Test other real rules
+        ard.condition = "[sxzh]".into();
+        assert_eq!(ard.check_condition("access", AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("abyss", AffixRuleType::Suffix), true);
+        assert_eq!(
+            ard.check_condition("accomplishment", AffixRuleType::Suffix),
+            false
+        );
+        assert_eq!(ard.check_condition("mmms", AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("mmsmm", AffixRuleType::Suffix), false);
+
+        // Check with default condition
+        ard.condition = ".".into();
+        assert_eq!(ard.check_condition("xxx", AffixRuleType::Suffix), true);
     }
 }

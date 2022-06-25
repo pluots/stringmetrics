@@ -48,24 +48,49 @@ impl Dictionary {
     }
 
     /// Match affixes, personal dict, etc
-    pub fn compile(&mut self) {
-        // for word in self.raw_wordlist_personal.iter() {
-        //     let split:Vec<&str> = word.split('/').collect();
-        //     let forbidden = word.starts_with('*');
+    pub fn compile(&mut self) -> Result<(), String> {
+        // Work through the personal word list
+        for word in self.raw_wordlist_personal.iter() {
+            // Words will be in the format "*word/otherword" where "word" is the
+            // main word to add, but it will get all rules of "otherword"
+            let split: Vec<&str> = word.split('/').collect();
+            let forbidden = word.starts_with('*');
 
-        //     match split.get(1) {
-        //         Some(sfx) => {
+            match split.get(1) {
+                Some(rootword) => {
+                    // Find "otherword/" in main wordlist
+                    let mut tmp = rootword.to_string();
+                    tmp.push('/');
+                    let filtval = tmp.trim_start_matches("*");
 
-        //         },
-        //         None => ()
-        //     }
-
-        // }
+                    match self
+                        .raw_wordlist
+                        .iter()
+                        .filter(|s| s.starts_with(&filtval))
+                        .next()
+                    {
+                        Some(w) => (),
+                        None => return Err("Root word not found".to_string()),
+                    }
+                }
+                None => (),
+            }
+        }
 
         for word in self.raw_wordlist.iter() {
             let split: Vec<&str> = word.split('/').collect();
         }
+
+        Ok(())
     }
 
     pub fn check(&self) {}
+}
+
+/// Apply affix rules to a given root word, based on what tokens it provides
+fn generate_wordlist_from_afx(rootword: &str, tokens: &str, affix: &Affix) -> Vec<String> {
+    for rule in &affix.affix_rules {
+        if tokens.contains(&rule.ident) {}
+    }
+    Vec::new()
 }
