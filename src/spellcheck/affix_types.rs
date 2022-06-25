@@ -244,7 +244,8 @@ pub struct AffixRuleDef {
 }
 
 impl AffixRuleDef {
-    pub fn check_condition(&self, s: &str, rtype: AffixRuleType) -> bool {
+    /// See whether the "condition" here is applicable
+    pub fn check_condition(&self, s: &str, rtype: &AffixRuleType) -> bool {
         if &self.condition == "." {
             return true;
         }
@@ -269,6 +270,47 @@ impl AffixRuleDef {
 
         let re = Regex::new(re_pattern.as_str()).unwrap();
         re.is_match(s)
+    }
+
+    // Verify the match condition and apply this rule
+    pub fn apply_pattern(&self, s: &str, rtype: &AffixRuleType) -> Option<String> {
+        // No return if condition doesn't match
+        if !self.check_condition(s, &rtype) {
+            return None;
+        }
+
+        let mut working = s;
+
+        match &rtype {
+            AffixRuleType::Prefix => {
+                // If stripping chars exist, strip them from the prefix
+                // If not or if no prefix to strip, working is unchanged
+                working = match &self.stripping_chars {
+                    Some(sc) => match working.strip_prefix(sc) {
+                        Some(w) => w,
+                        None => working,
+                    },
+                    None => working,
+                };
+
+                let mut s = self.affix.clone();
+                s.push_str(working);
+                Some(s)
+            }
+            AffixRuleType::Suffix => {
+                // Same logic as above
+                working = match &self.stripping_chars {
+                    Some(sc) => match working.strip_suffix(sc) {
+                        Some(w) => w,
+                        None => working,
+                    },
+                    None => working,
+                };
+                let mut s = working.to_owned();
+                s.push_str(&self.affix);
+                Some(s)
+            }
+        }
     }
 }
 
@@ -418,29 +460,59 @@ mod tests {
         };
 
         // General tests, including with pattern in the middle
-        assert_eq!(ard.check_condition("xxxy", AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("xxxay", AffixRuleType::Suffix), false);
-        assert_eq!(ard.check_condition("xxxyxx", AffixRuleType::Suffix), false);
+        assert_eq!(ard.check_condition("xxxy", &AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("xxxay", &AffixRuleType::Suffix), false);
+        assert_eq!(ard.check_condition("xxxyxx", &AffixRuleType::Suffix), false);
 
         // Test with prefix
         ard.condition = "y[^aeiou]".into();
-        assert_eq!(ard.check_condition("yxxx", AffixRuleType::Prefix), true);
-        assert_eq!(ard.check_condition("yaxxx", AffixRuleType::Prefix), false);
-        assert_eq!(ard.check_condition("xxxyxxx", AffixRuleType::Prefix), false);
+        assert_eq!(ard.check_condition("yxxx", &AffixRuleType::Prefix), true);
+        assert_eq!(ard.check_condition("yaxxx", &AffixRuleType::Prefix), false);
+        assert_eq!(
+            ard.check_condition("xxxyxxx", &AffixRuleType::Prefix),
+            false
+        );
 
         // Test other real rules
         ard.condition = "[sxzh]".into();
-        assert_eq!(ard.check_condition("access", AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("abyss", AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("access", &AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("abyss", &AffixRuleType::Suffix), true);
         assert_eq!(
-            ard.check_condition("accomplishment", AffixRuleType::Suffix),
+            ard.check_condition("accomplishment", &AffixRuleType::Suffix),
             false
         );
-        assert_eq!(ard.check_condition("mmms", AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("mmsmm", AffixRuleType::Suffix), false);
+        assert_eq!(ard.check_condition("mmms", &AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("mmsmm", &AffixRuleType::Suffix), false);
 
         // Check with default condition
         ard.condition = ".".into();
-        assert_eq!(ard.check_condition("xxx", AffixRuleType::Suffix), true);
+        assert_eq!(ard.check_condition("xxx", &AffixRuleType::Suffix), true);
+    }
+
+    #[test]
+    fn test_rule_apply() {
+        let mut ard = AffixRuleDef {
+            stripping_chars: Some("y".into()),
+            affix: "zzz".into(),
+            condition: "[^aeiou]y".into(),
+            morph_info: Vec::new(),
+        };
+
+        assert_eq!(
+            ard.apply_pattern("xxxy", &AffixRuleType::Suffix),
+            Some("xxxzzz".to_string())
+        );
+
+        ard.condition = "y[^aeiou]".into();
+        assert_eq!(
+            ard.apply_pattern("yxxx", &AffixRuleType::Prefix),
+            Some("zzzxxx".to_string())
+        );
+
+        ard.condition = ".".into();
+        assert_eq!(
+            ard.apply_pattern("xxx", &AffixRuleType::Suffix),
+            Some("xxxzzz".to_string())
+        );
     }
 }
