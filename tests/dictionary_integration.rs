@@ -15,12 +15,23 @@ fn load_affix_file() {
     // println!("{:?}",afx);
 }
 
+// #[test]
+// fn load_dict() {
+//     let mut dic = Dictionary::new();
+
+//     let content = fs::read_to_string("dictionaries/en.aff").unwrap();
+// }
 #[test]
-fn load_dict() {
+fn test_short_compile() {
     let mut dic = Dictionary::new();
 
-    let content = fs::read_to_string("dictionaries/en.aff").unwrap();
+    let aff_content = fs::read_to_string("tests/files/short.aff").unwrap();
+    let dic_content = fs::read_to_string("tests/files/short.dic").unwrap();
 
-    // dic.ch
-    // println!("{:?}",afx);
+    dic.affix.load_from_str(aff_content.as_str()).unwrap();
+    dic.load_dictionar_from_str(dic_content.as_str());
+    dic.compile();
+
+    println!("{:?}", dic.wordlist);
+    // println!("{:?}", dic.wordlist_forbidden);
 }

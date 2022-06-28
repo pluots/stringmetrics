@@ -11,7 +11,7 @@ use std::collections::HashSet;
 /// nosuggest_flag:
 pub struct Dictionary {
     // General word list
-    wordlist: HashSet<String>,
+    pub wordlist: HashSet<String>,
     // Words to accept but never suggest
     wordlist_nosuggest: HashSet<String>,
     // Words forbidden by the personal dictionary
