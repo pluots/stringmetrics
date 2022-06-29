@@ -13,3 +13,4 @@
 
 pub mod algorithms;
 pub mod spellcheck;
+pub mod tokenizers;

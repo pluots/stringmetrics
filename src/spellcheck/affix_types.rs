@@ -223,7 +223,7 @@ pub enum EncodingType {
 
 /// REP, ICONV and OCONV representations
 /// Simple input to output mapping
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Conversion {
     input: String,
     output: String,
@@ -244,7 +244,7 @@ impl Conversion {
 
         for row in iter {
             ret.push(Conversion {
-                input: match row.get(0) {
+                input: match row.first() {
                     Some(v) => v.to_string(),
                     None => return Err("No conversion input found".to_string()),
                 },
@@ -259,7 +259,7 @@ impl Conversion {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum AffixRuleType {
     Prefix,
     Suffix,
@@ -300,7 +300,7 @@ impl AffixRuleDef {
         morph_info: Vec<String>,
     ) -> AffixRuleDef {
         let mut ruledef = AffixRuleDef {
-            atype: atype,
+            atype,
             stripping_chars: match strip_text {
                 "" => None,
                 "0" => None,
@@ -308,7 +308,7 @@ impl AffixRuleDef {
             },
             affix: affix_text.to_owned(),
             condition: condition_text.to_owned(),
-            morph_info: morph_info,
+            morph_info,
             condition_re: None,
             condition_always_true: false,
         };
@@ -327,7 +327,9 @@ impl AffixRuleDef {
         self.condition_always_true = false;
 
         // Position at start
-        let mut re_pattern = "^".to_string();
+        let mut re_pattern = String::with_capacity(self.condition.len() + 4);
+
+        re_pattern.push('^');
 
         // Build the rest of the pattern
         match self.atype {
@@ -342,7 +344,7 @@ impl AffixRuleDef {
         };
 
         // Position at end
-        re_pattern.push_str("$");
+        re_pattern.push('$');
         self.condition_re = Some(Regex::new(re_pattern.as_str()).unwrap());
     }
 
@@ -453,8 +455,8 @@ impl AffixRule {
 
         // Populate with informatino from the first line
         Ok(AffixRule {
-            atype: atype,
-            ident: match start.get(0) {
+            atype,
+            ident: match start.first() {
                 Some(v) => v.to_string(),
                 None => return Err("No identifier found".to_string()),
             },

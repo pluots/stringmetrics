@@ -178,7 +178,7 @@ impl Affix {
             .filter(|ar| idents.contains(&ar.ident))
             .for_each(|rule| match rule.apply(rootword) {
                 Some(newword) => {
-                    if rule.combine_pfx_sfx && &rule.atype == &AffixRuleType::Prefix {
+                    if rule.combine_pfx_sfx && rule.atype == AffixRuleType::Prefix {
                         prefixed_words.push(newword.clone())
                     }
                     ret.push(newword);
@@ -192,7 +192,7 @@ impl Affix {
             .filter(|ar| {
                 ar.combine_pfx_sfx
                     && idents.contains(&ar.ident)
-                    && &ar.atype == &AffixRuleType::Suffix
+                    && ar.atype == AffixRuleType::Suffix
             })
             .for_each(|rule| {
                 for pfxword in &prefixed_words {

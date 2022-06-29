@@ -46,40 +46,62 @@ Completed and future planned support include:
 
 ### Performance
 
-In general, this program has been shown to be quite fast. Benchmarks show a
-result of about 40 ns per word:
+In general, this program has been shown to be quite fast. On an average laptop,
+benchmarks give approximately 40-50 ns per word. This is fast enough to
+spellcheck the entire million words of the Harry Potter series in about 40 ms.
+
+In fact, it actually beats Hunspell in a simple spellcheck test on a very large
+file. There is no guarantee that this performance will stay however, after
+adding fuller features.
+
+```bash
+hunspell -d dictionaries/en -l < tests/files/odyssey.txt > /dev/null
+1.25s user 0.01s system 95% cpu 1.325 total
+
+./target/release/stringmetrics spell -d dictionaries/en <  > /dev/null
+0.17s user 0.01s system 91% cpu 0.199 total
+```
+
+Simple benchmarks:
 
 ```bash
 Spellcheck: compile dictionary
-                        time:   [121.98 ms 122.56 ms 123.16 ms]
-Found 3 outliers among 100 measurements (3.00%)
-  3 (3.00%) high mild
-
-Spellcheck: 1 correct word
-                        time:   [38.071 ns 38.339 ns 38.714 ns]
-Found 10 outliers among 100 measurements (10.00%)
-  3 (3.00%) high mild
-  7 (7.00%) high severe
-
-Spellcheck: 1 incorrect word
-                        time:   [51.343 ns 51.776 ns 52.282 ns]
-Found 16 outliers among 100 measurements (16.00%)
-  7 (7.00%) high mild
+                        time:   [127.40 ms 132.32 ms 138.44 ms]
+Found 9 outliers among 100 measurements (9.00%)
   9 (9.00%) high severe
 
-Spellcheck: 15 correct words
-                        time:   [567.37 ns 574.87 ns 582.95 ns]
-Found 7 outliers among 100 measurements (7.00%)
+Spellcheck: 1 correct word
+                        time:   [35.343 ns 35.446 ns 35.563 ns]
+Found 15 outliers among 100 measurements (15.00%)
+  11 (11.00%) high mild
+  4 (4.00%) high severe
+
+Spellcheck: 1 incorrect word
+                        time:   [46.577 ns 46.700 ns 46.853 ns]
+Found 16 outliers among 100 measurements (16.00%)
   6 (6.00%) high mild
-  1 (1.00%) high severe
+  10 (10.00%) high severe
+
+Spellcheck: 15 correct words
+                        time:   [537.31 ns 552.10 ns 568.80 ns]
+Found 12 outliers among 100 measurements (12.00%)
+  2 (2.00%) high mild
+  10 (10.00%) high severe
 
 Spellcheck: 15 incorrect words
-                        time:   [787.35 ns 838.96 ns 909.99 ns]
-Found 10 outliers among 100 measurements (10.00%)
-  3 (3.00%) high mild
-  7 (7.00%) high severe
+                        time:   [741.72 ns 747.44 ns 755.19 ns]
+Found 15 outliers among 100 measurements (15.00%)
+  4 (4.00%) high mild
+  11 (11.00%) high severe
 
+Spellcheck: 188 word paragraph
+                        time:   [6.9062 us 6.9259 us 6.9485 us]
+Found 11 outliers among 100 measurements (11.00%)
+  4 (4.00%) high mild
+  7 (7.00%) high severe
 ```
+
+Note that dictionary compiling is only a one-time task after a file is loaded.
 
 ## License
 

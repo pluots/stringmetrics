@@ -2,7 +2,7 @@
 //! Load hunspell dicts
 //! http://pwet.fr/man/linux/fichiers_speciaux/hunspell/
 
-use crate::spellcheck::affix::Affix;
+use crate::{spellcheck::affix::Affix, tokenizers::split_whitespace_remove_punc};
 use core::hash::Hash;
 use std::collections::HashSet;
 
@@ -13,7 +13,8 @@ pub struct Dictionary {
     /// This contains the dictionary's configuration
     pub affix: Affix,
 
-    // General word list
+    // General word list of words that are accepted and suggested. Note that it
+    // may make sense in the future to include non-suggest words here too.
     wordlist: HashSet<String>,
     // Words to accept but never suggest
     wordlist_nosuggest: HashSet<String>,
@@ -47,7 +48,7 @@ impl Dictionary {
         self.affix.load_from_str(s)
     }
 
-    pub fn load_dictionar_from_str(&mut self, s: &str) {
+    pub fn load_dict_from_str(&mut self, s: &str) {
         self.compiled = false;
 
         let mut lines = s.lines();
@@ -55,6 +56,7 @@ impl Dictionary {
         let _first = lines.next();
         self.raw_wordlist = lines.map(|l| l.to_string()).collect()
     }
+
     pub fn load_personal_dict_from_str(&mut self, s: &str) {
         self.compiled = false;
 
@@ -68,22 +70,17 @@ impl Dictionary {
             // Words will be in the format "*word/otherword" where "word" is the
             // main word to add, but it will get all rules of "otherword"
             let split: Vec<&str> = word.split('/').collect();
-            let forbidden = word.starts_with('*');
+            let _forbidden = word.starts_with('*');
 
             match split.get(1) {
                 Some(rootword) => {
                     // Find "otherword/" in main wordlist
                     let mut tmp = rootword.to_string();
                     tmp.push('/');
-                    let filtval = tmp.trim_start_matches("*");
+                    let filtval = tmp.trim_start_matches('*');
 
-                    match self
-                        .raw_wordlist
-                        .iter()
-                        .filter(|s| s.starts_with(&filtval))
-                        .next()
-                    {
-                        Some(w) => (),
+                    match self.raw_wordlist.iter().find(|s| s.starts_with(&filtval)) {
+                        Some(_w) => (),
                         None => return Err("Root word not found".to_string()),
                     }
                 }
@@ -113,7 +110,7 @@ impl Dictionary {
         Ok(())
     }
 
-    /// Check that a word is spelled correctly. Returns true if so
+    /// Check that a single word is spelled correctly. Returns true if so
     ///
     /// This is the main spellchecking feature. It checks a single word for
     /// validity according to the loaded dictionary. This accepts any
@@ -135,29 +132,60 @@ impl Dictionary {
     /// let dic_content = fs::read_to_string("tests/files/short.dic").unwrap();
     ///
     /// dic.affix.load_from_str(aff_content.as_str()).unwrap();
-    /// dic.load_dictionar_from_str(dic_content.as_str());
+    /// dic.load_dict_from_str(dic_content.as_str());
     /// dic.compile().unwrap();
     ///
     /// assert_eq!(dic.check("yyication"), true);
     /// ```
+    #[inline]
     pub fn check<T: AsRef<str>>(&self, s: T) -> bool {
         // We actually just need to check
         self.break_if_not_compiled();
 
-        self.check_no_break(s)
+        let sref = s.as_ref();
+
+        for word in split_whitespace_remove_punc(sref) {
+            if !self.check_word_no_break(word) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Perform spellcheck on a string, return a list of misspelled words.
+    /// Returns an iterator.
+    pub fn check_return_list<T: AsRef<str>>(&self, s: T) -> Vec<String> {
+        // We actually just need to check
+        self.break_if_not_compiled();
+
+        split_whitespace_remove_punc(s.as_ref())
+            .filter(|word| !self.check_word_no_break(word))
+            .collect::<Vec<String>>()
+    }
+
+    /// Perform spellcheck on a single word
+    #[inline]
+    pub fn check_word<T: AsRef<str>>(&self, s: T) -> bool {
+        // We actually just need to check
+        self.break_if_not_compiled();
+
+        self.check_word_no_break(s)
     }
 
     // Private function that checks a single word. Same as check() but doesn't
     // validate this dictionary is compiled
-    fn check_no_break<T: AsRef<str>>(&self, s: T) -> bool {
+    #[inline]
+    fn check_word_no_break<T: AsRef<str>>(&self, s: T) -> bool {
         // Convert to a usable string reference
         let sref = s.as_ref();
+        let lower = &sref.to_lowercase();
 
         // Must not be in a forbidden word list
         // Note that in the future this implementation might change
+        // And one of the "exists" wordlists contains the word
         (!self.wordlist_forbidden.contains(sref))
-            // And one of the "exists" wordlists contains the word
-            && (self.wordlist.contains(sref) || self.wordlist_nosuggest.contains(sref))
+            && (self.wordlist.contains(sref) || self.wordlist.contains(lower))
     }
 
     /// Create a sorted vector of all items in the word list
@@ -177,20 +205,19 @@ impl Dictionary {
     }
 
     /// Helper function to error if we haven't compiled when we needed to
+    #[inline]
     fn break_if_not_compiled(&self) {
         assert!(
-            self.compiled == true,
+            self.compiled,
             "This method requires compiling the dictionary with `dic.compile()` first."
         )
     }
 }
 
-/// Apply affix rules to a given root word, based on what tokens it provides
-fn generate_wordlist_from_afx(rootword: &str, tokens: &str, affix: &Affix) -> Vec<String> {
-    for rule in &affix.affix_rules {
-        if tokens.contains(&rule.ident) {}
+impl Default for Dictionary {
+    fn default() -> Self {
+        Self::new()
     }
-    Vec::new()
 }
 
 fn iter_to_hashset<I, T>(items: I, hs: &mut HashSet<T>)

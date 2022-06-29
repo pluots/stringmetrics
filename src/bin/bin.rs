@@ -1,6 +1,7 @@
-use stringmetrics::{algorithms, spellcheck};
-
+use stringmetrics::algorithms;
+mod spell;
 use clap::{Parser, Subcommand};
+use spell::{create_dict_from_path, spellcheck_list_cli_runner};
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -22,6 +23,10 @@ enum Commands {
         /// Whether to print misspelled words
         #[clap(short, long, value_parser, default_value_t = false)]
         list_misspelled: bool,
+
+        /// Print the a compiled dictionary's word list to stdout
+        #[clap(long, value_parser, default_value_t = false)]
+        generate_wordlist: bool,
     },
     /// Levenshtein distance tools
     Lev {
@@ -45,10 +50,18 @@ fn main() {
     match &cli.command {
         Commands::Spell {
             dict_path,
-            list_misspelled,
+            list_misspelled: _, // Currently unused
+            generate_wordlist,
         } => {
-            println!("{:?}", dict_path);
-            println!("{:?}", list_misspelled);
+            let dic = create_dict_from_path(dict_path);
+
+            if *generate_wordlist {
+                for item in dic.wordlist_items() {
+                    println!("{}", item);
+                }
+            } else {
+                spellcheck_list_cli_runner(&dic);
+            }
         }
         Commands::Lev {
             string_a,
