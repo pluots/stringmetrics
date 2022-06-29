@@ -30,7 +30,8 @@ These are all found in the `algorithms` module.
 
 This is a spellchecker written completely in Rust. While maintaining
 compatibility with the venerable Hunspell dictionary format, it does not rely on
-Hunspell or any other underlying checker.
+Hunspell or any other underlying checker. NOTE: Spellchecker is currently in
+alpha.
 
 Spellcheck functionality is found in the `spellcheck` module.
 
