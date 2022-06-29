@@ -1,8 +1,4 @@
-use std::collections::{BTreeSet, HashSet};
 use std::fs;
-use std::fs::File;
-use std::io::{self, BufRead};
-use stringmetrics::spellcheck::Affix;
 use stringmetrics::spellcheck::Dictionary;
 
 fn fixture_create_short_dict() -> Dictionary {

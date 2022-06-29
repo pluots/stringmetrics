@@ -13,6 +13,10 @@ and see the docs here
 Source:
 [https://github.com/pluots/stringmetrics-rust](https://github.com/pluots/stringmetrics-rust)
 
+## Library and Command Line Interface
+
+This package provides both a library and a CLI tool.
+
 ## Stringmetric Algorithms
 
 One of the main purposes of this library is to provide a variety of string

@@ -52,7 +52,7 @@ impl Dictionary {
 
         let mut lines = s.lines();
         // First line is just a count of the number of items
-        let first = lines.next();
+        let _first = lines.next();
         self.raw_wordlist = lines.map(|l| l.to_string()).collect()
     }
     pub fn load_personal_dict_from_str(&mut self, s: &str) {
@@ -126,6 +126,9 @@ impl Dictionary {
     /// # Examples
     ///
     /// ```
+    /// use std::fs;
+    /// use stringmetrics::spellcheck::Dictionary;
+    ///
     /// let mut dic = Dictionary::new();
     ///
     /// let aff_content = fs::read_to_string("tests/files/short.aff").unwrap();

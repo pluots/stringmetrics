@@ -259,32 +259,78 @@ impl Conversion {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum AffixRuleType {
     Prefix,
     Suffix,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct AffixRuleDef {
+    atype: AffixRuleType,
     stripping_chars: Option<String>,
     affix: String,
+    /// Regex-based rule for when this rule is true
     condition: String,
     morph_info: Vec<String>, // Eventually may need its own type
+    /// Compiled version of condition
+    condition_re: Option<Regex>,
+    /// Shortcut regex checks if this is true
+    condition_always_true: bool,
+}
+
+// Can't derive because we hold the re_pattern
+impl PartialEq for AffixRuleDef {
+    fn eq(&self, other: &Self) -> bool {
+        self.atype == other.atype
+            && self.stripping_chars == other.stripping_chars
+            && self.affix == other.affix
+            && self.condition == other.condition
+            && self.morph_info == other.morph_info
+    }
 }
 
 impl AffixRuleDef {
-    /// See whether the "condition" here is applicable
-    pub fn check_condition(&self, s: &str, rtype: &AffixRuleType) -> bool {
+    /// Create from the information we would expect to have in a table
+    pub fn from_table_creation(
+        atype: AffixRuleType,
+        strip_text: &str,
+        affix_text: &str,
+        condition_text: &str,
+        morph_info: Vec<String>,
+    ) -> AffixRuleDef {
+        let mut ruledef = AffixRuleDef {
+            atype: atype,
+            stripping_chars: match strip_text {
+                "" => None,
+                "0" => None,
+                _ => Some(strip_text.to_owned()),
+            },
+            affix: affix_text.to_owned(),
+            condition: condition_text.to_owned(),
+            morph_info: morph_info,
+            condition_re: None,
+            condition_always_true: false,
+        };
+
+        ruledef.compile_re();
+
+        ruledef
+    }
+
+    /// Compile the regex if not yet available
+    fn compile_re(&mut self) {
         if &self.condition == "." {
-            return true;
+            self.condition_always_true = true;
+            return;
         }
+        self.condition_always_true = false;
 
         // Position at start
         let mut re_pattern = "^".to_string();
 
         // Build the rest of the pattern
-        match rtype {
+        match self.atype {
             AffixRuleType::Prefix => {
                 re_pattern.push_str(self.condition.clone().as_str());
                 re_pattern.push_str(".*");
@@ -297,21 +343,27 @@ impl AffixRuleDef {
 
         // Position at end
         re_pattern.push_str("$");
-        // NOTE: SPEED THIS UP
-        let re = Regex::new(re_pattern.as_str()).unwrap();
-        re.is_match(s)
+        self.condition_re = Some(Regex::new(re_pattern.as_str()).unwrap());
+    }
+
+    /// See whether the "condition" here is applicable
+    pub fn check_condition(&self, s: &str) -> bool {
+        if self.condition_always_true {
+            return true;
+        }
+        self.condition_re.as_ref().unwrap().is_match(s)
     }
 
     // Verify the match condition and apply this rule
-    pub fn apply_pattern(&self, s: &str, rtype: &AffixRuleType) -> Option<String> {
+    pub fn apply_pattern(&self, s: &str) -> Option<String> {
         // No return if condition doesn't match
-        if !self.check_condition(s, &rtype) {
+        if !self.check_condition(s) {
             return None;
         }
 
         let mut working = s;
 
-        match &rtype {
+        match self.atype {
             AffixRuleType::Prefix => {
                 // If stripping chars exist, strip them from the prefix
                 // If not or if no prefix to strip, working is unchanged
@@ -367,35 +419,41 @@ impl AffixRule {
 
         let mut ruledefs = Vec::new();
 
+        let atype = match pt.ttype {
+            TokenType::Prefix => AffixRuleType::Prefix,
+            TokenType::Suffix => AffixRuleType::Suffix,
+            _ => panic!(),
+        };
+
         // Create rule definitions for that identifier
         for rule in iter {
-            ruledefs.push(AffixRuleDef {
-                stripping_chars: match rule.get(1) {
-                    Some(v) => match *v {
-                        "0" => None,
-                        _ => Some(v.to_string()),
-                    },
-                    None => return Err("Bad stripping characters".to_string()),
-                },
-                affix: match rule.get(2) {
-                    Some(v) => v.to_string(),
-                    None => return Err("Bad affix given".to_string()),
-                },
-                condition: match rule.get(3) {
-                    Some(v) => v.to_string(),
-                    None => return Err("Bad condition given".to_string()),
-                },
-                morph_info: rule.as_slice()[4..].iter().map(|s| s.to_string()).collect(),
-            })
+            let strip_text = match rule.get(1) {
+                Some(v) => v,
+                None => return Err("Bad stripping characters".to_string()),
+            };
+
+            let affix_text = match rule.get(2) {
+                Some(v) => v,
+                None => return Err("Bad affix given".to_string()),
+            };
+
+            let condition = match rule.get(3) {
+                Some(v) => v,
+                None => return Err("Bad condition given".to_string()),
+            };
+
+            ruledefs.push(AffixRuleDef::from_table_creation(
+                atype,
+                strip_text,
+                affix_text,
+                condition,
+                rule.as_slice()[4..].iter().map(|s| s.to_string()).collect(),
+            ))
         }
 
         // Populate with informatino from the first line
         Ok(AffixRule {
-            atype: match pt.ttype {
-                TokenType::Prefix => AffixRuleType::Prefix,
-                TokenType::Suffix => AffixRuleType::Suffix,
-                _ => panic!(),
-            },
+            atype: atype,
             ident: match start.get(0) {
                 Some(v) => v.to_string(),
                 None => return Err("No identifier found".to_string()),
@@ -413,10 +471,12 @@ impl AffixRule {
     }
 
     /// Apply this rule to a root string
-    /// Do not pay attention to prf/sfx combinations, that must be done earlier
+    ///
+    /// Does not pay attention to prf/sfx combinations, that must be done
+    /// earlier.
     pub fn apply(&self, rootword: &str) -> Option<String> {
         for rule in &self.rules {
-            match rule.apply_pattern(rootword, &self.atype) {
+            match rule.apply_pattern(rootword) {
                 Some(applied) => return Some(applied),
                 None => (),
             }
@@ -475,67 +535,69 @@ mod tests {
     #[test]
     fn test_rule_def_condition() {
         let mut ard = AffixRuleDef {
+            atype: AffixRuleType::Suffix,
             stripping_chars: None,
             affix: "".into(),
             condition: "[^aeiou]y".into(),
             morph_info: Vec::new(),
+            condition_re: None,
+            condition_always_true: false,
         };
+        ard.compile_re();
 
         // General tests, including with pattern in the middle
-        assert_eq!(ard.check_condition("xxxy", &AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("xxxay", &AffixRuleType::Suffix), false);
-        assert_eq!(ard.check_condition("xxxyxx", &AffixRuleType::Suffix), false);
+        assert_eq!(ard.check_condition("xxxy"), true);
+        assert_eq!(ard.check_condition("xxxay"), false);
+        assert_eq!(ard.check_condition("xxxyxx"), false);
 
         // Test with prefix
         ard.condition = "y[^aeiou]".into();
-        assert_eq!(ard.check_condition("yxxx", &AffixRuleType::Prefix), true);
-        assert_eq!(ard.check_condition("yaxxx", &AffixRuleType::Prefix), false);
-        assert_eq!(
-            ard.check_condition("xxxyxxx", &AffixRuleType::Prefix),
-            false
-        );
+        ard.atype = AffixRuleType::Prefix;
+        ard.compile_re();
+        assert_eq!(ard.check_condition("yxxx"), true);
+        assert_eq!(ard.check_condition("yaxxx"), false);
+        assert_eq!(ard.check_condition("xxxyxxx"), false);
 
         // Test other real rules
         ard.condition = "[sxzh]".into();
-        assert_eq!(ard.check_condition("access", &AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("abyss", &AffixRuleType::Suffix), true);
-        assert_eq!(
-            ard.check_condition("accomplishment", &AffixRuleType::Suffix),
-            false
-        );
-        assert_eq!(ard.check_condition("mmms", &AffixRuleType::Suffix), true);
-        assert_eq!(ard.check_condition("mmsmm", &AffixRuleType::Suffix), false);
+        ard.atype = AffixRuleType::Suffix;
+        ard.compile_re();
+        assert_eq!(ard.check_condition("access"), true);
+        assert_eq!(ard.check_condition("abyss"), true);
+        assert_eq!(ard.check_condition("accomplishment"), false);
+        assert_eq!(ard.check_condition("mmms"), true);
+        assert_eq!(ard.check_condition("mmsmm"), false);
 
         // Check with default condition
         ard.condition = ".".into();
-        assert_eq!(ard.check_condition("xxx", &AffixRuleType::Suffix), true);
+        ard.compile_re();
+        assert_eq!(ard.check_condition("xxx"), true);
     }
 
     #[test]
     fn test_rule_apply() {
         let mut ard = AffixRuleDef {
+            atype: AffixRuleType::Suffix,
             stripping_chars: Some("y".into()),
             affix: "zzz".into(),
             condition: "[^aeiou]y".into(),
             morph_info: Vec::new(),
+            condition_re: None,
+            condition_always_true: false,
         };
+        ard.compile_re();
 
-        assert_eq!(
-            ard.apply_pattern("xxxy", &AffixRuleType::Suffix),
-            Some("xxxzzz".to_string())
-        );
+        assert_eq!(ard.apply_pattern("xxxy"), Some("xxxzzz".to_string()));
 
+        ard.atype = AffixRuleType::Prefix;
         ard.condition = "y[^aeiou]".into();
-        assert_eq!(
-            ard.apply_pattern("yxxx", &AffixRuleType::Prefix),
-            Some("zzzxxx".to_string())
-        );
+        ard.compile_re();
+        assert_eq!(ard.apply_pattern("yxxx"), Some("zzzxxx".to_string()));
 
+        ard.atype = AffixRuleType::Suffix;
         ard.condition = ".".into();
-        assert_eq!(
-            ard.apply_pattern("xxx", &AffixRuleType::Suffix),
-            Some("xxxzzz".to_string())
-        );
+        ard.compile_re();
+        assert_eq!(ard.apply_pattern("xxx"), Some("xxxzzz".to_string()));
     }
 
     #[test]
@@ -545,24 +607,27 @@ mod tests {
             ident: "A".into(),
             combine_pfx_sfx: true,
             rules: vec![
-                AffixRuleDef {
-                    stripping_chars: Some("y".into()),
-                    affix: "iness".into(),
-                    condition: "[^aeiou]y".into(),
-                    morph_info: Vec::new(),
-                },
-                AffixRuleDef {
-                    stripping_chars: None,
-                    affix: "ness".into(),
-                    condition: "[aeiou]y".into(),
-                    morph_info: Vec::new(),
-                },
-                AffixRuleDef {
-                    stripping_chars: None,
-                    affix: "ness".into(),
-                    condition: "[^y]".into(),
-                    morph_info: Vec::new(),
-                },
+                AffixRuleDef::from_table_creation(
+                    AffixRuleType::Suffix,
+                    "y",
+                    "iness",
+                    "[^aeiou]y",
+                    Vec::new(),
+                ),
+                AffixRuleDef::from_table_creation(
+                    AffixRuleType::Suffix,
+                    "0",
+                    "ness",
+                    "[aeiou]y",
+                    Vec::new(),
+                ),
+                AffixRuleDef::from_table_creation(
+                    AffixRuleType::Suffix,
+                    "0",
+                    "ness",
+                    "[^y]",
+                    Vec::new(),
+                ),
             ],
         };
 

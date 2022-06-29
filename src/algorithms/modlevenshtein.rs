@@ -253,13 +253,14 @@ pub fn levenshtein_limit_weight(
 /// assert_eq!(levenshtein_limit_weight("🏴‍☠️", "A", 100, 1, 1, 1), 1);
 /// ```
 ///
-/// Using the below function to split on byte ("char") boundaries instead:
+/// Using the below function to split on byte ("char") boundaries instead. Note
+/// that this is probably something that you'd never actually want to do.
 ///
 /// ```
 /// use stringmetrics::algorithms::levenshtein_limit_weight_iter;
 /// let iter1 = "🏴‍☠️".chars();   // ['🏴', '\u{200d}', '☠', '\u{fe0f}']
 /// let iter2 = "A".chars();    // ['A']
-/// assert_eq!(levenshtein_limit_weight_iter(iter1, iter2, 100, 1, 1, 1), 1);
+/// assert_eq!(levenshtein_limit_weight_iter(iter1, iter2, 100, 1, 1, 1), 4);
 /// ```
 pub fn levenshtein_limit_weight_iter<T, I>(
     a: T,
