@@ -31,7 +31,7 @@ futures = "0.3"             # async tools
 lazy_static = "1.4"         # late-evaluated statics
 regex = "1"                 # rust core regex
 # This crate's proc macros (unused)
-# stringmetrics-derive = { path = "stringmetrics-derive" }
+# stringmetrics_derive = { path = "stringmetrics_derive" }
 # Enum ser/des operations
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"        # Macros for ser/de

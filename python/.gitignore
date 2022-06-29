@@ -1,11 +1,4 @@
 /target
-/Cargo.lock
-dictionaries/*.dic
-dictionaries/*.aff
-dictionaries/*.license
-tests/files/odyssey.txt
-
-Pipfile.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
