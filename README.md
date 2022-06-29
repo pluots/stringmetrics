@@ -5,17 +5,18 @@ algorithms such has Hamming distance, Levenshtein distance, Jaccard similarity,
 and more, as well as a competent spellchecker that handles Hunspell
 dictionaries.
 
-Get the create info here:
+This package comes with a library for programatic use, as well as a command line
+interface. The library is usable via WASM.
+
+Crate info:
 [https://crates.io/crates/stringmetrics](https://crates.io/crates/stringmetrics)
-and see the docs here
+
+Crate docs:
 [https://docs.rs/stringmetrics/](https://docs.rs/stringmetrics/).
 
-Source:
+Crate source:
 [https://github.com/pluots/stringmetrics-rust](https://github.com/pluots/stringmetrics-rust)
 
-## Library and Command Line Interface
-
-This package provides both a library and a CLI tool.
 
 ## Stringmetric Algorithms
 
@@ -43,44 +44,41 @@ Completed and future planned support include:
 - [ ]
 - [ ] Morphological/Phonetic handling
 
-### Design Decisions
+### Performance
 
-A lot of spellchecking revolves just seeing if a word exists in a very large
-list. Two logical data structure choices are  `std::collections::BTreeSet` and
-`std::collections::HashSet` - `HashSet` blew `BTreeSet` out of the water on a
-table with 50k rows, so we went with that.
+In general, this program has been shown to be quite fast. Benchmarks show a
+result of about 40 ns per word:
 
 ```bash
-# "Contains" is a test for words that are in the list. "Not Contains" is a test for
-BTree Contains          time:   [2.0070 us 2.0119 us 2.0173 us]
-Found 8 outliers among 100 measurements (8.00%)
-  6 (6.00%) high mild
-  2 (2.00%) high severe
+Spellcheck: compile dictionary
+                        time:   [121.98 ms 122.56 ms 123.16 ms]
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
 
-BTree Not Contains      time:   [2.2838 us 2.2922 us 2.3017 us]
-Found 6 outliers among 100 measurements (6.00%)
-  4 (4.00%) high mild
-  2 (2.00%) high severe
+Spellcheck: 1 correct word
+                        time:   [38.071 ns 38.339 ns 38.714 ns]
+Found 10 outliers among 100 measurements (10.00%)
+  3 (3.00%) high mild
+  7 (7.00%) high severe
 
-BTree Iter              time:   [274.62 us 276.07 us 277.75 us]
-Found 12 outliers among 100 measurements (12.00%)
-  4 (4.00%) high mild
-  8 (8.00%) high severe
-
-Hash Contains           time:   [482.35 ns 516.38 ns 560.42 ns]
-Found 12 outliers among 100 measurements (12.00%)
-  1 (1.00%) high mild
-  11 (11.00%) high severe
-
-Hash Not Contains       time:   [378.75 ns 380.30 ns 382.17 ns]
-Found 17 outliers among 100 measurements (17.00%)
+Spellcheck: 1 incorrect word
+                        time:   [51.343 ns 51.776 ns 52.282 ns]
+Found 16 outliers among 100 measurements (16.00%)
   7 (7.00%) high mild
-  10 (10.00%) high severe
+  9 (9.00%) high severe
 
-Hash Iter               time:   [176.80 us 177.37 us 178.22 us]
-Found 19 outliers among 100 measurements (19.00%)
-  8 (8.00%) high mild
-  11 (11.00%) high severe
+Spellcheck: 15 correct words
+                        time:   [567.37 ns 574.87 ns 582.95 ns]
+Found 7 outliers among 100 measurements (7.00%)
+  6 (6.00%) high mild
+  1 (1.00%) high severe
+
+Spellcheck: 15 incorrect words
+                        time:   [787.35 ns 838.96 ns 909.99 ns]
+Found 10 outliers among 100 measurements (10.00%)
+  3 (3.00%) high mild
+  7 (7.00%) high severe
+
 ```
 
 ## License

@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use std::collections::{BTreeSet, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -64,40 +64,45 @@ const NOT_CONTAINS_LIST: [&str; 15] = [
     "000000",
 ];
 
+#[inline]
 pub fn btree_contains(obj: &BTreeSet<String>) {
     for item in CONTAINS_LIST {
         obj.contains(item);
     }
 }
 
+#[inline]
 pub fn hash_contains(obj: &HashSet<String>) {
     for item in CONTAINS_LIST {
         obj.contains(item);
     }
 }
 
+#[inline]
 pub fn btree_not_contains(obj: &BTreeSet<String>) {
     for item in NOT_CONTAINS_LIST {
         obj.contains(item);
     }
 }
 
+#[inline]
 pub fn hash_not_contains(obj: &HashSet<String>) {
     for item in NOT_CONTAINS_LIST {
         obj.contains(item);
     }
 }
 
+#[inline]
 pub fn btree_iterator(obj: &BTreeSet<String>) {
     let _v: Vec<&String> = obj.iter().collect();
 }
+
+#[inline]
 pub fn hash_iterator(obj: &HashSet<String>) {
     let _v: Vec<&String> = obj.iter().collect();
 }
 
-//
-//
-//
+// Actual benchmark calling functions
 
 pub fn bench_btree_contains(c: &mut Criterion) {
     let bt = btree_setup();
@@ -129,7 +134,7 @@ pub fn hash_btree_iter(c: &mut Criterion) {
 }
 
 criterion_group!(
-    benches,
+    dict_datastructure,
     bench_btree_contains,
     bench_btree_not_contains,
     bench_btree_iter,
@@ -137,4 +142,4 @@ criterion_group!(
     hash_btree_not_contains,
     hash_btree_iter
 );
-criterion_main!(benches);
+criterion_main!(dict_datastructure);

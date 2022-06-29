@@ -13,7 +13,7 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Everything related to spellchecking
-    Check {
+    Spell {
         /// Path to a dictionary file. Specify e.g. dictionaries/de_DE if
         /// dictionaries/de_DE.aff and dictionaries/de_DE.dic exist
         #[clap(short, long, value_parser)]
@@ -43,7 +43,7 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Check {
+        Commands::Spell {
             dict_path,
             list_misspelled,
         } => {

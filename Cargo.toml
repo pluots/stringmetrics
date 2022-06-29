@@ -54,6 +54,10 @@ predicates = "2.1"
 name = "dict_datastructure"
 harness = false
 
+[[bench]]
+name = "dict_integration"
+harness = false
+
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
