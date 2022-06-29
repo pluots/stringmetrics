@@ -200,7 +200,7 @@ impl Dictionary {
             .iter()
             .map(|s| s.as_str())
             .collect::<Vec<&str>>();
-        items.sort();
+        items.sort_unstable();
         items
     }
 

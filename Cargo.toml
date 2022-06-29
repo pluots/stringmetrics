@@ -8,7 +8,6 @@ description = "Rust library for approximate string matching and spellchecking"
 documentation = "https://docs.rs/stringmetrics"
 readme = "README.md"
 repository = "https://github.com/pluots/stringmetrics-rust"
-license = "Apache-2.0"
 license-file = "LICENSE"
 keywords = ["spellcheck", "spelling", "levenshtein"]
 categories = ["algorithms", "text-processing"]
