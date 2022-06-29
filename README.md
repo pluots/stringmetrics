@@ -36,8 +36,8 @@ Spellcheck functionality is found in the `spellcheck` module.
 
 ### Functionality
 
-NOTE: The spellcheck portion of this project is still under development.
-Completed and future planned support include:
+NOTE: The spellcheck portion of this project is still under development and is
+not guaranteed to work properly. Completed and future planned support include:
 
 - [x] Basic prefix/sufix dictionary files
 - [ ] Forbidden word handling
@@ -50,17 +50,17 @@ In general, this program has been shown to be quite fast. On an average laptop,
 benchmarks give approximately 40-50 ns per word. This is fast enough to
 spellcheck the entire million words of the Harry Potter series in about 40 ms.
 
-In fact, it actually beats Hunspell in a simple spellcheck test on a very large
+<!-- In fact, it actually beats Hunspell in a simple spellcheck test on a very large
 file. There is no guarantee that this performance will stay however, after
 adding fuller features.
 
 ```bash
-hunspell -d dictionaries/en -l < tests/files/odyssey.txt > /dev/null
+time hunspell -d dictionaries/en -l < tests/files/odyssey.txt > /dev/null
 1.25s user 0.01s system 95% cpu 1.325 total
 
-./target/release/stringmetrics spell -d dictionaries/en <  > /dev/null
+time ./target/release/stringmetrics spell -d dictionaries/en < tests/files/odyssey.txt > /dev/null
 0.17s user 0.01s system 91% cpu 0.199 total
-```
+``` -->
 
 Simple benchmarks:
 

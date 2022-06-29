@@ -12,8 +12,10 @@ const END_REMOVE_CHARS: [char; 2] = ['-', '\''];
 pub fn split_whitespace_remove_punc(s: &str) -> impl Iterator<Item = String> + '_ {
     // TODO: benchmark whether it is faster to replace first, or at the end
     // Note that we leave the "'" since it's useful for apostrophe
-    s.split_whitespace().map(|word| {
-        word.trim_matches(&END_REMOVE_CHARS[..])
-            .replace(&REMOVE_CHARS, "")
-    })
+    s.split_whitespace()
+        .map(|word| {
+            word.trim_matches(&END_REMOVE_CHARS[..])
+                .replace(&REMOVE_CHARS, "")
+        })
+        .filter(|word| !word.is_empty())
 }
