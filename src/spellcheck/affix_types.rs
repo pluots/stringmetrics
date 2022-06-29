@@ -231,13 +231,18 @@ pub struct Conversion {
 }
 
 impl Conversion {
-    pub fn from_table(
-        table: Vec<Vec<&str>>,
+    pub fn from_processed_token(
+        pt: AffixProcessedToken,
         bidirectional: bool,
     ) -> Result<Vec<Conversion>, String> {
+        let tab = t_data_unwrap!(pt, Table);
+        let mut iter = tab.iter();
+
+        // First line just contains the row count
+        iter.next().unwrap();
         let mut ret = Vec::new();
 
-        for row in table {
+        for row in iter {
             ret.push(Conversion {
                 input: match row.get(0) {
                     Some(v) => v.to_string(),
@@ -292,7 +297,7 @@ impl AffixRuleDef {
 
         // Position at end
         re_pattern.push_str("$");
-
+        // NOTE: SPEED THIS UP
         let re = Regex::new(re_pattern.as_str()).unwrap();
         re.is_match(s)
     }

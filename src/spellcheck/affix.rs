@@ -112,6 +112,8 @@ pub struct Affix {
     // ## Affix-related items
     pub input_conversions: Vec<Conversion>,
 
+    pub output_conversions: Vec<Conversion>,
+
     // Rules for setting prefixes and suffixes
     pub affix_rules: Vec<AffixRule>,
 
@@ -146,6 +148,7 @@ impl Affix {
             compound_middle_flag: None,
             compound_only_flag: None,
             input_conversions: Vec::new(),
+            output_conversions: Vec::new(),
             affix_rules: Vec::new(),
             replacements: Vec::new(),
         }

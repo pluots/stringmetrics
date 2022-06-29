@@ -2,11 +2,8 @@
 
 This is a Rust library for approximate string matching that implements simple
 algorithms such has Hamming distance, Levenshtein distance, Jaccard similarity,
-and more.
-
-In addition to the basic levenshtein algorithm, it includes a weighted algorithm
-that allows specifying costs of insertions, deletions, and substitutions, as
-well as a maximum limit for optimization.
+and more, as well as a competent spellchecker that handles Hunspell
+dictionaries.
 
 Get the create info here:
 [https://crates.io/crates/stringmetrics](https://crates.io/crates/stringmetrics)
@@ -16,8 +13,31 @@ and see the docs here
 Source:
 [https://github.com/pluots/stringmetrics-rust](https://github.com/pluots/stringmetrics-rust)
 
+## Stringmetric Algorithms
+
+One of the main purposes of this library is to provide a variety of string
+metric functions. These include a few Levenshtein implementations (including
+limit/max, weighted, and generic), Jaccard index, and a Hamming implementation.
+These are all found in the `algorithms` module.
+
 
 ## Spellcheck
+
+This is a spellchecker written completely in Rust. While maintaining
+compatibility with the venerable Hunspell dictionary format, it does not rely on
+Hunspell or any other underlying checker.
+
+Spellcheck functionality is found in the `spellcheck` module.
+
+### Functionality
+
+NOTE: The spellcheck portion of this project is still under development.
+Completed and future planned support include:
+
+- [x] Basic prefix/sufix dictionary files
+- [ ] Forbidden word handling
+- [ ]
+- [ ] Morphological/Phonetic handling
 
 ### Design Decisions
 

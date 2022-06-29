@@ -2,11 +2,20 @@
 name = "stringmetrics"
 version = "1.0.2"
 edition = "2021"
-description = "Rust library for approximate string matching"
-license-file = "LICENSE"
-repository = "https://github.com/pluots/stringmetrics-rust"
+authors = ["Trevor Gross <tmgross@umich.edu>"]
+description = "Rust library for approximate string matching and spellchecking"
 # This won't auto link for some reason, no harm in having it manual
 documentation = "https://docs.rs/stringmetrics"
+readme = "README.md"
+repository = "https://github.com/pluots/stringmetrics-rust"
+license = "Apache-2.0"
+license-file = "LICENSE"
+keywords = ["spellcheck", "spelling", "levenshtein"]
+categories = ["algorithms", "text-processing"]
+
+
+[badges]
+maintenance = { status = "actively-developed" }
 
 # [lib]
 # name = "mylib"
