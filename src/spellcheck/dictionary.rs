@@ -42,7 +42,9 @@ impl Dictionary {
     }
 
     pub fn load_dictionar_from_str(&mut self, s: &str) {
-        self.raw_wordlist = s.lines().map(|l| l.to_string()).collect()
+        let mut lines = s.lines();
+        let first = lines.next();
+        self.raw_wordlist = lines.map(|l| l.to_string()).collect()
     }
     pub fn load_personal_dict_from_str(&mut self, s: &str) {
         self.raw_wordlist_personal = s.lines().map(|l| l.to_string()).collect()

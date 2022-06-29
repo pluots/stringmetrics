@@ -128,13 +128,9 @@ impl Affix {
             lang: String::new(),
             ignore_chars: Vec::new(),
             afx_flag_vector: Vec::new(),
-            keys: vec![
-                graph_vec!("qwertyuiop"),
-                graph_vec!("asdfghjkl"),
-                graph_vec!("zxcvbnm"),
-            ],
-            try_characters: graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'"),
-            nosuggest_flag: String::from("AHOHOIH"),
+            keys: Vec::new(),
+            try_characters: Vec::new(),
+            nosuggest_flag: String::new(),
             compound_suggestions_max: 2,
             ngram_suggestions_max: 2,
             ngram_diff_max: 5,
@@ -209,7 +205,18 @@ impl Affix {
 }
 
 impl Default for Affix {
+    /// Common defaults for affix configuration
     fn default() -> Self {
-        Affix::new()
+        let mut ax = Affix::new();
+
+        ax.keys = vec![
+            graph_vec!("qwertyuiop"),
+            graph_vec!("asdfghjkl"),
+            graph_vec!("zxcvbnm"),
+        ];
+        ax.try_characters = graph_vec!("esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ'");
+        ax.nosuggest_flag = String::from("!");
+
+        ax
     }
 }

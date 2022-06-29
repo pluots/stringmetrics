@@ -23,6 +23,7 @@ fn load_affix_file() {
 // }
 #[test]
 fn test_short_compile() {
+    // Test that we correctly compile the short wordlist
     let mut dic = Dictionary::new();
 
     let aff_content = fs::read_to_string("tests/files/short.aff").unwrap();
@@ -30,8 +31,22 @@ fn test_short_compile() {
 
     dic.affix.load_from_str(aff_content.as_str()).unwrap();
     dic.load_dictionar_from_str(dic_content.as_str());
-    dic.compile();
+    dic.compile().unwrap();
 
-    println!("{:?}", dic.wordlist);
-    // println!("{:?}", dic.wordlist_forbidden);
+    let mut items = dic.wordlist.iter().collect::<Vec<&String>>();
+    items.sort();
+
+    assert_eq!(
+        items,
+        vec![
+            "rexxx",
+            "rezzz",
+            "rezzzen",
+            "xxx",
+            "yyication",
+            "yyy",
+            "zzz",
+            "zzzen"
+        ]
+    );
 }
