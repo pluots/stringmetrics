@@ -1,16 +1,16 @@
 [package]
-name = "NEW"
+name = "stringmetrics"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "NEW"
+name = "stringmetrics"
 crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
-stringmetrics = { path = "../stringmetrics" }
+stringmetrics = { path = "../" }
 
 [package.metadata.maturin]
-python-source = "python"
+python-source = "pysrc"
