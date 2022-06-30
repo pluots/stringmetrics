@@ -1,6 +1,5 @@
-
 use pyo3::prelude::*;
-use stringmetrics::algorithms::{levenshtein as alg_levenshtein};
+use stringmetrics::algorithms::levenshtein as alg_levenshtein;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]

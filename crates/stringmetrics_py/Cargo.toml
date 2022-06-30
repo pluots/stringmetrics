@@ -1,0 +1,19 @@
+[package]
+name = "stringmetrics_py"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+readme = "../../README.md"
+license-file = "../../LICENSE"
+
+[lib]
+name = "stringmetrics_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.16.5", features = ["extension-module"] }
+stringmetrics = { path = "../stringmetrics" }
+
+[package.metadata.release]
+shared-version = true
