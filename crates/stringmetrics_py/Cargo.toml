@@ -8,7 +8,7 @@ readme = "../../README.md"
 license-file = "../../LICENSE"
 
 [lib]
-name = "stringmetrics_py"
+name = "stringmetrics"
 crate-type = ["cdylib"]
 
 [dependencies]

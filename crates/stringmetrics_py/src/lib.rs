@@ -9,7 +9,7 @@ fn levenshtein(a: &str, b: &str) -> PyResult<usize> {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn algorithms(_py: Python, m: &PyModule) -> PyResult<()> {
+fn stringmetrics(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(levenshtein, m)?)?;
     Ok(())
 }
