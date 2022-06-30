@@ -40,11 +40,6 @@ strum_macros = "0.24"        # Macros for ser/de
 unicode-segmentation = "1.9.0"
 clap = { version = "3.2", features = ["derive"] }
 
-
-# Use this for testing with full optimizations
-# [profile.test]
-# opt-level = 3
-
 [dev-dependencies]
 criterion = "0.3"
 assert_cmd = "2.0"
@@ -63,4 +58,4 @@ harness = false
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
 
 [package.metadata.release]
-allow-branch = ["main"]
+shared-version = true

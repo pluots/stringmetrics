@@ -12,8 +12,11 @@ name = "stringmetrics"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.16.5", features = ["extension-module"] }
+pyo3 = { version = "0.16", features = ["extension-module"] }
 stringmetrics = { path = "../stringmetrics" }
+
+[build-dependencies]
+pyo3-build-config = "0.16"
 
 [package.metadata.release]
 shared-version = true

@@ -1,5 +1,8 @@
 [workspace]
 
-# members = ["crates/stringmetrics", "crates/stringmetrics_py"]
-# members = ["crates/stringmetrics", "crates/stringmetrics_py"]
 members = ["crates/stringmetrics", "crates/stringmetrics_py"]
+
+
+[workspace.metadata.release]
+allow-branch = ["main"]
+shared-version = true
