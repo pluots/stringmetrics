@@ -1,15 +1,33 @@
 use pyo3::prelude::*;
-use stringmetrics::algorithms::levenshtein as alg_levenshtein;
+// use pyo3::types::{PyUnicode};
+use stringmetrics::algorithms::{levenshtein_limit_weight, levenshtein_quick as modlev_quick};
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
-fn levenshtein(a: &str, b: &str) -> PyResult<usize> {
-    Ok(alg_levenshtein(a, b) as usize)
+#[inline]
+fn levenshtein(a: &str, b: &str) -> u32 {
+    levenshtein_limit_weight(a, b, u32::MAX, 1, 1, 1)
+}
+
+#[pyfunction]
+#[inline]
+fn levenshtein_quick(a: String, b: String) -> u32 {
+    modlev_quick(a, b)
+}
+
+/// Formats the sum of two numbers as string.
+#[pyfunction]
+#[inline]
+fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
+    levenshtein_limit_weight(a, b, limit, 1, 1, 1)
 }
 
 /// A Python module implemented in Rust.
 #[pymodule]
+#[inline]
 fn stringmetrics(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(levenshtein, m)?)?;
+    m.add_function(wrap_pyfunction!(levenshtein_limit, m)?)?;
+    m.add_function(wrap_pyfunction!(levenshtein_quick, m)?)?;
     Ok(())
 }

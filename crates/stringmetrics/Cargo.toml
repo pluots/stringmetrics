@@ -53,6 +53,14 @@ harness = false
 name = "dict_integration"
 harness = false
 
+[[bench]]
+name = "levenshtein_bench"
+harness = false
+
+[[bench]]
+name = "iter_bench"
+harness = false
+
 
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]

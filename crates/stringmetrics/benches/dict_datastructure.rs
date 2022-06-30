@@ -2,11 +2,12 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use std::collections::{BTreeSet, HashSet};
 use std::fs::File;
 use std::io::{self, BufRead};
+use std::iter::FromIterator;
 
 /// Load lines from a file
 /// Strip the affix "/" directive
 fn lines_loader() -> Vec<String> {
-    let file = File::open("dictionaries/en.dic").unwrap();
+    let file = File::open("../../dictionaries/en.dic").unwrap();
     let lines = io::BufReader::new(file).lines();
 
     let mut v: Vec<String> = Vec::new();
