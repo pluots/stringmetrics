@@ -1,4 +1,4 @@
-name: Build python wheels
+name: Build and release python wheels
 
 on:
   push:
