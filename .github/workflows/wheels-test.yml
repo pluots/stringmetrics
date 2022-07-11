@@ -11,13 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
+    # - uses: messense/maturin-action@v1
+    #   with:
+    #     manylinux: auto
+    #     command: build
+    #     args: --release -o dist --manifest-path crates/stringmetrics_py/Cargo.toml
     - uses: messense/maturin-action@v1
       with:
-        manylinux: auto
-        command: build
-        args: --release -o dist --manifest-path crates/stringmetrics_py/Cargo.toml
-    - uses: messense/maturin-action@v1
-      with:
+        target: x86_64-unknown-linux-musl
         manylinux: musllinux_1_1
         command: build
         args: --release -o dist --manifest-path crates/stringmetrics_py/Cargo.toml
