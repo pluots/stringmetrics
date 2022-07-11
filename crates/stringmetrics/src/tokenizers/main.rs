@@ -23,7 +23,7 @@ pub fn split_whitespace_remove_punc(s: &str) -> impl Iterator<Item = String> + '
     s.split_whitespace()
         .map(|word| {
             word.trim_matches(&END_REMOVE_CHARS[..])
-                .replace(&REMOVE_CHARS, "")
+                .replace(&REMOVE_CHARS[..], "")
         })
         .filter(|word| !word.is_empty())
 }
