@@ -1,3 +1,7 @@
 [workspace]
 
-members = ["crates/stringmetrics", "crates/stringmetrics_py"]
+members = [
+    "crates/stringmetrics",
+    "crates/stringmetrics_py",
+    "crates/stringmetrics_bin_bench"
+    ]
