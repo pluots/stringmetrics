@@ -5,8 +5,9 @@ edition = "2018"
 authors = ["Trevor Gross <tmgross@umich.edu>"]
 description = "Rust library for approximate string matching"
 
-readme = "../../README.md"
-license-file = "../../LICENSE"
+# Note: these are symlinked from top level
+readme = "README.md"
+license-file = "LICENSE"
 
 documentation = "https://docs.rs/stringmetrics"
 repository = "https://github.com/pluots/stringmetrics"

@@ -44,6 +44,11 @@ pub fn bench_collected(c: &mut Criterion) {
             black_box(vv.iter().count());
         })
     });
+    c.bench_function("Iterate collected chars deref", |b| {
+        b.iter(|| {
+            black_box(vv.iter().map(|x| *x).count());
+        })
+    });
     c.bench_function("Iterate uncollected chars", |b| {
         b.iter(|| {
             black_box(bb_str.chars().count());
