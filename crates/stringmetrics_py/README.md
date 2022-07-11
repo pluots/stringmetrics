@@ -1,5 +1,7 @@
 # Stringmetrics
 
+A library that implements Levenshtein distance and other string metrics. This
+
 Python bindings for the Rust stringmetrics library
 
 ```py
