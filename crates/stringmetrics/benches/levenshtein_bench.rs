@@ -1,60 +1,50 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::cmp::min;
-use stringmetrics::algorithms::levenshtein;
+use stringmetrics::{levenshtein, levenshtein_limit};
 
 pub fn bench_lev(c: &mut Criterion) {
-    c.bench_function("Basic Levenshtein", |b| {
+    c.bench_function("Base Levenshtein", |b| {
         b.iter(|| levenshtein(black_box("the fat cat"), black_box("a mean rat")))
     });
-    c.bench_function("Basic Levenshtein Empty", |b| {
-        b.iter(|| levenshtein(black_box("the fat cat"), black_box("")))
-    });
-}
-
-pub fn bench_lev_quick(c: &mut Criterion) {
     c.bench_function("Quick Levenshtein", |b| {
-        b.iter(|| {
-            levenshtein_quick(
-                black_box(String::from("the fat cat")),
-                black_box(String::from("a mean rat")),
-            )
-        })
+        b.iter(|| levenshtein_quick(black_box("the fat cat"), black_box("a mean rat")))
     });
-    c.bench_function("Quick Levenshtein Empty", |b| {
-        b.iter(|| {
-            levenshtein_quick(
-                black_box(String::from("the fat cat")),
-                black_box(String::from("")),
-            )
-        })
-    });
-}
-
-pub fn bench_lev_quick_usize(c: &mut Criterion) {
     c.bench_function("Quick Levenshtein usize", |b| {
+        b.iter(|| levenshtein_quick_size(black_box("the fat cat"), black_box("a mean rat")))
+    });
+
+    c.bench_function("Base Levenshtein limit", |b| {
         b.iter(|| {
-            levenshtein_quick_size(
-                black_box(String::from("the fat cat")),
-                black_box(String::from("a mean rat")),
+            levenshtein_limit(
+                black_box("the fat cat"),
+                black_box("a mean rat"),
+                black_box(40),
             )
         })
     });
-}
-
-pub fn bench_lev_quick_limit(c: &mut Criterion) {
     c.bench_function("Quick Levenshtein limit", |b| {
         b.iter(|| {
             levenshtein_quick_limit(
-                black_box(String::from("the fat cat")),
-                black_box(String::from("a mean rat")),
+                black_box("the fat cat"),
+                black_box("a mean rat"),
                 black_box(40),
             )
         })
     });
 }
 
+pub fn bench_lev_empty(c: &mut Criterion) {
+    c.bench_function("Base Levenshtein Empty", |b| {
+        b.iter(|| levenshtein(black_box("the fat cat"), black_box("")))
+    });
+
+    c.bench_function("Quick Levenshtein Empty", |b| {
+        b.iter(|| levenshtein_quick(black_box("the fat cat"), black_box("")))
+    });
+}
+
 #[inline]
-fn levenshtein_quick(a: String, b: String) -> u32 {
+fn levenshtein_quick(a: &str, b: &str) -> u32 {
     let a_len = a.len() as u32;
     let b_len = b.len() as u32;
 
@@ -73,8 +63,8 @@ fn levenshtein_quick(a: String, b: String) -> u32 {
         v_curr[0] = (i + 1) as u32;
         // Fill out the rest of the row
         for (j, b_item) in b.chars().enumerate() {
-            let ins_cost = v_curr[j];
-            let del_cost = v_prev[j + 1];
+            let ins_cost = v_curr[j] + 1;
+            let del_cost = v_prev[j + 1] + 1;
             let sub_cost = match a_item == b_item {
                 true => v_prev[j],
                 false => v_prev[j] + 1,
@@ -93,8 +83,7 @@ fn levenshtein_quick(a: String, b: String) -> u32 {
     *v_prev.last().unwrap()
 }
 
-#[inline]
-fn levenshtein_quick_limit(a: String, b: String, limit: u32) -> u32 {
+fn levenshtein_quick_limit(a: &str, b: &str, limit: u32) -> u32 {
     let a_len = a.len() as u32;
     let b_len = b.len() as u32;
 
@@ -114,8 +103,8 @@ fn levenshtein_quick_limit(a: String, b: String, limit: u32) -> u32 {
         v_curr[0] = (i + 1) as u32;
         // Fill out the rest of the row
         for (j, b_item) in b.chars().enumerate() {
-            let ins_cost = v_curr[j];
-            let del_cost = v_prev[j + 1];
+            let ins_cost = v_curr[j] + 1;
+            let del_cost = v_prev[j + 1] + 1;
             let sub_cost = match a_item == b_item {
                 true => v_prev[j],
                 false => v_prev[j] + 1,
@@ -139,7 +128,7 @@ fn levenshtein_quick_limit(a: String, b: String, limit: u32) -> u32 {
 }
 
 #[inline]
-fn levenshtein_quick_size(a: String, b: String) -> usize {
+fn levenshtein_quick_size(a: &str, b: &str) -> usize {
     let a_len = a.len();
     let b_len = b.len();
 
@@ -163,11 +152,11 @@ fn levenshtein_quick_size(a: String, b: String) -> usize {
     // top to bottom. Note there is actually an offset of 1 from i to the "true"
     // array position (since we start one row down).
     for (i, a_item) in a.chars().enumerate() {
-        v_curr[0] = (i + 1);
+        v_curr[0] = i + 1;
         // Fill out the rest of the row
         for (j, b_item) in b.chars().enumerate() {
-            let ins_cost = v_curr[j];
-            let del_cost = v_prev[j + 1];
+            let ins_cost = v_curr[j] + 1;
+            let del_cost = v_prev[j + 1] + 1;
             let sub_cost = match a_item == b_item {
                 true => v_prev[j],
                 false => v_prev[j] + 1,
@@ -186,11 +175,5 @@ fn levenshtein_quick_size(a: String, b: String) -> usize {
     *v_prev.last().unwrap()
 }
 
-criterion_group!(
-    levenshtein_bench,
-    bench_lev,
-    bench_lev_quick,
-    bench_lev_quick_usize,
-    bench_lev_quick_limit,
-);
+criterion_group!(levenshtein_bench, bench_lev, bench_lev_empty,);
 criterion_main!(levenshtein_bench);

@@ -1,3 +1,4 @@
+//! # Jaccard Similarty tools
 use std::collections::HashSet;
 use std::hash::Hash;
 

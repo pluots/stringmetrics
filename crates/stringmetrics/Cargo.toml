@@ -3,15 +3,15 @@ name = "stringmetrics"
 version = "1.1.2"
 edition = "2018"
 authors = ["Trevor Gross <tmgross@umich.edu>"]
-description = "Rust library for approximate string matching and spellchecking"
+description = "Rust library for approximate string matching"
 
 readme = "../../README.md"
 license-file = "../../LICENSE"
 
 documentation = "https://docs.rs/stringmetrics"
-repository = "https://github.com/pluots/stringmetrics-rust"
+repository = "https://github.com/pluots/stringmetrics"
 
-keywords = ["spellcheck", "spelling", "levenshtein"]
+keywords = ["levenshtein"]
 categories = ["algorithms", "text-processing"]
 
 [badges]
@@ -22,36 +22,12 @@ maintenance = { status = "actively-developed" }
 name = "stringmetrics"
 path = "src/lib.rs"
 
-[[bin]]
-name = "stringmetrics"
-path = "src/bin/bin.rs"
-
 [dependencies]
-# isolang = "2.1.0"
-futures = "0.3"             # async tools
-lazy_static = "1.4"         # late-evaluated statics
-regex = "1"                 # rust core regex
-# This crate's proc macros (unused)
-# stringmetrics_derive = { path = "stringmetrics_derive" }
-# Enum ser/des operations
-strum = { version = "0.24", features = ["derive"] }
-strum_macros = "0.24"        # Macros for ser/de
-# Splitting on graphemes rather than chars
-unicode-segmentation = "1.9.0"
-clap = { version = "3.2", features = ["derive"] }
 
 [dev-dependencies]
 criterion = "0.3"
 assert_cmd = "2.0"
 predicates = "2.1"
-
-[[bench]]
-name = "dict_datastructure"
-harness = false
-
-[[bench]]
-name = "dict_integration"
-harness = false
 
 [[bench]]
 name = "levenshtein_bench"
