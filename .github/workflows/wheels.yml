@@ -1,4 +1,4 @@
-name: Build and release python wheels
+name: "Python wheels: build & release"
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     - 'v*'
 
 jobs:
-  linux:
+  linux_wheels:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -28,7 +28,7 @@ jobs:
         name: wheels
         path: dist
 
-  windows:
+  windows_wheels:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
@@ -42,7 +42,7 @@ jobs:
         name: wheels
         path: dist
 
-  macos:
+  macos_wheels:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
@@ -56,7 +56,7 @@ jobs:
         name: wheels
         path: dist
 
-  release:
+  release_all_wheels:
     name: Release
     runs-on: ubuntu-latest
     # needs: [ linux ]
