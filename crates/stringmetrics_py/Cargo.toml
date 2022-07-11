@@ -4,9 +4,9 @@ version = "2.0.0"
 edition = "2018"
 publish = false
 
-readme = "../../README.py.md"
-license-file = "../../LICENSE"
-
+readme = "README.md"
+# Note: this is symlinked from top level
+license-file = "LICENSE"
 
 [lib]
 name = "stringmetrics"

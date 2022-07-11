@@ -85,27 +85,28 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
         return min(a_len, limit);
     }
 
-    let diff = max(a_len, b_len) - min(a_len, b_len);
-    if diff >= limit {
+    if (max(a_len, b_len) - min(a_len, b_len)) >= limit {
         return limit;
     }
-
-    // It is faster to collect to a vector of chars than repeatedly calling
-    // .chars() for very long strings - look into adding this optimization
-    // let b_vec: Vec<char> = b.chars().collect();
 
     let v_len = b_len + 1;
     let mut v_prev: Vec<u32> = (0..(v_len)).collect();
     let mut v_curr: Vec<u32> = vec![0; v_len as usize];
     let mut current_max: u32 = 0;
 
+    // Benches show it's quicker to have these defined outside the loop
+    // Than immut inside
+    let mut ins_cost: u32;
+    let mut del_cost: u32;
+    let mut sub_cost: u32;
+
     for (i, a_item) in a.chars().enumerate() {
         v_curr[0] = (i + 1) as u32;
         // Fill out the rest of the row
         for (j, b_item) in b.chars().enumerate() {
-            let ins_cost = v_curr[j] + 1;
-            let del_cost = v_prev[j + 1] + 1;
-            let sub_cost = match a_item == b_item {
+            ins_cost = v_curr[j] + 1;
+            del_cost = v_prev[j + 1] + 1;
+            sub_cost = match a_item == b_item {
                 true => v_prev[j],
                 false => v_prev[j] + 1,
             };
