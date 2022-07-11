@@ -1,10 +1,3 @@
-# from .stringmetrics import *
-
-# __doc__ = stringmetrics.__doc__
-# if hasattr(stringmetrics, "__all__"):
-#     __all__ = stringmetrics.__all__
-# from typing import Iterable, Optional
-
 from .stringmetrics import levenshtein as levenshtein
 
 # from .stringmetrics import levenshtein_advanced as _levenshtein_advanced
