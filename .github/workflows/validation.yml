@@ -95,3 +95,6 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: doc
+      - uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "crates/stringmetrics_py/docs/"
