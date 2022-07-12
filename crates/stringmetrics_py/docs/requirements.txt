@@ -1,2 +1,2 @@
 furo
-sphinx
+sphinx==5.0
