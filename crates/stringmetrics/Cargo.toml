@@ -31,7 +31,7 @@ assert_cmd = "2.0"
 predicates = "2.1"
 
 [[bench]]
-name = "levenshtein_bench"
+name = "lev_bench"
 harness = false
 
 [[bench]]

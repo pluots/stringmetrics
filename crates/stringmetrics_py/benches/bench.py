@@ -58,10 +58,9 @@ tests = (
 )
 
 setups = (
-    # ("from jellyfish import levenshtein_distance as testfn", "jellyfish"),
+    ("from jellyfish import levenshtein_distance as testfn", "jellyfish"),
     ("from stringmetrics import levenshtein as testfn", "stringmetrics"),
     ("from rapidfuzz.distance.Levenshtein import distance as testfn", "rapidfuzz"),
-    ("from rapidfuzz.distance.Levenshtein import distance as testfn", "lev"),
 )
 
 
@@ -83,7 +82,8 @@ def main():
 
             loops, time = timeit.Timer(stmt, setup).autorange()
             time_str = si_format(time / loops)
-            print(f"{size} {name}: {time_str} per loop ({loops} loops)")
+            name += ":"
+            print(f"{size: <14} {name: <15} {time_str: >9} per loop ({loops} loops)")
 
 
 if __name__ == "__main__":

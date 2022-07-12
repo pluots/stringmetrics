@@ -76,3 +76,6 @@ docs/_build/
 
 # Pyenv
 .python-version
+
+# Perf analysis files
+perf.data*
