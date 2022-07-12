@@ -116,10 +116,5 @@ fn levenshtein_quick(a: &str, b: &str) -> u32 {
     *v_prev.last().unwrap()
 }
 
-criterion_group!(
-    bench,
-    bench_lev,
-    bench_lev_empty,
-    bench_lev_long
-);
+criterion_group!(bench, bench_lev, bench_lev_empty, bench_lev_long);
 criterion_main!(bench);
