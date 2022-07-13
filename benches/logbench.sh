@@ -1,8 +1,8 @@
 #!/bin/sh
 
-dtime=$(date +"%Y-%m-%d %H:%MZ" --utc)
+dtime=$(date +"%Y-%m-%d_%H%M" --utc)
 hash=$(git rev-parse --short HEAD)
-fname="benches/results/$dtime $hash.bench"
+fname="benches/results/${dtime}_$hash.bench"
 
 # Print CPU information to the file
 cmd="echo Benchmark from $dtime on commit $hash;"
