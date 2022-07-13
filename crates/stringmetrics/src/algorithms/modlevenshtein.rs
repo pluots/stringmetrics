@@ -74,58 +74,123 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
     // This implementation is the same as levenshtein_limit_weight_slice, but
     // without the cost multiplications (for speed).
-    let a_len = a.len() as u32;
-    let b_len = b.len() as u32;
 
-    // Start with some shortcut solution optimizations
-    if a_len == 0 {
-        return min(b_len, limit);
+    // Variables to hold the starting and ending similar elements
+    let mut start_sim = 0usize;
+    let mut end_sim = 0usize;
+
+    // Figure out how many similar elements we can skip from the beginning
+    // This also handles the quick case where a == b.
+    for (a_char, b_char) in a.chars().zip(b.chars()) {
+        if a_char == b_char {
+            start_sim += 1
+        } else {
+            break;
+        }
     }
+
+    let mut a_len_u = a.len() - start_sim;
+    let mut b_len_u = b.len() - start_sim;
+
+    // Figure out how many similar elements we can skip at the end
+    let mut a_iter = a.chars();
+    let mut b_iter = b.chars();
+
+    loop {
+        if end_sim >= a_len_u || end_sim >= b_len_u {
+            break;
+        }
+        match (a_iter.next_back(), b_iter.next_back()) {
+            (Some(x), Some(y)) => {
+                if x == y {
+                    end_sim += 1
+                } else {
+                    break;
+                }
+            }
+            _ => break,
+        }
+    }
+
+    a_len_u -= end_sim;
+    b_len_u -= end_sim;
+
+    let a_wrk: &str;
+    let b_wrk: &str;
+    let a_len: u32;
+    let b_len: u32;
+
+    // We want the longer string in the inner loop
+    // B will be the longer string from this point on
+    if a_len_u > b_len_u {
+        a_wrk = b;
+        b_wrk = a;
+        a_len = b_len_u as u32;
+        b_len = a_len_u as u32;
+    } else {
+        a_wrk = a;
+        b_wrk = b;
+        a_len = a_len_u as u32;
+        b_len = b_len_u as u32;
+    }
+
+    // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
         return min(a_len, limit);
     }
 
-    if (max(a_len, b_len) - min(a_len, b_len)) >= limit {
+    if b_len - a_len >= limit {
         return limit;
     }
 
-    let v_len = b_len + 1;
-    let mut v_prev: Vec<u32> = (0..(v_len)).collect();
-    let mut v_curr: Vec<u32> = vec![0; v_len as usize];
-    let mut current_max: u32 = 0;
+    let mut work_vec: Vec<u32> = (1..(b_len + 1)).collect();
 
-    // Benches show it's quicker to have these defined outside the loop
-    // Than immut inside
-    let mut ins_cost: u32;
-    let mut del_cost: u32;
-    let mut sub_cost: u32;
+    let mut tmp_res = b_len;
 
-    for (i, a_item) in a.chars().enumerate() {
-        v_curr[0] = (i + 1) as u32;
-        // Fill out the rest of the row
-        for (j, b_item) in b.chars().enumerate() {
-            ins_cost = v_curr[j] + 1;
-            del_cost = v_prev[j + 1] + 1;
-            sub_cost = match a_item == b_item {
-                true => v_prev[j],
-                false => v_prev[j] + 1,
-            };
+    for (i, a_item) in a_wrk.chars().skip(start_sim).enumerate() {
+        // Our "horizotal" iterations always start with the leftmost column,
+        // which is the insertion cost (or substitution above)
+        // temp_res is also our ins_base
+        let mut sub_base = i as u32;
 
-            v_curr[j + 1] = min(min(ins_cost, del_cost), sub_cost);
+        // Reuse the casted variable as our loop exit if we are at the end
+        if sub_base >= a_len {
+            break;
         }
 
-        current_max = *v_curr.last().unwrap();
+        tmp_res = sub_base + 1;
 
-        if current_max >= limit {
+        // Go through and do our calculations. we need to preserve the "up left"
+        // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
+        for (j, b_item) in b_wrk.chars().skip(start_sim).enumerate() {
+            if j as u32 >= b_len {
+                break;
+            }
+
+            let del_base = work_vec[j];
+
+            if a_item != b_item {
+                sub_base += 1;
+            }
+
+            // Insertion costs and deletion costs are their bases + 1
+            // i.e., the value to the left or above plus 1
+            tmp_res = min(min(tmp_res, del_base) + 1, sub_base);
+
+            // As we shift to the right, our deletion square becomes our
+            // substitution square
+            sub_base = del_base;
+
+            // Save our insertion cost for the next iteration
+            work_vec[j] = tmp_res;
+        }
+
+        if tmp_res > limit {
             return limit;
         }
-
-        // Move current row to previous for the next loop
-        // "Current" is always overwritten so we can just swap
-        std::mem::swap(&mut v_prev, &mut v_curr);
     }
 
-    current_max
+    tmp_res
 }
 
 /// Levenshtein distance computation with weights
@@ -298,17 +363,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_levenshtein_empty() {
-        assert_eq!(levenshtein("", ""), 0);
-    }
-
-    #[test]
     fn test_levenshtein_equal() {
         assert_eq!(levenshtein("abcdef", "abcdef"), 0);
     }
 
     #[test]
-    fn test_levenshtein_one_empty() {
+    fn test_levenshtein_empty() {
+        assert_eq!(levenshtein("", ""), 0);
         assert_eq!(levenshtein("abcdef", ""), 6);
         assert_eq!(levenshtein("", "abcdef"), 6);
     }
@@ -316,13 +377,35 @@ mod tests {
     #[test]
     fn test_levenshtein_basic() {
         assert_eq!(levenshtein("abcd", "ab"), 2);
+        assert_eq!(levenshtein("ab", "abcd"), 2);
         assert_eq!(levenshtein("abcd", "ad"), 2);
         assert_eq!(levenshtein("abcd", "cd"), 2);
         assert_eq!(levenshtein("abcd", "a"), 3);
         assert_eq!(levenshtein("abcd", "c"), 3);
         assert_eq!(levenshtein("abcd", "accd"), 1);
         assert_eq!(levenshtein("kitten", "sitting"), 3);
+        assert_eq!(levenshtein("sitting", "kitten"), 3);
+        assert_eq!(levenshtein("not", "to a"), 3);
         assert_eq!(levenshtein("to be a bee", "not to bee"), 6);
+    }
+
+    #[test]
+    fn test_levenshtein_trick_skips() {
+        // Try to trick the part that skips forward and backward
+        assert_eq!(levenshtein("abcd", "abcd"), 0);
+        assert_eq!(levenshtein("abcd", "ad"), 2);
+        assert_eq!(levenshtein("abcd", "cd"), 2);
+        assert_eq!(levenshtein("abcd", "a"), 3);
+        assert_eq!(levenshtein("abcd", "b"), 3);
+        assert_eq!(levenshtein("abcd", "c"), 3);
+        assert_eq!(levenshtein("abcd", "d"), 3);
+        assert_eq!(levenshtein("a", "abcd"), 3);
+        assert_eq!(levenshtein("d", "abcd"), 3);
+        assert_eq!(levenshtein("notate", "to ate"), 2);
+        assert_eq!(levenshtein("to ate", "notate"), 2);
+        assert_eq!(levenshtein("to be a", "not to"), 6);
+        assert_eq!(levenshtein("not to", "to be a"), 6);
+        assert_eq!(levenshtein("abccc", "accc"), 1);
     }
 
     #[test]
