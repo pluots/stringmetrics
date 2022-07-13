@@ -2,6 +2,8 @@
 
 ## [Unreleased] - ReleaseDate
 
+## [2.0.6] - 2022-07-13
+
 <!-- ### Added -->
 
 ### Changed
@@ -13,5 +15,6 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.0.5...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.0.6...HEAD
+[2.0.6]: https://github.com/pluots/stringmetrics/compare/v2.0.5...v2.0.6
 [2.0.5]: https://github.com/pluots/stringmetrics/compare/v2.0.4...v2.0.5
