@@ -1,8 +1,0 @@
-[package]
-name = "stringmetrics_bin_bench"
-version = "0.1.0"
-edition = "2021"
-publish = false
-
-[dependencies]
-stringmetrics = { path = "../stringmetrics" }
