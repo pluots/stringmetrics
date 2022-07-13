@@ -6,9 +6,10 @@ fname="benches/results/${dtime}_$hash.bench"
 
 # Print CPU information to the file
 cmd="echo Benchmark from $dtime on commit $hash;"
-cmd=${cmd}"printf '\n'; "
-cmd=${cmd}"echo CPU information:; "
-cmd=${cmd}"lscpu | grep -E 'Architecture|Model name|Socket|Thread|CPU\(s\)|MHz'; "
+cmd=${cmd}"rustc --version;"
+cmd=${cmd}"printf '\n';"
+cmd=${cmd}"echo CPU information:;"
+cmd=${cmd}"lscpu | grep -E 'Architecture|Model name|Socket|Thread|CPU\(s\)|MHz';"
 cmd=${cmd}"printf '\n\n\n';"
 cmd=${cmd}"cargo bench $*;"
 
