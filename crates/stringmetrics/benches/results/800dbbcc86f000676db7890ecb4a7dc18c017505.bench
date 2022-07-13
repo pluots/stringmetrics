@@ -1,155 +1,0 @@
-Script started on 2022-07-12 21:57:20-04:00 [TERM="xterm-256color" TTY="/dev/pts/5" COLUMNS="260" LINES="42"]
-[0m[0m[1m[32m    Finished[0m bench [optimized] target(s) in 0.03s
-[0m[0m[1m[32m     Running[0m unittests src/lib.rs (/home/seed/Documents/workspace/text/stringmetrics/target/release/deps/stringmetrics-4267cf963964f948)
-
-running 22 tests
-test algorithms::modhamming::tests::test_basic ... [33mignored(B[m
-test algorithms::modhamming::tests::test_empty_string ... [33mignored(B[m
-test algorithms::modhamming::tests::test_iter ... [33mignored(B[m
-test algorithms::modhamming::tests::test_panic_on_not_equal - should panic ... [33mignored(B[m
-test algorithms::modhamming::tests::test_slice ... [33mignored(B[m
-test algorithms::modjaccard::tests::test_jaccard_a_empty ... [33mignored(B[m
-test algorithms::modjaccard::tests::test_jaccard_b_empty ... [33mignored(B[m
-test algorithms::modjaccard::tests::test_jaccard_empty ... [33mignored(B[m
-test algorithms::modjaccard::tests::test_jaccard_str_sets ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_basic ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_empty ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_equal ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_limit ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_limit_one_empty ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_limit_weight_slice ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_one_empty ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_weight_deletion ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_weight_insertion ... [33mignored(B[m
-test algorithms::modlevenshtein::tests::test_levenshtein_weight_substitution ... [33mignored(B[m
-test tokenizers::main::tests::test_remove_chars ... [33mignored(B[m
-test tokenizers::main::tests::test_split ... [33mignored(B[m
-test tokenizers::main::tests::test_trim_end ... [33mignored(B[m
-
-test result: [32mok(B[m. 0 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-[0m[0m[1m[32m     Running[0m benches/iter_bench.rs (/home/seed/Documents/workspace/text/stringmetrics/target/release/deps/iter_bench-92486792a5554bc0)
-WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
-This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
-
-Gnuplot not found, using plotters backend
-Benchmarking Collect chars                          Benchmarking Collect chars: Warming up for 3.0000 s                                                   Benchmarking Collect chars: Collecting 100 samples in estimated 5.0002 s (39M iterations)                                                                                         Benchmarking Collect chars: Analyzing                                     [32mCollect chars[39m           time:   [[2m118.80 ns[22m [1m119.49 ns[22m [2m120.17 ns[22m]
-                        change: [[2m-3.4407%[22m -2.2273% [2m-0.8130%[22m] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-[33mFound 4 outliers among 100 measurements (4.00%)[39m
-  2 (2.00%) high mild
-  2 (2.00%) high severe
-
-Benchmarking Iterate collected chars                                    Benchmarking Iterate collected chars: Warming up for 3.0000 s                                                             Benchmarking Iterate collected chars: Collecting 100 samples in estimated 5.0000 s (22B iterations)                                                                                                   Benchmarking Iterate collected chars: Analyzing                                               [32mIterate collected chars[39m time:   [[2m229.57 ps[22m [1m229.61 ps[22m [2m229.65 ps[22m]
-                        change: [[2m-0.7553%[22m -0.2673% [2m+0.0970%[22m] (p = 0.26 > 0.05)
-                        No change in performance detected.
-[33mFound 11 outliers among 100 measurements (11.00%)[39m
-  1 (1.00%) low severe
-  1 (1.00%) low mild
-  5 (5.00%) high mild
-  4 (4.00%) high severe
-
-Benchmarking Iterate collected chars deref                                          Benchmarking Iterate collected chars deref: Warming up for 3.0000 s                                                                   Benchmarking Iterate collected chars deref: Collecting 100 samples in estimated 5.0000 s (22B iterations)                                                                                                         Benchmarking Iterate collected chars deref: Analyzing                                                     [32mIterate collected chars deref[39m
-[32m[39m                        time:   [[2m229.98 ps[22m [1m230.15 ps[22m [2m230.34 ps[22m]
-                        change: [[2m-0.4497%[22m +0.0674% [2m+0.7804%[22m] (p = 0.88 > 0.05)
-                        No change in performance detected.
-[33mFound 8 outliers among 100 measurements (8.00%)[39m
-  5 (5.00%) high mild
-  3 (3.00%) high severe
-
-Benchmarking Iterate uncollected chars                                      Benchmarking Iterate uncollected chars: Warming up for 3.0000 s                                                               Benchmarking Iterate uncollected chars: Collecting 100 samples in estimated 5.0000 s (498M iterations)                                                                                                      Benchmarking Iterate uncollected chars: Analyzing                                                 [32mIterate uncollected chars[39m
-[32m[39m                        time:   [[2m9.9690 ns[22m [1m9.9931 ns[22m [2m10.021 ns[22m]
-                        change: [[2m-4.0604%[22m [32m[1m-3.0182%[22m[39m [2m-2.0480%[22m] (p = 0.00 < 0.05)
-                        Performance has [32mimproved[39m.
-[33mFound 4 outliers among 100 measurements (4.00%)[39m
-  4 (4.00%) high severe
-
-Benchmarking Iterate uncollected bytes                                      Benchmarking Iterate uncollected bytes: Warming up for 3.0000 s                                                               Benchmarking Iterate uncollected bytes: Collecting 100 samples in estimated 5.0000 s (22B iterations)                                                                                                     Benchmarking Iterate uncollected bytes: Analyzing                                                 [32mIterate uncollected bytes[39m
-[32m[39m                        time:   [[2m228.11 ps[22m [1m228.13 ps[22m [2m228.15 ps[22m]
-                        change: [[2m-2.0622%[22m -1.2916% [2m-0.2118%[22m] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-[33mFound 11 outliers among 100 measurements (11.00%)[39m
-  4 (4.00%) high mild
-  7 (7.00%) high severe
-
-[0m[0m[1m[32m     Running[0m benches/lev_bench.rs (/home/seed/Documents/workspace/text/stringmetrics/target/release/deps/lev_bench-0260e02bb8feb7b8)
-WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
-This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
-
-Gnuplot not found, using plotters backend
-Benchmarking Base Levenshtein                             Benchmarking Base Levenshtein: Warming up for 3.0000 s                                                      Benchmarking Base Levenshtein: Collecting 100 samples in estimated 5.0012 s (18M iterations)                                                                                            Benchmarking Base Levenshtein: Analyzing                                        [32mBase Levenshtein[39m        time:   [[2m276.74 ns[22m [1m279.54 ns[22m [2m282.84 ns[22m]
-                        change: [[2m-3.4448%[22m [32m[1m-2.1470%[22m[39m [2m-1.0847%[22m] (p = 0.00 < 0.05)
-                        Performance has [32mimproved[39m.
-[33mFound 7 outliers among 100 measurements (7.00%)[39m
-  4 (4.00%) high mild
-  3 (3.00%) high severe
-
-Benchmarking Quick Levenshtein                              Benchmarking Quick Levenshtein: Warming up for 3.0000 s                                                       Benchmarking Quick Levenshtein: Collecting 100 samples in estimated 5.0011 s (17M iterations)                                                                                             Benchmarking Quick Levenshtein: Analyzing                                         [32mQuick Levenshtein[39m       time:   [[2m291.26 ns[22m [1m291.77 ns[22m [2m292.32 ns[22m]
-                        change: [[2m-4.7061%[22m [32m[1m-3.8469%[22m[39m [2m-3.0293%[22m] (p = 0.00 < 0.05)
-                        Performance has [32mimproved[39m.
-[33mFound 6 outliers among 100 measurements (6.00%)[39m
-  1 (1.00%) low mild
-  5 (5.00%) high mild
-
-Benchmarking Base Levenshtein limit                                   Benchmarking Base Levenshtein limit: Warming up for 3.0000 s                                                            Benchmarking Base Levenshtein limit: Collecting 100 samples in estimated 5.0006 s (17M iterations)                                                                                                  Benchmarking Base Levenshtein limit: Analyzing                                              [32mBase Levenshtein limit[39m  time:   [[2m292.96 ns[22m [1m294.50 ns[22m [2m295.84 ns[22m]
-                        change: [[2m+1.1843%[22m [31m[1m+2.4236%[22m[39m [2m+3.9602%[22m] (p = 0.00 < 0.05)
-                        Performance has [31mregressed[39m.
-[33mFound 3 outliers among 100 measurements (3.00%)[39m
-  1 (1.00%) high mild
-  2 (2.00%) high severe
-
-Benchmarking Levenshtein Weights                                Benchmarking Levenshtein Weights: Warming up for 3.0000 s                                                         Benchmarking Levenshtein Weights: Collecting 100 samples in estimated 5.0005 s (9.3M iterations)                                                                                                Benchmarking Levenshtein Weights: Analyzing                                           [32mLevenshtein Weights[39m     time:   [[2m533.59 ns[22m [1m535.39 ns[22m [2m537.40 ns[22m]
-                        change: [[2m-0.1291%[22m +1.2214% [2m+2.8156%[22m] (p = 0.10 > 0.05)
-                        No change in performance detected.
-[33mFound 12 outliers among 100 measurements (12.00%)[39m
-  8 (8.00%) high mild
-  4 (4.00%) high severe
-
-Benchmarking Base Levenshtein Empty                                   Benchmarking Base Levenshtein Empty: Warming up for 3.0000 s                                                            Benchmarking Base Levenshtein Empty: Collecting 100 samples in estimated 5.0000 s (1.6B iterations)                                                                                                   Benchmarking Base Levenshtein Empty: Analyzing                                              [32mBase Levenshtein Empty[39m  time:   [[2m2.9883 ns[22m [1m2.9953 ns[22m [2m3.0046 ns[22m]
-                        change: [[2m+0.2079%[22m +1.0837% [2m+2.1344%[22m] (p = 0.02 < 0.05)
-                        Change within noise threshold.
-[33mFound 14 outliers among 100 measurements (14.00%)[39m
-  14 (14.00%) high severe
-
-Benchmarking Quick Levenshtein Empty                                    Benchmarking Quick Levenshtein Empty: Warming up for 3.0000 s                                                             Benchmarking Quick Levenshtein Empty: Collecting 100 samples in estimated 5.0000 s (1.7B iterations)                                                                                                    Benchmarking Quick Levenshtein Empty: Analyzing                                               [32mQuick Levenshtein Empty[39m time:   [[2m2.9792 ns[22m [1m2.9801 ns[22m [2m2.9811 ns[22m]
-                        change: [[2m-1.2582%[22m -0.8629% [2m-0.5536%[22m] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-[33mFound 13 outliers among 100 measurements (13.00%)[39m
-  4 (4.00%) high mild
-  9 (9.00%) high severe
-
-Benchmarking Levenshtein Weights Empty                                      Benchmarking Levenshtein Weights Empty: Warming up for 3.0000 s                                                               Benchmarking Levenshtein Weights Empty: Collecting 100 samples in estimated 5.0138 s (1.6M iterations)                                                                                                      Benchmarking Levenshtein Weights Empty: Analyzing                                                 [32mLevenshtein Weights Empty[39m
-[32m[39m                        time:   [[2m3.1448 µs[22m [1m3.1460 µs[22m [2m3.1475 µs[22m]
-                        change: [[2m-1.2526%[22m -0.8880% [2m-0.6079%[22m] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-[33mFound 8 outliers among 100 measurements (8.00%)[39m
-  4 (4.00%) high mild
-  4 (4.00%) high severe
-
-Benchmarking Base Levenshtein Long                                  Benchmarking Base Levenshtein Long: Warming up for 3.0000 s
-Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 5.8s, enable flat sampling, or reduce sample count to 60.
-                                                           Benchmarking Base Levenshtein Long: Collecting 100 samples in estimated 5.8074 s (5050 iterations)                                                                                                  Benchmarking Base Levenshtein Long: Analyzing                                             [32mBase Levenshtein Long[39m   time:   [[2m1.1408 ms[22m [1m1.1469 ms[22m [2m1.1551 ms[22m]
-                        change: [[2m-1.0574%[22m -0.5706% [2m+0.0112%[22m] (p = 0.03 < 0.05)
-                        Change within noise threshold.
-[33mFound 9 outliers among 100 measurements (9.00%)[39m
-  4 (4.00%) high mild
-  5 (5.00%) high severe
-
-Benchmarking Limited Levenshtein Long                                     Benchmarking Limited Levenshtein Long: Warming up for 3.0000 s                                                              Benchmarking Limited Levenshtein Long: Collecting 100 samples in estimated 5.0034 s (4.3M iterations)                                                                                                     Benchmarking Limited Levenshtein Long: Analyzing                                                [32mLimited Levenshtein Long[39m
-[32m[39m                        time:   [[2m1.1613 µs[22m [1m1.1624 µs[22m [2m1.1635 µs[22m]
-                        change: [[2m-2.0307%[22m [32m[1m-1.6121%[22m[39m [2m-1.2076%[22m] (p = 0.00 < 0.05)
-                        Performance has [32mimproved[39m.
-[33mFound 6 outliers among 100 measurements (6.00%)[39m
-  3 (3.00%) high mild
-  3 (3.00%) high severe
-
-Benchmarking Levenshtein Weights Long                                     Benchmarking Levenshtein Weights Long: Warming up for 3.0000 s                                                              Benchmarking Levenshtein Weights Long: Collecting 100 samples in estimated 5.0042 s (1.6M iterations)                                                                                                     Benchmarking Levenshtein Weights Long: Analyzing                                                [32mLevenshtein Weights Long[39m
-[32m[39m                        time:   [[2m3.1617 µs[22m [1m3.1635 µs[22m [2m3.1653 µs[22m]
-                        change: [[2m-1.3334%[22m [32m[1m-1.2134%[22m[39m [2m-1.1045%[22m] (p = 0.00 < 0.05)
-                        Performance has [32mimproved[39m.
-[33mFound 4 outliers among 100 measurements (4.00%)[39m
-  3 (3.00%) high mild
-  1 (1.00%) high severe
-
-
-Script done on 2022-07-12 21:59:51-04:00 [COMMAND_EXIT_CODE="0"]
