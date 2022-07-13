@@ -11,14 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Build Linux Wheels
+    - name: Build libc wheels
       uses: messense/maturin-action@v1
       with:
         manylinux: auto
         command: build
         # container default is manylinux
         args: --release -o dist --manifest-path crates/stringmetrics_py/Cargo.toml
-    - uses: messense/maturin-action@v1
+    - name: Build musl wheels
+      uses: messense/maturin-action@v1
       with:
         maturin-version: "v0.13.0"
         target: x86_64-unknown-linux-musl
