@@ -1,0 +1,10 @@
+# Commented features are unstable
+unstable_features = true
+
+# format_code_in_doc_comments = true
+newline_style = "Unix"
+# group_imports = "StdExternalCrate"
+# wrap_comments = true
+# format_macro_matchers = true
+# format_macro_bodies = true
+# format_strings = true
