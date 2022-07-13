@@ -1,3 +1,22 @@
 [workspace]
 
-members = ["crates/stringmetrics", "crates/stringmetrics_py"]
+members = [
+    "crates/stringmetrics",
+    "crates/stringmetrics_py",
+    "crates/profiling"
+    ]
+
+
+# Build with `cargo build --profile=release-debug`
+# Useful for profiling, not for official releases
+[profile.release-debug]
+inherits = "release"
+debug = true
+
+# Sample profiling commands:
+# sudo perf record -e cycles -c 500 ./target/release-debug/lev
+# sudo perf annotate
+
+# Or with valgrind/kcachegrind
+# valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes \
+# --simulate-cache=yes target/release-debug/lev 

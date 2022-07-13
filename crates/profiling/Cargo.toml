@@ -1,0 +1,12 @@
+[package]
+name = "stringmetrics_profiling"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+stringmetrics = { path = "../stringmetrics" }
+
+[[bin]]
+name = "prof_lev"
+path = "src/lev.rs"

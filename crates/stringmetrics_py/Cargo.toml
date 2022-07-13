@@ -3,6 +3,8 @@ name = "stringmetrics_py"
 version = "2.0.4"
 edition = "2018"
 publish = false
+# Limitation of parking-lot from pyo3
+rust-version = "1.49"
 
 readme = "README.md"
 # Note: this is symlinked from top level
