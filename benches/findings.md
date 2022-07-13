@@ -22,7 +22,8 @@ Levenshtein Limit Long usize (hit limit)
 ```
 
 Performance was overall quite similar. `u32` was selected to allow larger
-values, but provide better memory
+values, but provide better memory usage than `usize`. Note the above benchmarks
+were run before some significant performance improvement changes.
 
 In the future, it may be worth changing the limit functions to accept any
 integer type via generic `<U>` on limit.

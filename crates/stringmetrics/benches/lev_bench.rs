@@ -25,7 +25,7 @@ const STR_B_LONG: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing \
     quam. Ut non congue nulla. Donec laoreet viverra tellus, eu placerat sapien \
     malesuada id. Maecenas facilisis lectus diam, quis sodales enim scelerisque \
     ut. Vestibulum ut ex in sem placerat ultrices. Mauris felis leo, fermentum \
-    id suscipit eget, sagittis non mauris. Donec ut interdum risus.";
+    id suscipit eget, sagittis non mauris. Donec ut interdum risus non ipsum.";
 
 pub fn bench_lev(c: &mut Criterion) {
     let weights = LevWeights::default();

@@ -108,14 +108,6 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
         }
     }
 
-    println!(
-        "a: {:?} b: {:?} start: {} end: {}",
-        a.chars().skip(start_sim).collect::<Vec<char>>(),
-        b.chars().skip(start_sim).collect::<Vec<char>>(),
-        start_sim,
-        end_sim
-    );
-
     a_len_u -= end_sim;
     b_len_u -= end_sim;
 
@@ -152,9 +144,10 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
     let mut tmp_res = b_len;
 
     for (i, a_item) in a_wrk.chars().skip(start_sim).enumerate() {
-        if i >= a_len_u {
+        if i as u32 >= a_len {
             break;
         }
+
         // Our "horizotal" iterations always start with the leftmost column,
         // which is the insertion cost (or substitution above)
         // temp_res is also our ins_base
@@ -188,8 +181,6 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
             // Save our insertion cost for the next iteration
             work_vec[j] = tmp_res;
         }
-
-        // res = *work_vec.last().unwrap();
 
         if tmp_res > limit {
             return limit;
@@ -382,14 +373,14 @@ mod tests {
 
     #[test]
     fn test_levenshtein_basic() {
-        // assert_eq!(levenshtein("abcd", "ab"), 2);
-        // assert_eq!(levenshtein("abcd", "ad"), 2);
-        // assert_eq!(levenshtein("abcd", "cd"), 2);
-        // assert_eq!(levenshtein("abcd", "a"), 3);
-        // assert_eq!(levenshtein("abcd", "c"), 3);
-        // assert_eq!(levenshtein("abcd", "accd"), 1);
-        // assert_eq!(levenshtein("kitten", "sitting"), 3);
-        assert_eq!(levenshtein("to be a", "not to"), 6);
+        assert_eq!(levenshtein("abcd", "ab"), 2);
+        assert_eq!(levenshtein("abcd", "ad"), 2);
+        assert_eq!(levenshtein("abcd", "cd"), 2);
+        assert_eq!(levenshtein("abcd", "a"), 3);
+        assert_eq!(levenshtein("abcd", "c"), 3);
+        assert_eq!(levenshtein("abcd", "accd"), 1);
+        assert_eq!(levenshtein("kitten", "sitting"), 3);
+        assert_eq!(levenshtein("not", "to a"), 3);
         assert_eq!(levenshtein("to be a bee", "not to bee"), 6);
     }
 
@@ -403,6 +394,10 @@ mod tests {
         assert_eq!(levenshtein("abcd", "b"), 3);
         assert_eq!(levenshtein("abcd", "c"), 3);
         assert_eq!(levenshtein("abcd", "d"), 3);
+        assert_eq!(levenshtein("notate", "to ate"), 2);
+        assert_eq!(levenshtein("to ate", "notate"), 2);
+        assert_eq!(levenshtein("to be a", "not to"), 6);
+        assert_eq!(levenshtein("not to", "to be a"), 6);
         assert_eq!(levenshtein("abccc", "accc"), 1);
     }
 
