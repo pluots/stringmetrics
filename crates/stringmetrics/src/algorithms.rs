@@ -80,9 +80,8 @@
 //! Hjelmqvist](https://www.codeproject.com/Articles/13525/Fast-memory-efficient-Levenshtein-algorithm-2)
 //! and described on [the Levenshtein distance Wikipedia
 //! page](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows)
-//! that only uses two vectors at a time, rather than constructing the entire
-//! matrix, for memory optimizations. Memory use is only that for a vector of
-//! u32 twice the length of string B.
+//! but adapted to use a single vector. Main memory usage is only that of a
+//! `Vec<u32>` in the same length as the shortest string.
 //!
 //! ### Limited Levenshtein algorithm
 //!

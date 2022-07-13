@@ -72,10 +72,15 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 /// assert_eq!(levenshtein_limit(a, b, 3), 3);
 /// ```
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
-    // Start with some shortcut solution optimizations
+    // This implementation is the same as levenshtein_limit_weight_slice, but
+    // without the cost multiplications (for speed).
 
-    // Remove the leading
+    // Variables to hold the starting and ending similar elements
     let mut start_sim = 0usize;
+    let mut end_sim = 0usize;
+
+    // Figure out how many similar elements we can skip from the beginning
+    // This also handles the quick case where a == b.
     for (a_char, b_char) in a.chars().zip(b.chars()) {
         if a_char == b_char {
             start_sim += 1
@@ -84,14 +89,13 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
         }
     }
 
-    // This implementation is the same as levenshtein_limit_weight_slice, but
-    // without the cost multiplications (for speed).
     let mut a_len_u = a.len() - start_sim;
     let mut b_len_u = b.len() - start_sim;
 
-    let mut end_sim = 0usize;
+    // Figure out how many similar elements we can skip at the end
     let mut a_iter = a.chars();
     let mut b_iter = b.chars();
+
     loop {
         if end_sim >= a_len_u || end_sim >= b_len_u {
             break;
@@ -117,7 +121,7 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
     let b_len: u32;
 
     // We want the longer string in the inner loop
-    // B will be the longer string from this point
+    // B will be the longer string from this point on
     if a_len_u > b_len_u {
         a_wrk = b;
         b_wrk = a;
@@ -144,21 +148,20 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
     let mut tmp_res = b_len;
 
     for (i, a_item) in a_wrk.chars().skip(start_sim).enumerate() {
-        if i as u32 >= a_len {
-            break;
-        }
-
         // Our "horizotal" iterations always start with the leftmost column,
         // which is the insertion cost (or substitution above)
         // temp_res is also our ins_base
         let mut sub_base = i as u32;
-        if sub_base > a_len {
+
+        // Reuse the casted variable as our loop exit if we are at the end
+        if sub_base >= a_len {
             break;
         }
+
         tmp_res = sub_base + 1;
 
         // Go through and do our calculations. we need to preserve the "up left"
-        // and "left" values as the rest are overwritten
+        // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
         for (j, b_item) in b_wrk.chars().skip(start_sim).enumerate() {
             if j as u32 >= b_len {
                 break;
@@ -374,12 +377,14 @@ mod tests {
     #[test]
     fn test_levenshtein_basic() {
         assert_eq!(levenshtein("abcd", "ab"), 2);
+        assert_eq!(levenshtein("ab", "abcd"), 2);
         assert_eq!(levenshtein("abcd", "ad"), 2);
         assert_eq!(levenshtein("abcd", "cd"), 2);
         assert_eq!(levenshtein("abcd", "a"), 3);
         assert_eq!(levenshtein("abcd", "c"), 3);
         assert_eq!(levenshtein("abcd", "accd"), 1);
         assert_eq!(levenshtein("kitten", "sitting"), 3);
+        assert_eq!(levenshtein("sitting", "kitten"), 3);
         assert_eq!(levenshtein("not", "to a"), 3);
         assert_eq!(levenshtein("to be a bee", "not to bee"), 6);
     }
@@ -394,6 +399,8 @@ mod tests {
         assert_eq!(levenshtein("abcd", "b"), 3);
         assert_eq!(levenshtein("abcd", "c"), 3);
         assert_eq!(levenshtein("abcd", "d"), 3);
+        assert_eq!(levenshtein("a", "abcd"), 3);
+        assert_eq!(levenshtein("d", "abcd"), 3);
         assert_eq!(levenshtein("notate", "to ate"), 2);
         assert_eq!(levenshtein("to ate", "notate"), 2);
         assert_eq!(levenshtein("to be a", "not to"), 6);

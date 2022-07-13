@@ -1,8 +1,14 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use stringmetrics::{levenshtein, levenshtein_limit, levenshtein_limit_weight, LevWeights};
 
+const BENCH_WEIGHTS: bool = false;
+const BENCH_LENDIFF: bool = true;
+
 const STR_A: &str = "an orange cat";
 const STR_B: &str = "an auburn bat";
+
+const STR_A_LENDIFF: &str = "an orange cat";
+const STR_B_LENDIFF: &str = "an auburn bat and a thing and maybe a thing or two";
 
 const STR_A_LONG: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing \
     elit. Nunc non dictum elit. Curabitur vitae dapibus dolor, id consequat \
@@ -23,9 +29,9 @@ const STR_B_LONG: &str = "Lorem ipsum dolor sit amet, consectetur adipiscing \
     non pharetra arcu. Praesent vitae viverra lorem. Phasellus sodales luctus \
     ullamcorper. Maecenas lorem eros, condimentum vel nisi id, sagittis pretium \
     quam. Ut non congue nulla. Donec laoreet viverra tellus, eu placerat sapien \
-    malesuada id. Maecenas facilisis lectus diam, quis sodales enim scelerisque \
-    ut. Vestibulum ut ex in sem placerat ultrices. Mauris felis leo, fermentum \
-    id suscipit eget, sagittis non mauris. Donec ut interdum risus non ipsum.";
+    malesuada id. sodales enim scelerisque ut. Vestibulum ut ex in sem placerat \
+    ultrices. Mauris felis leo, fermentum id suscipit eget, sagittis non mauris\
+    . Donec ut interdum risus non ipsum.";
 
 pub fn bench_lev(c: &mut Criterion) {
     let weights = LevWeights::default();
@@ -35,38 +41,62 @@ pub fn bench_lev(c: &mut Criterion) {
     c.bench_function("Levenshtein Limit (no hit)", |b| {
         b.iter(|| levenshtein_limit(black_box(STR_A), black_box(STR_B), black_box(40)))
     });
-    c.bench_function("Levenshtein Weights", |b| {
-        b.iter(|| levenshtein_limit_weight(black_box(STR_A), black_box(STR_B), 100, &weights))
-    });
+    if BENCH_LENDIFF {
+        c.bench_function("Levenshtein Different Lengths", |b| {
+            b.iter(|| levenshtein(black_box(STR_A_LENDIFF), black_box(STR_B_LENDIFF)))
+        });
+    }
+    if BENCH_WEIGHTS {
+        c.bench_function("Levenshtein Weights", |b| {
+            b.iter(|| levenshtein_limit_weight(black_box(STR_A), black_box(STR_B), 100, &weights))
+        });
+    }
 }
 
 pub fn bench_lev_empty(c: &mut Criterion) {
-    let weights = LevWeights::default();
+    if BENCH_LENDIFF {
+        c.bench_function("Levenshtein Empty A", |b| {
+            b.iter(|| levenshtein(black_box(""), black_box(STR_B)))
+        });
+    }
 
-    c.bench_function("Levenshtein Empty", |b| {
+    c.bench_function("Levenshtein Empty B", |b| {
         b.iter(|| levenshtein(black_box(STR_A), black_box("")))
     });
-    c.bench_function("Levenshtein Weights Empty", |b| {
-        b.iter(|| {
-            levenshtein_limit_weight(black_box(STR_A_LONG), black_box(STR_B_LONG), 100, &weights)
-        })
-    });
+
+    if BENCH_WEIGHTS {
+        let weights = LevWeights::default();
+        c.bench_function("Levenshtein Weights Empty B", |b| {
+            b.iter(|| levenshtein_limit_weight(black_box(STR_A_LONG), black_box(""), 100, &weights))
+        });
+    }
 }
 
 pub fn bench_lev_long(c: &mut Criterion) {
-    let weights = LevWeights::default();
-
     c.bench_function("Levenshtein Long", |b| {
         b.iter(|| levenshtein(black_box(STR_A_LONG), black_box(STR_B_LONG)))
     });
     c.bench_function("Levenshtein Limit Long (hit limit)", |b| {
         b.iter(|| levenshtein_limit(black_box(STR_A_LONG), black_box(STR_B_LONG), 100))
     });
-    c.bench_function("Levenshtein Weights Long (no hit)", |b| {
-        b.iter(|| {
-            levenshtein_limit_weight(black_box(STR_A_LONG), black_box(STR_B_LONG), 5000, &weights)
-        })
-    });
+    if BENCH_LENDIFF {
+        c.bench_function("Levenshtein Long Flip", |b| {
+            b.iter(|| levenshtein(black_box(STR_B_LONG), black_box(STR_A_LONG)))
+        });
+    }
+    if BENCH_WEIGHTS {
+        let weights = LevWeights::default();
+        c.bench_function("Levenshtein Weights Long (no hit)", |b| {
+            b.iter(|| {
+                levenshtein_limit_weight(
+                    black_box(STR_A_LONG),
+                    black_box(STR_B_LONG),
+                    5000,
+                    &weights,
+                )
+            })
+        });
+    }
 }
 
 criterion_group!(bench, bench_lev, bench_lev_empty, bench_lev_long);

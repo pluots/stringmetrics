@@ -1,4 +1,7 @@
 ## Levenshtein algorithm
+
+### Data types
+
 `levenshtein()` was tested with both `u32` and `usize` for its intermediates and
 return value.
 
@@ -27,6 +30,13 @@ were run before some significant performance improvement changes.
 
 In the future, it may be worth changing the limit functions to accept any
 integer type via generic `<U>` on limit.
+
+### A and B swapping
+
+Benchmarks were performed to determine if it is better to have the shorter
+string on the outer loop (A) or inner loop (B). The determination was made that
+it does not matter much, so the smaller string was placed inside to keep the
+cache vector smaller.
 
 ## Collections
 
