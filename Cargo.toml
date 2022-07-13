@@ -8,6 +8,7 @@ members = [
 
 
 # Build with `cargo build --profile=release-debug`
+# Alternatively `cargo bench --profile=release-debug`
 # Useful for profiling, not for official releases
 [profile.release-debug]
 inherits = "release"
@@ -19,4 +20,4 @@ debug = true
 
 # Or with valgrind/kcachegrind
 # valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes \
-# --simulate-cache=yes target/release-debug/lev 
+# --simulate-cache=yes target/release-debug/lev

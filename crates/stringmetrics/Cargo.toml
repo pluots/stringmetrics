@@ -44,6 +44,8 @@ rustdoc-args = [ "--html-in-header", "katex-header.html" ]
 
 [package.metadata.release]
 shared-version = true
+
+# Can't run replacements at workspace root. Need to use this "hacky" sort of way.
 pre-release-replacements = [
   {file="../../CHANGELOG.md", search="Unreleased", replace="{{version}}"},
   {file="../../CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}", exactly=1},
