@@ -4,9 +4,9 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Changed
-
 ### Added
+
+### Changed
 
 ### Removed
 
