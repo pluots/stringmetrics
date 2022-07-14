@@ -26,7 +26,7 @@ jobs:
         manylinux: musllinux_1_1
         # container: off
         command: build
-        args: --release -o dist --find-interpreter --manifest-path crates/stringmetrics_py/Cargo.toml
+        args: --release -o dist -i 3.7 3.8 3.9 3.10 --manifest-path crates/stringmetrics_py/Cargo.toml
     - name: Upload wheels
       uses: actions/upload-artifact@v2
       with:
