@@ -21,7 +21,7 @@ jobs:
     - name: Build musl wheels
       uses: messense/maturin-action@v1
       with:
-        maturin-version: "v0.13.0"
+        # maturin-version: "v0.13.0"
         target: x86_64-unknown-linux-musl
         manylinux: musllinux_1_1
         # container: off
