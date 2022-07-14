@@ -21,10 +21,8 @@ jobs:
     - name: Build musl wheels
       uses: messense/maturin-action@v1
       with:
-        # maturin-version: "v0.13.0"
         target: x86_64-unknown-linux-musl
         manylinux: musllinux_1_1
-        # container: off
         command: build
         args: --release -o dist -i 3.7 3.8 3.9 3.10 --manifest-path crates/stringmetrics_py/Cargo.toml
     - name: Upload wheels
