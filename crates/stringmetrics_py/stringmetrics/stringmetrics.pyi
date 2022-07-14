@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Optional, Sequence
 
-def levenshtein(a: str, b: str, limit: Optional[int] = None) -> int:
+def levenshtein(a: Sequence, b: Sequence, limit: Optional[int] = None) -> int:
     """Compute the Levenshtein distance between two strings.
 
     If a limit is specified, the algorithm will stop calculating once that

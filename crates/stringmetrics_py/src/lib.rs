@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-// use pyo3::types::PyIterator;
+// use pyo3::types::PySequence;
 use stringmetrics::algorithms;
 
 /// Formats the sum of two numbers as string.
@@ -11,6 +11,15 @@ fn levenshtein(a: &str, b: &str, limit: Option<u32>) -> u32 {
         None => algorithms::levenshtein(a, b),
     }
 }
+
+// #[pyfunction]
+// #[inline]
+// fn levenshtein_seq(a: &PySequence, b: &PySequence, limit: Option<u32>) -> u32 {
+//     match limit {
+//         Some(v) => algorithms::levenshtein_limit(a, b, v),
+//         None => algorithms::levenshtein(a, b),
+//     }
+// }
 
 /// Formats the sum of two numbers as string.
 // #[pyfunction]
@@ -36,6 +45,7 @@ fn levenshtein(a: &str, b: &str, limit: Option<u32>) -> u32 {
 #[inline]
 fn stringmetrics(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(levenshtein, m)?)?;
+    m.add_function(wrap_pyfunction!(levenshtein_nolimit, m)?)?;
     // m.add_function(wrap_pyfunction!(levenshtein_limit, m)?)?;
     Ok(())
 }
