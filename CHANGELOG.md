@@ -4,11 +4,19 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Changed
+
+### Added
+
+### Removed
+
+
 ## [2.0.7] - 2022-07-14
 
 ### Changed
 
 - Fixed musllinux builds to work for 3.7-3.10.
+
 
 ## [2.0.6] - 2022-07-13
 
@@ -19,6 +27,7 @@
 - Updated algorithm used by `levenshtein` and `levenshtein_limit` for
   significantly improved performance, especially when strings start or end with
   a large number of similar characters.
+
 
 ## [2.0.5] - 2022-07-13
 
