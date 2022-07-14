@@ -1,11 +1,11 @@
 #!/bin/sh
 
 dtime=$(date +"%Y-%m-%d_%H%M" --utc)
-hash=$(git rev-parse --short HEAD)
-fname="benches/results/${dtime}_$hash.bench"
+describe=$(git describe --always --tags)
+fname="benches/results/${describe}_${dtime}.bench"
 
 # Print CPU information to the file
-cmd="echo Benchmark from $dtime on commit $hash;"
+cmd="echo Benchmark from $dtime on commit $describe;"
 cmd=${cmd}"rustc --version;"
 cmd=${cmd}"printf '\n';"
 cmd=${cmd}"echo CPU information:;"

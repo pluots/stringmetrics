@@ -1,0 +1,205 @@
+Benchmark from 2022-07-14_1710 on commit v2.0.7-3-ga763935
+rustc 1.62.0 (a8314ef7d 2022-06-27)
+
+CPU information:
+Architecture:                    x86_64
+CPU(s):                          12
+On-line CPU(s) list:             0-11
+Thread(s) per core:              2
+Socket(s):                       1
+Model name:                      AMD Ryzen 5 3600X 6-Core Processor
+CPU MHz:                         2018.318
+CPU max MHz:                     3800.0000
+CPU min MHz:                     2200.0000
+NUMA node0 CPU(s):               0-11
+
+
+
+
+running 22 tests
+test algorithms::modhamming::tests::test_basic ... ignored
+test algorithms::modhamming::tests::test_empty_string ... ignored
+test algorithms::modhamming::tests::test_iter ... ignored
+test algorithms::modhamming::tests::test_panic_on_not_equal - should panic ... ignored
+test algorithms::modhamming::tests::test_slice ... ignored
+test algorithms::modjaccard::tests::test_jaccard_a_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_b_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_str_sets ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_basic ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_empty ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_equal ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_limit ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_limit_one_empty ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_limit_weight_slice ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_trick_skips ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_deletion ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_insertion ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_substitution ... ignored
+test tokenizers::main::tests::test_remove_chars ... ignored
+test tokenizers::main::tests::test_split ... ignored
+test tokenizers::main::tests::test_trim_end ... ignored
+
+test result: ok. 0 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
+This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
+
+Gnuplot not found, using plotters backend
+Benchmarking Collect chars
+Benchmarking Collect chars: Warming up for 3.0000 s
+Benchmarking Collect chars: Collecting 100 samples in estimated 5.0003 s (38M iterations)
+Benchmarking Collect chars: Analyzing
+Collect chars           time:   [126.94 ns 127.95 ns 128.89 ns]
+                        change: [+3.2363% +3.9623% +4.7806%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+Benchmarking Iterate collected chars
+Benchmarking Iterate collected chars: Warming up for 3.0000 s
+Benchmarking Iterate collected chars: Collecting 100 samples in estimated 5.0000 s (22B iterations)
+Benchmarking Iterate collected chars: Analyzing
+Iterate collected chars time:   [230.00 ps 231.48 ps 233.44 ps]
+                        change: [-0.3947% +0.1162% +0.7280%] (p = 0.69 > 0.05)
+                        No change in performance detected.
+Found 7 outliers among 100 measurements (7.00%)
+  1 (1.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking Iterate collected chars deref
+Benchmarking Iterate collected chars deref: Warming up for 3.0000 s
+Benchmarking Iterate collected chars deref: Collecting 100 samples in estimated 5.0000 s (22B iterations)
+Benchmarking Iterate collected chars deref: Analyzing
+Iterate collected chars deref
+                        time:   [228.33 ps 228.82 ps 229.58 ps]
+                        change: [-2.3032% -0.9287% +0.1477%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 12 outliers among 100 measurements (12.00%)
+  2 (2.00%) high mild
+  10 (10.00%) high severe
+
+Benchmarking Iterate uncollected chars
+Benchmarking Iterate uncollected chars: Warming up for 3.0000 s
+Benchmarking Iterate uncollected chars: Collecting 100 samples in estimated 5.0000 s (502M iterations)
+Benchmarking Iterate uncollected chars: Analyzing
+Iterate uncollected chars
+                        time:   [9.7228 ns 9.8697 ns 10.046 ns]
+                        change: [-2.1696% -1.0568% +0.6234%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 9 outliers among 100 measurements (9.00%)
+  1 (1.00%) high mild
+  8 (8.00%) high severe
+
+Benchmarking Iterate uncollected bytes
+Benchmarking Iterate uncollected bytes: Warming up for 3.0000 s
+Benchmarking Iterate uncollected bytes: Collecting 100 samples in estimated 5.0000 s (22B iterations)
+Benchmarking Iterate uncollected bytes: Analyzing
+Iterate uncollected bytes
+                        time:   [228.03 ps 228.08 ps 228.17 ps]
+                        change: [-1.8431% -0.8940% +0.3837%] (p = 0.11 > 0.05)
+                        No change in performance detected.
+Found 11 outliers among 100 measurements (11.00%)
+  1 (1.00%) high mild
+  10 (10.00%) high severe
+
+WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
+This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
+
+Gnuplot not found, using plotters backend
+Benchmarking Levenshtein
+Benchmarking Levenshtein: Warming up for 3.0000 s
+Benchmarking Levenshtein: Collecting 100 samples in estimated 5.0000 s (33M iterations)
+Benchmarking Levenshtein: Analyzing
+Levenshtein             time:   [152.31 ns 152.45 ns 152.61 ns]
+                        change: [+43.787% +45.059% +45.997%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+
+Benchmarking Levenshtein Limit (no hit)
+Benchmarking Levenshtein Limit (no hit): Warming up for 3.0000 s
+Benchmarking Levenshtein Limit (no hit): Collecting 100 samples in estimated 5.0004 s (33M iterations)
+Benchmarking Levenshtein Limit (no hit): Analyzing
+Levenshtein Limit (no hit)
+                        time:   [151.95 ns 152.15 ns 152.36 ns]
+                        change: [+45.495% +45.705% +45.918%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+
+Benchmarking Levenshtein Different Lengths
+Benchmarking Levenshtein Different Lengths: Warming up for 3.0000 s
+Benchmarking Levenshtein Different Lengths: Collecting 100 samples in estimated 5.0022 s (5.9M iterations)
+Benchmarking Levenshtein Different Lengths: Analyzing
+Levenshtein Different Lengths
+                        time:   [850.68 ns 855.62 ns 862.40 ns]
+                        change: [+8.1959% +9.4401% +11.377%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 15 outliers among 100 measurements (15.00%)
+  6 (6.00%) high mild
+  9 (9.00%) high severe
+
+Benchmarking Levenshtein Empty A
+Benchmarking Levenshtein Empty A: Warming up for 3.0000 s
+Benchmarking Levenshtein Empty A: Collecting 100 samples in estimated 5.0001 s (278M iterations)
+Benchmarking Levenshtein Empty A: Analyzing
+Levenshtein Empty A     time:   [17.873 ns 17.978 ns 18.117 ns]
+                        change: [+0.7251% +1.1929% +1.7368%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+
+Benchmarking Levenshtein Empty B
+Benchmarking Levenshtein Empty B: Warming up for 3.0000 s
+Benchmarking Levenshtein Empty B: Collecting 100 samples in estimated 5.0001 s (275M iterations)
+Benchmarking Levenshtein Empty B: Analyzing
+Levenshtein Empty B     time:   [17.963 ns 18.039 ns 18.182 ns]
+                        change: [-0.7445% -0.0443% +0.6188%] (p = 0.91 > 0.05)
+                        No change in performance detected.
+Found 7 outliers among 100 measurements (7.00%)
+  1 (1.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking Levenshtein Long
+Benchmarking Levenshtein Long: Warming up for 3.0000 s
+Benchmarking Levenshtein Long: Collecting 100 samples in estimated 8.4087 s (10k iterations)
+Benchmarking Levenshtein Long: Analyzing
+Levenshtein Long        time:   [830.21 µs 835.10 µs 841.31 µs]
+                        change: [+3.3689% +3.9941% +4.6345%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 8 outliers among 100 measurements (8.00%)
+  5 (5.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking Levenshtein Limit Long (hit limit)
+Benchmarking Levenshtein Limit Long (hit limit): Warming up for 3.0000 s
+Benchmarking Levenshtein Limit Long (hit limit): Collecting 100 samples in estimated 5.0031 s (3.7M iterations)
+Benchmarking Levenshtein Limit Long (hit limit): Analyzing
+Levenshtein Limit Long (hit limit)
+                        time:   [1.3463 µs 1.3478 µs 1.3496 µs]
+                        change: [+5.0432% +5.6155% +6.3180%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 8 outliers among 100 measurements (8.00%)
+  2 (2.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking Levenshtein Long Flip
+Benchmarking Levenshtein Long Flip: Warming up for 3.0000 s
+Benchmarking Levenshtein Long Flip: Collecting 100 samples in estimated 8.3149 s (10k iterations)
+Benchmarking Levenshtein Long Flip: Analyzing
+Levenshtein Long Flip   time:   [818.59 µs 818.81 µs 819.04 µs]
+                        change: [+1.5504% +1.7876% +2.0776%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 6 outliers among 100 measurements (6.00%)
+  1 (1.00%) high mild
+  5 (5.00%) high severe
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
