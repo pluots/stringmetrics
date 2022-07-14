@@ -1,6 +1,12 @@
+# Changelog
+
 <!-- next-header -->
 
 ## [Unreleased] - ReleaseDate
+
+### Changed
+
+- Fixed musllinux builds to work for 3.7-3.10.
 
 ## [2.0.6] - 2022-07-13
 
