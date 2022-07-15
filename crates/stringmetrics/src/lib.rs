@@ -27,3 +27,5 @@ pub mod algorithms;
 pub mod tokenizers;
 
 pub use algorithms::*;
+
+pub mod iter;
