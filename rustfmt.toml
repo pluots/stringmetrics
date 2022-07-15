@@ -1,5 +1,5 @@
 # Commented features are unstable
-unstable_features = true
+# unstable_features = true
 
 # format_code_in_doc_comments = true
 newline_style = "Unix"

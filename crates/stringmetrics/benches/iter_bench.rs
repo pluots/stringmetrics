@@ -61,6 +61,40 @@ pub fn bench_collected(c: &mut Criterion) {
     });
 }
 
+// pub fn bench_iter_items(c: &mut Criterion) {
+//     let bb_str = SOMESTR;
+//     let vv: Vec<char> = bb_str.chars().collect();
+
+//     // We want a fair test so we loop within the benchmark here
+//     // Constructing the vector takes time, we just want to see if it iterates
+//     // faster
+//     c.bench_function("Collect chars", |b| {
+//         b.iter(|| {
+//             black_box(bb_str.chars().collect::<Vec<char>>());
+//         })
+//     });
+//     c.bench_function("Iterate collected chars", |b| {
+//         b.iter(|| {
+//             black_box(vv.iter().count());
+//         })
+//     });
+//     c.bench_function("Iterate collected chars deref", |b| {
+//         b.iter(|| {
+//             black_box(vv.iter().map(|x| *x).count());
+//         })
+//     });
+//     c.bench_function("Iterate uncollected chars", |b| {
+//         b.iter(|| {
+//             black_box(bb_str.chars().count());
+//         })
+//     });
+//     c.bench_function("Iterate uncollected bytes", |b| {
+//         b.iter(|| {
+//             black_box(bb_str.bytes().count());
+//         })
+//     });
+// }
+
 // #[inline]
 
 criterion_group!(

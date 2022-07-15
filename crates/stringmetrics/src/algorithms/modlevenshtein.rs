@@ -2,7 +2,13 @@
 //!
 //! This module contains functions for applying various closeness algorithms.
 
-use std::cmp::{max, min};
+// use crate::iter::{find_eq_end_items, IterPairInfo};
+use std::{
+    cmp::{max, min},
+    convert::TryInto,
+};
+
+use crate::iter::find_eq_end_items;
 
 /// A struct that holds the costs of insertion, deletion, and substitution. Used
 /// for levenshthein algorithms that require weight specifications.
@@ -29,6 +35,8 @@ impl Default for LevWeights {
     }
 }
 
+// fn get_similar_count<I,
+
 /// Basic Levenshtein distance computation
 ///
 /// This runs the levenshtein distance algorithm with all costs equal to 1 and
@@ -54,7 +62,7 @@ impl Default for LevWeights {
 /// if you need that functionality, please use [`levenshtein_weight`].
 #[inline]
 pub fn levenshtein(a: &str, b: &str) -> u32 {
-    levenshtein_limit(a, b, u32::MAX)
+    levenshtein_limit_iter(a.chars(), b.chars(), u32::MAX)
 }
 
 /// Levenshtein distance computation with a limit
@@ -71,67 +79,50 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 /// let b = "mmmmmmm";
 /// assert_eq!(levenshtein_limit(a, b, 3), 3);
 /// ```
+#[inline]
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
+    levenshtein_limit_iter(a.chars(), b.chars(), limit)
+}
+
+pub fn levenshtein_limit_iter<I, T, D>(a: I, b: I, limit: u32) -> u32
+where
+    I: IntoIterator<IntoIter = D>,
+    D: DoubleEndedIterator<Item = T> + Clone,
+    T: PartialEq,
+{
     // This implementation is the same as levenshtein_limit_weight_slice, but
     // without the cost multiplications (for speed).
 
-    // Variables to hold the starting and ending similar elements
-    let mut start_sim = 0usize;
-    let mut end_sim = 0usize;
+    let a_iter_base = a.into_iter();
+    let b_iter_base = b.into_iter();
 
-    // Figure out how many similar elements we can skip from the beginning
-    // This also handles the quick case where a == b.
-    for (a_char, b_char) in a.chars().zip(b.chars()) {
-        if a_char == b_char {
-            start_sim += 1
-        } else {
-            break;
-        }
-    }
+    let (a_len, b_len, start_same, end_same) =
+        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone()).expand();
 
-    let mut a_len_u = a.len() - start_sim;
-    let mut b_len_u = b.len() - start_sim;
+    let a_len_u: u32 = (a_len - start_same - end_same)
+        .try_into()
+        .expect("Critical: > u32::MAX items");
+    let b_len_u: u32 = (b_len - start_same - end_same)
+        .try_into()
+        .expect("Critical: > u32::MAX items");
 
-    // Figure out how many similar elements we can skip at the end
-    let mut a_iter = a.chars();
-    let mut b_iter = b.chars();
-
-    loop {
-        if end_sim >= a_len_u || end_sim >= b_len_u {
-            break;
-        }
-        match (a_iter.next_back(), b_iter.next_back()) {
-            (Some(x), Some(y)) => {
-                if x == y {
-                    end_sim += 1
-                } else {
-                    break;
-                }
-            }
-            _ => break,
-        }
-    }
-
-    a_len_u -= end_sim;
-    b_len_u -= end_sim;
-
-    let a_wrk: &str;
-    let b_wrk: &str;
+    let a_wrk: D;
+    let b_wrk: D;
     let a_len: u32;
     let b_len: u32;
 
     // We want the longer string in the inner loop
     // B will be the longer string from this point on
     if a_len_u > b_len_u {
-        a_wrk = b;
-        b_wrk = a;
-        a_len = b_len_u as u32;
-        b_len = a_len_u as u32;
+        a_wrk = b_iter_base;
+        b_wrk = a_iter_base;
+        a_len = b_len_u;
+        b_len = a_len_u;
     } else {
-        a_wrk = a;
-        b_wrk = b;
-        a_len = a_len_u as u32;
-        b_len = b_len_u as u32;
+        a_wrk = a_iter_base;
+        b_wrk = b_iter_base;
+        a_len = a_len_u;
+        b_len = b_len_u;
     }
 
     // Only check b_len because if a_len is 0, the loop won't happen
@@ -147,7 +138,7 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
 
     let mut tmp_res = b_len;
 
-    for (i, a_item) in a_wrk.chars().skip(start_sim).enumerate() {
+    for (i, a_item) in a_wrk.skip(start_same).enumerate() {
         // Our "horizotal" iterations always start with the leftmost column,
         // which is the insertion cost (or substitution above)
         // temp_res is also our ins_base
@@ -162,7 +153,7 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
 
         // Go through and do our calculations. we need to preserve the "up left"
         // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
-        for (j, b_item) in b_wrk.chars().skip(start_sim).enumerate() {
+        for (j, b_item) in b_wrk.clone().skip(start_same).enumerate() {
             if j as u32 >= b_len {
                 break;
             }
@@ -192,6 +183,8 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
 
     tmp_res
 }
+
+// pub fn levenshtein_weight_iter(weights: &LevWeights)
 
 /// Levenshtein distance computation with weights
 ///
