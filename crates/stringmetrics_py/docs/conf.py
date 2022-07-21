@@ -10,10 +10,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import re
+from pathlib import Path
 
 # -- Project information -----------------------------------------------------
 
@@ -22,7 +22,12 @@ copyright = "2022, Trevor Gross"
 author = "Trevor Gross"
 
 # The full version, including alpha/beta/rc tags
-release = "1.1.0"
+path = Path(__file__).parent.parent.joinpath("Cargo.toml")
+with path.open() as fs:
+    fstr = fs.read()
+
+# Single source of truth for the version
+release = re.search(r"^version\s*=\s*\"(.*)\"$", fstr, re.MULTILINE).groups()[0]
 
 
 # -- General configuration ---------------------------------------------------
