@@ -1,6 +1,6 @@
 [package]
 name = "stringmetrics_profiling"
-version = "2.0.8"
+version = "2.1.0"
 edition = "2021"
 publish = false
 
