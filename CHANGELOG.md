@@ -4,11 +4,9 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Added
-
 ### Changed
 
-### Removed
+- Improved documentation coverage
 
 
 
