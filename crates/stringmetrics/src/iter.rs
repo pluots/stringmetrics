@@ -1,3 +1,5 @@
+//! Tools to help with processing iterators
+
 use std::cmp::min;
 
 /// This function has an unstable API
