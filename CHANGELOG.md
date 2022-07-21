@@ -4,6 +4,16 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+### Changed
+
+### Removed
+
+
+
+## [2.1.1] - 2022-07-21
+
 ### Changed
 
 - Improved documentation coverage
@@ -49,7 +59,8 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/pluots/stringmetrics/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/pluots/stringmetrics/compare/v2.0.7...v2.1.0
 [2.0.7]: https://github.com/pluots/stringmetrics/compare/v2.0.6...v2.0.7
 [2.0.6]: https://github.com/pluots/stringmetrics/compare/v2.0.5...v2.0.6
