@@ -6,9 +6,18 @@
 
 ### Added
 
+- New function `levenshtein_limit_iter`
+
 ### Changed
 
+- `levenshtein_limit_weight` moved to just `levenshtein_weight` to save
+  redundancy
+- Significantly improved algorithm for weighted levenshtein calculations
+
 ### Removed
+
+- `levenshtein_limit_weight_slice` has been removed. Use
+  `levenshtein_weight_iter` instead.
 
 
 ## [2.0.7] - 2022-07-14
