@@ -39,23 +39,22 @@ assert_eq!(levenshtein_limit("a very long string", "short!", 4), 4);
 ```
 
 ```rs
-// Basic hamming distance
-use stringmetrics::hamming;
-
-let a = "abcdefg";
-let b = "aaadefa";
-assert_eq!(hamming(a, b), 3);
-```
-
-```rs
 // Set custom weights
 use stringmetrics::{levenshtein_weight, LevWeights};
 
 // This struct holds insertion, deletion, and substitution costs
 let weights = LevWeights::new(4, 3, 2);
-assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 8);
+assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
 ```
 
+```rs
+// Basic hamming distance
+use stringmetrics::hamming;
+
+let a = "abcdefg";
+let b = "aaadefa";
+assert_eq!(hamming(a, b), Ok(3));
+```
 
 See [the documentation](https://docs.rs/stringmetrics/) for more details.
 
