@@ -1,5 +1,8 @@
+//! This module includes errors used by [`stringmetrics`].
+
 use std::fmt;
 
+/// An error that arises when equal lengths are required but not found.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LengthMismatchError;
 
