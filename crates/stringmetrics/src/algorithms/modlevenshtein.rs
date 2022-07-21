@@ -3,10 +3,7 @@
 //! This module contains functions for applying various closeness algorithms.
 
 // use crate::iter::{find_eq_end_items, IterPairInfo};
-use std::{
-    cmp::{max, min},
-    convert::TryInto,
-};
+use std::{cmp::min, convert::TryInto, fmt::Debug, iter::Skip};
 
 use crate::iter::find_eq_end_items;
 
@@ -45,7 +42,7 @@ impl Default for LevWeights {
 /// "very different" (e.g., strings have similar lengths). In most cases it is
 /// better to use [`levenshtein_limit`] to avoid unnecessary computation.
 ///
-/// Behind the scenes, this wraps [`levenshtein_limit`]. For details on
+/// Behind the scenes, this wraps [`levenshtein_limit_iter`]. For details on
 /// operation, see the [algorithms](crate::algorithms) page.
 ///
 /// # Example
@@ -62,7 +59,7 @@ impl Default for LevWeights {
 /// if you need that functionality, please use [`levenshtein_weight`].
 #[inline]
 pub fn levenshtein(a: &str, b: &str) -> u32 {
-    levenshtein_limit_iter(a.chars(), b.chars(), u32::MAX)
+    levenshtein_limit_iter(a.bytes(), b.bytes(), u32::MAX)
 }
 
 /// Levenshtein distance computation with a limit
@@ -70,6 +67,8 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 /// This will limitate the levshtein distance up to a given maximum value. The
 /// usual reason for wanting to do this is to avoid unnecessary computation when
 /// a match between two strings can quickly be pruned as "different".
+///
+/// This function also wraps [`levenshtein_limit_iter`].
 ///
 /// # Example
 ///
@@ -81,23 +80,71 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 /// ```
 #[inline]
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
-    levenshtein_limit_iter(a.chars(), b.chars(), limit)
+    levenshtein_limit_iter(a.bytes(), b.bytes(), limit)
 }
 
+// pub fn levenshtein_weight_iter(weights: &LevWeights)
+
+/// Levenshtein distance computations with adjustable weights and a limit
+///
+/// Allows setting costs for inserts, deletes and substitutions. See
+/// [algorithms](crate::algorithms) for details on weight computation.
+///
+/// Behind the scenes, this wraps [`levenshtein_weight_iter`].
+///
+/// # Example
+///
+/// In this example, an insertion weight of 4, deletion weight of 3, and
+/// substitution weight of 2 are used. A limit of 6 is applied, and we see that
+/// we hit that limit.
+///
+/// ```
+/// use stringmetrics::{levenshtein_weight, LevWeights};
+/// let weights = LevWeights::new(4, 3, 2);
+/// assert_eq!(levenshtein_weight("kitten", "sitting", 6, &weights), 6);
+/// ```
+///
+/// With a more reasonable limit, we get a representative result. The 8 comes
+/// from one added letter (4) and two substitutions.
+///
+/// ```
+/// use stringmetrics::{levenshtein_weight, LevWeights};
+/// let weights = LevWeights::new(4, 3, 2);
+/// assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
+/// ```
+#[inline]
+pub fn levenshtein_weight(a: &str, b: &str, limit: u32, weights: &LevWeights) -> u32 {
+    levenshtein_weight_iter(a.bytes(), b.bytes(), limit, weights)
+}
+
+/// Levenshthein distance computation on anything with [`Iterator`] with items
+/// that have [`PartialEq`].
+///
+/// This can be used when Levenshthein distance is applicable to something other
+/// than strings that has not yet been collected to a vector.
+///
+/// # Example
+///
+/// ```
+/// use stringmetrics::{levenshtein_weight_iter, LevWeights};
+/// let weights = LevWeights::default();
+/// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
+/// ```
 pub fn levenshtein_limit_iter<I, T, D>(a: I, b: I, limit: u32) -> u32
 where
     I: IntoIterator<IntoIter = D>,
     D: DoubleEndedIterator<Item = T> + Clone,
     T: PartialEq,
 {
-    // This implementation is the same as levenshtein_limit_weight_slice, but
-    // without the cost multiplications (for speed).
-
+    // Identical implementation to levenshtein_weight_iter, just avoiding
+    // cost calculation overheads
+    // A goal is to combine these, which may require some compiler tricks
+    // Or putting the main functionality into a function with a lot of if/else
     let a_iter_base = a.into_iter();
     let b_iter_base = b.into_iter();
 
     let (a_len, b_len, start_same, end_same) =
-        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone()).expand();
+        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
 
     let a_len_u: u32 = (a_len - start_same - end_same)
         .try_into()
@@ -106,21 +153,21 @@ where
         .try_into()
         .expect("Critical: > u32::MAX items");
 
-    let a_wrk: D;
-    let b_wrk: D;
+    let a_wrk: Skip<D>;
+    let b_wrk: Skip<D>;
     let a_len: u32;
     let b_len: u32;
 
     // We want the longer string in the inner loop
     // B will be the longer string from this point on
     if a_len_u > b_len_u {
-        a_wrk = b_iter_base;
-        b_wrk = a_iter_base;
+        a_wrk = b_iter_base.skip(start_same);
+        b_wrk = a_iter_base.skip(start_same);
         a_len = b_len_u;
         b_len = a_len_u;
     } else {
-        a_wrk = a_iter_base;
-        b_wrk = b_iter_base;
+        a_wrk = a_iter_base.skip(start_same);
+        b_wrk = b_iter_base.skip(start_same);
         a_len = a_len_u;
         b_len = b_len_u;
     }
@@ -138,35 +185,35 @@ where
 
     let mut tmp_res = b_len;
 
-    for (i, a_item) in a_wrk.skip(start_same).enumerate() {
-        // Our "horizotal" iterations always start with the leftmost column,
-        // which is the insertion cost (or substitution above)
-        // temp_res is also our ins_base
-        let mut sub_base = i as u32;
-
-        // Reuse the casted variable as our loop exit if we are at the end
-        if sub_base >= a_len {
+    for (i, a_item) in a_wrk.enumerate() {
+        // Exit the loop if we are at the end
+        if i as u32 >= a_len {
             break;
         }
-
+        // Our "horizontal" iterations always start with the leftmost column,
+        // which is the insertion cost (or substitution above)
+        // temp_res is also our insertion cost base
+        let mut sub_base = i as u32;
         tmp_res = sub_base + 1;
 
         // Go through and do our calculations. we need to preserve the "up left"
         // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
-        for (j, b_item) in b_wrk.clone().skip(start_same).enumerate() {
+        for (j, b_item) in b_wrk.clone().enumerate() {
             if j as u32 >= b_len {
                 break;
             }
 
             let del_base = work_vec[j];
 
-            if a_item != b_item {
-                sub_base += 1;
-            }
-
             // Insertion costs and deletion costs are their bases + 1
             // i.e., the value to the left or above plus 1
-            tmp_res = min(min(tmp_res, del_base) + 1, sub_base);
+            // Substitution cost is equal to the up-left (sub_base) cost if equal,
+            // otherwise up-left value + 1.
+            if a_item != b_item {
+                tmp_res = min(min(tmp_res, del_base), sub_base) + 1;
+            } else {
+                tmp_res = min(min(tmp_res, del_base) + 1, sub_base);
+            }
 
             // As we shift to the right, our deletion square becomes our
             // substitution square
@@ -184,65 +231,8 @@ where
     tmp_res
 }
 
-// pub fn levenshtein_weight_iter(weights: &LevWeights)
-
-/// Levenshtein distance computation with weights
-///
-/// Allows setting costs for inserts, deletes and substitutions. See
-/// [algorithms](crate::algorithms) for details on weight computation.
-///
-/// Behind the scenes, this wraps [`levenshtein_limit_weight`].
-///
-/// # Example
-///
-/// In this example, an insertion weight of 4, deletion weight of 3, and
-/// substitution weight of 2 are used.
-///
-/// ```
-/// use stringmetrics::{levenshtein_weight, LevWeights};
-/// let weights = LevWeights::new(4, 3, 2);
-/// assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 8);
-/// ```
-#[inline]
-pub fn levenshtein_weight(a: &str, b: &str, weights: &LevWeights) -> u32 {
-    levenshtein_limit_weight(a, b, u32::MAX, weights)
-}
-
-/// Levenshtein distance computations with adjustable weights and a limit
-///
-///
-/// # Example
-///
-/// In this example, an insertion weight of 4, deletion weight of 3, and
-/// substitution weight of 2 are used. A limit of 6 is applied, and we see that
-/// we hit that limit.
-///
-/// ```
-/// use stringmetrics::{levenshtein_limit_weight, LevWeights};
-/// let weights = LevWeights::new(4, 3, 2);
-/// assert_eq!(levenshtein_limit_weight("kitten", "sitting", 6, &weights), 6);
-/// ```
-///
-/// With a more reasonable limit, we get a representative result. The 8 comes
-/// from one added letter (4) and two substitutions.
-///
-/// ```
-/// use stringmetrics::{levenshtein_limit_weight, LevWeights};
-/// let weights = LevWeights::new(4, 3, 2);
-/// assert_eq!(levenshtein_limit_weight("kitten", "sitting", 100, &weights), 8);
-/// ```
-#[inline]
-pub fn levenshtein_limit_weight(a: &str, b: &str, limit: u32, weights: &LevWeights) -> u32 {
-    levenshtein_limit_weight_slice(
-        &a.chars().collect::<Vec<char>>(),
-        &b.chars().collect::<Vec<char>>(),
-        limit,
-        weights,
-    )
-}
-
-/// Levenshthein distance computation on anything with [`Iterator`] with items
-/// that have [`PartialEq`].
+/// Weighted Levenshthein distance computation on anything with [`Iterator`]
+/// with items that have [`PartialEq`].
 ///
 /// This can be used when Levenshthein distance is applicable to something other
 /// than strings that has not yet been collected to a vector.
@@ -250,21 +240,121 @@ pub fn levenshtein_limit_weight(a: &str, b: &str, limit: u32, weights: &LevWeigh
 /// # Example
 ///
 /// ```
-/// use stringmetrics::{levenshtein_limit_weight_iter, LevWeights};
+/// use stringmetrics::{levenshtein_weight_iter, LevWeights};
 /// let weights = LevWeights::default();
-/// assert_eq!(levenshtein_limit_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
+/// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
 /// ```
-#[inline]
-pub fn levenshtein_limit_weight_iter<I, T>(a: I, b: I, limit: u32, weights: &LevWeights) -> u32
+pub fn levenshtein_weight_iter<I, T, D>(a: I, b: I, limit: u32, weights: &LevWeights) -> u32
 where
-    I: Iterator<Item = T>,
+    I: IntoIterator<IntoIter = D>,
+    D: DoubleEndedIterator<Item = T> + Clone,
     T: PartialEq,
 {
-    // Need to collect to vectors first so we get a finite length
-    let a_vec: Vec<T> = a.collect();
-    let b_vec: Vec<T> = b.collect();
+    let a_iter_base = a.into_iter();
+    let b_iter_base = b.into_iter();
 
-    levenshtein_limit_weight_slice(&a_vec, &b_vec, limit, weights)
+    let (a_len, b_len, start_same, end_same) =
+        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
+
+    let a_len_u: u32 = (a_len - start_same - end_same)
+        .try_into()
+        .expect("Critical: > u32::MAX items");
+    let b_len_u: u32 = (b_len - start_same - end_same)
+        .try_into()
+        .expect("Critical: > u32::MAX items");
+
+    let a_wrk: Skip<D>;
+    let b_wrk: Skip<D>;
+    let a_len: u32;
+    let b_len: u32;
+
+    let w_sub = weights.substitution;
+    let w_ins;
+    let w_del;
+
+    // We want the longer string in the inner loop
+    // B will be the longer string from this point on
+    if a_len_u > b_len_u {
+        a_wrk = b_iter_base.skip(start_same);
+        b_wrk = a_iter_base.skip(start_same);
+        a_len = b_len_u;
+        b_len = a_len_u;
+        w_ins = weights.deletion;
+        w_del = weights.insertion;
+    } else {
+        a_wrk = a_iter_base.skip(start_same);
+        b_wrk = b_iter_base.skip(start_same);
+        a_len = a_len_u;
+        b_len = b_len_u;
+        w_ins = weights.insertion;
+        w_del = weights.deletion;
+    }
+
+    // Only check b_len because if a_len is 0, the loop won't happen
+    if b_len == 0 {
+        return min(a_len * w_del, limit);
+    }
+
+    if b_len - a_len >= limit {
+        return limit;
+    }
+
+    let equal_weights = w_ins == w_del && w_del == w_sub;
+
+    let mut work_vec: Vec<u32> = (w_ins..((b_len * w_ins) + 1))
+        .step_by(w_ins as usize)
+        .collect();
+    let mut tmp_res = b_len * w_ins;
+
+    for (i, a_item) in a_wrk.enumerate() {
+        // Reuse the casted variable as our loop exit if we are at the end
+        if i as u32 >= a_len {
+            break;
+        }
+
+        // Our "horizontal" iterations always start with the leftmost column,
+        // which is the insertion cost (or substitution above)
+        // temp_res is also our insertion cost base
+        let mut sub_base = i as u32 * w_del;
+        tmp_res = sub_base + w_del;
+
+        // Go through and do our calculations. we need to preserve the "up left"
+        // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
+        for (j, b_item) in b_wrk.clone().enumerate() {
+            if j as u32 >= b_len {
+                break;
+            }
+
+            let del_base = work_vec[j];
+
+            // Insertion costs and deletion costs are their bases + 1
+            // i.e., the value to the left or above plus 1
+            if equal_weights {
+                if a_item != b_item {
+                    tmp_res = min(min(tmp_res, del_base), sub_base) + w_ins;
+                } else {
+                    tmp_res = min(min(tmp_res, del_base) + w_ins, sub_base);
+                }
+            } else if a_item != b_item {
+                tmp_res = min(min(tmp_res + w_ins, del_base + w_del), sub_base + w_sub);
+            } else {
+                tmp_res = min(min(tmp_res + w_ins, del_base + w_del), sub_base);
+            }
+
+            // As we shift to the right, our deletion square becomes our
+            // substitution square
+            sub_base = del_base;
+
+            // Save our insertion cost for the next iteration
+            work_vec[j] = tmp_res;
+        }
+
+        if tmp_res > limit {
+            return limit;
+        }
+    }
+
+    tmp_res
 }
 
 /// Levenshtein distance computations with adjustable weights and a limit, for
@@ -284,72 +374,6 @@ where
 ///
 /// See [algorithms](crate::algorithms) for a detailed description of the
 /// algorithm in use.
-pub fn levenshtein_limit_weight_slice<T: PartialEq>(
-    a: &[T],
-    b: &[T],
-    limit: u32,
-    weights: &LevWeights,
-) -> u32 {
-    let a_len = a.len() as u32;
-    let b_len = b.len() as u32;
-
-    let w_ins = weights.insertion;
-    let w_del = weights.deletion;
-    let w_sub = weights.substitution;
-
-    // Start with some shortcut solution optimizations
-    if a_len == 0 {
-        return min(b_len * w_ins, limit);
-    }
-    if b_len == 0 {
-        return min(a_len * w_del, limit);
-    }
-
-    let diff = max(a_len, b_len) - min(a_len, b_len);
-    if diff >= limit {
-        return limit;
-    }
-
-    // These vectors will hold the "previous" and "active" distance row, rather
-    // than needing to construct the entire array. We want to keep these small
-    // so a vector of u32 is preferred over usize. u16 would be even better but
-    // for long text, that could be hit somewhat easily.
-    let v_len = b_len + 1;
-    let mut v_prev: Vec<u32> = (0..(v_len * w_ins)).step_by(w_ins as usize).collect();
-    let mut v_curr: Vec<u32> = vec![0; v_len as usize];
-
-    let mut current_max: u32 = 0;
-    // i holds our "vertical" position, j our "horizontal". We fill the table
-    // top to bottom. Note there is actually an offset of 1 from i to the "true"
-    // array position (since we start one row down).
-    for (i, a_item) in a.iter().enumerate() {
-        v_curr[0] = ((i + 1) * w_del as usize) as u32;
-
-        // Fill out the rest of the row
-        for (j, b_item) in b.iter().enumerate() {
-            let ins_cost = v_curr[j] + w_ins;
-            let del_cost = v_prev[j + 1] + w_del;
-            let sub_cost = match a_item == b_item {
-                true => v_prev[j],
-                false => v_prev[j] + w_sub,
-            };
-
-            v_curr[j + 1] = min(min(ins_cost, del_cost), sub_cost);
-        }
-
-        current_max = *v_curr.last().unwrap();
-
-        if current_max >= limit {
-            return limit;
-        }
-
-        // Move current row to previous for the next loop
-        // "Current" is always overwritten so we can just swap
-        std::mem::swap(&mut v_prev, &mut v_curr);
-    }
-
-    current_max
-}
 
 #[cfg(test)]
 mod tests {
@@ -420,26 +444,26 @@ mod tests {
     #[test]
     fn test_levenshtein_weight_insertion() {
         let weights = LevWeights::new(10, 1, 1);
-        assert_eq!(levenshtein_weight("", "a", &weights), 10);
-        assert_eq!(levenshtein_weight("a", "", &weights), 1);
-        assert_eq!(levenshtein_weight("", "ab", &weights), 20);
-        assert_eq!(levenshtein_weight("ab", "", &weights), 2);
-        assert_eq!(levenshtein_weight("ab", "abcd", &weights), 20);
-        assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 12);
+        assert_eq!(levenshtein_weight("", "a", 100, &weights), 10);
+        assert_eq!(levenshtein_weight("a", "", 100, &weights), 1);
+        assert_eq!(levenshtein_weight("", "ab", 100, &weights), 20);
+        assert_eq!(levenshtein_weight("ab", "", 100, &weights), 2);
+        assert_eq!(levenshtein_weight("ab", "abcd", 100, &weights), 20);
+        assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 12);
     }
 
     #[test]
     fn test_levenshtein_weight_deletion() {
         let weights = LevWeights::new(1, 10, 1);
-        assert_eq!(levenshtein_weight("", "a", &weights), 1);
-        assert_eq!(levenshtein_weight("a", "", &weights), 10);
-        assert_eq!(levenshtein_weight("", "ab", &weights), 2);
-        assert_eq!(levenshtein_weight("ab", "", &weights), 20);
-        assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 3);
+        assert_eq!(levenshtein_weight("", "a", 100, &weights), 1);
+        assert_eq!(levenshtein_weight("a", "", 100, &weights), 10);
+        assert_eq!(levenshtein_weight("", "ab", 100, &weights), 2);
+        assert_eq!(levenshtein_weight("ab", "", 100, &weights), 20);
+        assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 3);
 
         let weights = LevWeights::new(1, 10, 2);
-        assert_eq!(levenshtein_weight("abc", "ac", &weights), 10);
-        assert_eq!(levenshtein_weight("abcd", "ac", &weights), 20);
+        assert_eq!(levenshtein_weight("abc", "ac", 100, &weights), 10);
+        assert_eq!(levenshtein_weight("abcd", "ac", 100, &weights), 20);
     }
 
     #[test]
@@ -447,26 +471,10 @@ mod tests {
         // Note that when substitution cost is high, the algorithm will prefer
         // a deletion and insertion
         let weights = LevWeights::new(10, 10, 5);
-        assert_eq!(levenshtein_weight("a", "b", &weights), 5);
+        assert_eq!(levenshtein_weight("a", "b", 100, &weights), 5);
         let weights = LevWeights::new(10, 10, 2);
-        assert_eq!(levenshtein_weight("abcd", "acc", &weights), 12);
+        assert_eq!(levenshtein_weight("abcd", "acc", 100, &weights), 12);
         let weights = LevWeights::new(4, 3, 2);
-        assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 8);
-    }
-
-    #[test]
-    fn test_levenshtein_limit_weight_slice() {
-        // Note that when substitution cost is high, the algorithm will prefer
-        // a deletion and insertion
-        let weights = LevWeights::new(1, 1, 1);
-        assert_eq!(
-            levenshtein_limit_weight_slice(&[1, 2, 3], &[1, 2, 2], 10, &weights),
-            1
-        );
-        let weights = LevWeights::new(1, 5, 1);
-        assert_eq!(
-            levenshtein_limit_weight_slice(&[1, 2, 3], &[1, 2], 10, &weights),
-            5
-        );
+        assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
     }
 }

@@ -27,7 +27,8 @@
 //! The hamming distance between two equal length strings is the number of
 //! substitutions required to change one string into the other. Computation is
 //! very simple; all that is required is to iterate through and track
-//! differences.
+//! differences. Hamming distance is implemented by [`hamming`] and
+//! [`hamming_iter`]
 //!
 //! ## Levenshtein distance Algorithm
 //!
@@ -96,18 +97,19 @@
 //!
 //! ### Weighted Levenshtein algorithm
 //!
-//! Implemented by [`levenshtein_weight`] and [`levenshtein_limit_weight`], a
+//! Implemented by [`levenshtein_weight`] and [`levenshtein_weight_iter`], a
 //! weighted Levenshtein algorithm just allows applying differing penalties for
 //! insertion, deletion, and substitution. It's basically the same algorithm as
-//! above, except the added values are weights rather than one, and the initial
-//! row population is related to insertion and deletion weights.
+//! above, except the added values are specified (rather than always one), and
+//! the initial row population is related to insertion and deletion weights.
 //!
-//! For example, the following code:
+//! For example, the following code uses insertion, deletion, and substitution
+//! weights of 4, 3, and 2, respectively. There is also a limit of 100:
 //!
 //! ```
 //! use stringmetrics::{levenshtein_weight, LevWeights};
 //! let weights = LevWeights::new(4, 3, 2);
-//! assert_eq!(levenshtein_weight("kitten", "sitting", &weights), 8);
+//! assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
 //! ```
 //! Creates the following matrix:
 //!
@@ -124,21 +126,57 @@
 //! 6     n [18, 17, 14, 11,  8,  7,  4,  8]
 //! ```
 //!
+//! Rules are similar to above:
+//!
+//! 1. Insertion cost is the value of the field to the left plus insertion
+//!    weight
+//! 2. Deletion cost is the value of the field above plus deletion weight
+//! 3. Substitution cost is the value of the field left above if the two
+//!    relevant characters are the same. If they are different, add substitution
+//!    weight to this value.
+//! 4. Take the minimum of these three values and put it in the current box.
+//!
 //! The result of 8 is representative of one added letter (+4) and two
 //! substitutions (+2*2). The substitution could alternatively be counted as an
 //! insertion followed by a deletion but the algorithm "chooses" against it
 //! since the cost would be much higher (4+3=7 when the substitution cost is
 //! only 2).)
+//!
+//! ### Note on string comparisons
+//!
+//! All string-based levenshtein algorithms use bytes rather than characters by
+//! default. This speeds things up significantly, and usually the difference is
+//! unimportant. However, if you are working with CJK character sets or emojis,
+//! you may prefer the somewhat more accurate (but slower) `chars()` usage. This
+//! example presents the case well:
+//!
+//! ```
+//! use stringmetrics::{levenshtein_limit, levenshtein_limit_iter};
+//!
+//! // Default implementation; these are not the "expected" values
+//! // In many cases, this may be acceptable
+//! assert_eq!(levenshtein_limit("鱼", "雪", 100), 2);
+//! assert_eq!(levenshtein_limit("😙", "🔬", 100), 2);
+//!
+//! // "Expected" values by using iterator functions
+//! assert_eq!(levenshtein_limit_iter("鱼".chars(), "雪".chars(), 100), 1);
+//! assert_eq!(levenshtein_limit_iter("😙".chars(), "🔬".chars(), 100), 1);
+//! ```
+//!
+//! If accurate matching on further extended unicode is required, the [unicode
+//! segmentation
+//! crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/)
+//! can be used to split on the iterable `graphemes(true)`.
 
 mod modhamming;
 // mod damerau;
 mod modjaccard;
 mod modlevenshtein;
 
-pub use self::modhamming::{hamming, hamming_iter, hamming_slice};
+pub use self::modhamming::{hamming, hamming_iter};
 // pub use self::damerau::damerau_levenshtein;
 pub use self::modjaccard::{jaccard, jaccard_set};
 pub use self::modlevenshtein::{
-    levenshtein, levenshtein_limit, levenshtein_limit_weight, levenshtein_limit_weight_iter,
-    levenshtein_limit_weight_slice, levenshtein_weight, LevWeights,
+    levenshtein, levenshtein_limit, levenshtein_limit_iter, levenshtein_weight,
+    levenshtein_weight_iter, LevWeights,
 };
