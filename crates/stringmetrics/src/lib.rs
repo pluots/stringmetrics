@@ -24,8 +24,8 @@
 //! ```
 
 pub mod algorithms;
+pub mod errors;
+pub mod iter;
 pub mod tokenizers;
 
 pub use algorithms::*;
-
-pub mod iter;

@@ -1,30 +1,14 @@
 use std::cmp::min;
 
-#[derive(Debug, PartialEq)]
-pub struct IterPairInfo {
-    a_len: usize,
-    b_len: usize,
-    start_same: usize,
-    end_same: usize,
-}
-
-impl IterPairInfo {
-    pub fn new(a_len: usize, b_len: usize, start_same: usize, end_same: usize) -> Self {
-        IterPairInfo {
-            a_len,
-            b_len,
-            start_same,
-            end_same,
-        }
-    }
-
-    pub fn expand(&self) -> (usize, usize, usize, usize) {
-        (self.a_len, self.b_len, self.start_same, self.end_same)
-    }
-}
-
+/// This function has an unstable API
+///
+/// It is designed to identify the longest similar start and end sequences in a
+/// pair of iterators.
+///
+/// Unfortunately, we return an ugly tuple rather than a struct since that is
+/// about 5% faster. Use this via destructuring rather than indexing.
 #[inline]
-pub fn find_eq_end_items<I, T, D>(a: I, b: I) -> IterPairInfo
+pub fn find_eq_end_items<I, T, D>(a: I, b: I) -> (usize, usize, usize, usize)
 where
     I: IntoIterator<IntoIter = D>,
     D: DoubleEndedIterator<Item = T> + Clone,
@@ -43,6 +27,8 @@ where
     let mut b_iter = b.into_iter();
 
     // We need to recreate the iterator here so we can use it later
+    // Note: this is likely doable without cloning if we work from the front,
+    // then work from the back, and add the difference.
     let a_iter2 = a_iter.clone();
     let b_iter2 = b_iter.clone();
 
@@ -90,12 +76,7 @@ where
         }
     }
 
-    IterPairInfo {
-        a_len,
-        b_len,
-        start_same,
-        end_same,
-    }
+    (a_len, b_len, start_same, end_same)
 }
 
 #[cfg(test)]
@@ -104,41 +85,32 @@ mod tests {
 
     #[test]
     fn test_find_eq_items() {
-        assert_eq!(
-            find_eq_end_items("".chars(), "".chars()),
-            IterPairInfo::new(0, 0, 0, 0)
-        );
-        assert_eq!(
-            find_eq_end_items("aaaa".chars(), "".chars()),
-            IterPairInfo::new(4, 0, 0, 0)
-        );
-        assert_eq!(
-            find_eq_end_items("".chars(), "aaaa".chars()),
-            IterPairInfo::new(0, 4, 0, 0)
-        );
+        assert_eq!(find_eq_end_items("".chars(), "".chars()), (0, 0, 0, 0));
+        assert_eq!(find_eq_end_items("aaaa".chars(), "".chars()), (4, 0, 0, 0));
+        assert_eq!(find_eq_end_items("".chars(), "aaaa".chars()), (0, 4, 0, 0));
         assert_eq!(
             find_eq_end_items("abcd".chars(), "abcd".chars()),
-            IterPairInfo::new(4, 4, 4, 0)
+            (4, 4, 4, 0)
         );
         assert_eq!(
             find_eq_end_items("aaaa".chars(), "aa".chars()),
-            IterPairInfo::new(4, 2, 2, 0)
+            (4, 2, 2, 0)
         );
         assert_eq!(
             find_eq_end_items("aaaa".chars(), "aabbbb".chars()),
-            IterPairInfo::new(4, 6, 2, 0)
+            (4, 6, 2, 0)
         );
         assert_eq!(
             find_eq_end_items("xxaa".chars(), "yyyyaa".chars()),
-            IterPairInfo::new(4, 6, 0, 2)
+            (4, 6, 0, 2)
         );
         assert_eq!(
             find_eq_end_items("aaxxxxbb".chars(), "aaaabbbb".chars()),
-            IterPairInfo::new(8, 8, 2, 2)
+            (8, 8, 2, 2)
         );
         assert_eq!(
             find_eq_end_items("aaaa".chars(), "bbbb".chars()),
-            IterPairInfo::new(4, 4, 0, 0)
+            (4, 4, 0, 0)
         );
     }
 }

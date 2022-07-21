@@ -1,6 +1,7 @@
 //! # Jaccard Similarty tools
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::iter::FromIterator;
 
 /// Calculate the Jaccard index on two [`HashSet`]s.
 ///
@@ -70,13 +71,14 @@ where
 ///
 /// ```
 ///
-pub fn jaccard<T, U>(a: T, b: T) -> f32
+pub fn jaccard<I, T>(a: I, b: I) -> f32
 where
-    T: Iterator<Item = U>,
-    U: Hash + Eq,
+    I: IntoIterator<Item = T>,
+    T: Hash + Eq,
 {
-    let aa: HashSet<U> = a.collect();
-    let bb: HashSet<U> = b.collect();
+    let aa = HashSet::from_iter(a.into_iter());
+    let bb = HashSet::from_iter(b.into_iter());
+    // let bb: HashSet<T>::from_iter(b.into_iter());
     jaccard_set(aa, bb)
 }
 

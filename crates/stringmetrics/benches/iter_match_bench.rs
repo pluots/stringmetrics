@@ -1,7 +1,30 @@
 use std::cmp::min;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use stringmetrics::iter::{find_eq_end_items, IterPairInfo};
+use stringmetrics::iter::find_eq_end_items;
+
+#[derive(Debug, PartialEq)]
+pub struct IterPairInfo {
+    a_len: usize,
+    b_len: usize,
+    start_same: usize,
+    end_same: usize,
+}
+
+impl IterPairInfo {
+    pub fn new(a_len: usize, b_len: usize, start_same: usize, end_same: usize) -> Self {
+        IterPairInfo {
+            a_len,
+            b_len,
+            start_same,
+            end_same,
+        }
+    }
+
+    pub fn expand(&self) -> (usize, usize, usize, usize) {
+        (self.a_len, self.b_len, self.start_same, self.end_same)
+    }
+}
 
 // More rusty way to solve the problem
 // Seems to be faster for larger strings, can't really figure out why

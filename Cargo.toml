@@ -15,9 +15,9 @@ inherits = "release"
 debug = true
 
 # Sample profiling commands:
-# sudo perf record -e cycles -c 500 ./target/release-debug/lev
+# sudo perf record -e cycles -c 500 ./target/release-debug/prof_lev
 # sudo perf annotate
 
 # Or with valgrind/kcachegrind
 # valgrind --tool=callgrind --dump-instr=yes --collect-jumps=yes \
-# --simulate-cache=yes target/release-debug/lev
+# --simulate-cache=yes target/release-debug/prof_lev
