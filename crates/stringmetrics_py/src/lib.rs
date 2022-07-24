@@ -1,3 +1,6 @@
+// Older (stable) versions of clippy don't have this
+// #![allow(clippy::borrow_deref_ref)]
+
 use pyo3::prelude::*;
 // use pyo3::types::PyIterator;
 use stringmetrics::algorithms;
