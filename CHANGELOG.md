@@ -4,11 +4,9 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Added
-
 ### Changed
 
-### Removed
+- Changed `jaccard_set` to take a reference rather than the a copied value
 
 
 
