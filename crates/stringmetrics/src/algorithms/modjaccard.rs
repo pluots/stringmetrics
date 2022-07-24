@@ -1,14 +1,13 @@
 //! # Jaccard Similarty tools
 use std::collections::HashSet;
-use std::hash::Hash;
-use std::iter::FromIterator;
+use std::hash::{BuildHasher, Hash};
 
 /// Calculate the Jaccard index on two [`HashSet`]s.
 ///
 /// Returns the mathematical Jaccard index, i.e. `|A ∩ B| / |A ∪ B|`
 ///
 /// Usually this is interfaced via [`jaccard`]; that is recommended unless your
-/// data is already in a HashSet.
+/// data is already in a `HashSet`.
 ///
 /// # Example
 ///
@@ -19,19 +18,21 @@ use std::iter::FromIterator;
 /// let crew1 = HashSet::from(["Einar", "Olaf", "Harald"]);
 /// let crew2 = HashSet::from(["Olaf", "Harald", "Birger"]);
 ///
-/// assert_eq!(jaccard_set(crew1, crew2), 0.5);
+/// assert_eq!(jaccard_set(&crew1, &crew2), 0.5);
 ///
 /// ```
 ///
 /// [`HashSet`]: std::collections::HashMap
 /// [`jaccard`]: crate::algorithms::jaccard
-pub fn jaccard_set<T>(a: HashSet<T>, b: HashSet<T>) -> f32
+#[allow(clippy::cast_precision_loss)]
+#[inline]
+pub fn jaccard_set<T, S: BuildHasher>(a: &HashSet<T, S>, b: &HashSet<T, S>) -> f32
 where
     T: Eq + Hash,
 {
-    let ii = a.intersection(&b).count();
-    let uu = a.union(&b).count();
-    ii as f32 / uu as f32
+    let ii: f32 = a.intersection(b).count() as f32;
+    let uu: f32 = a.union(b).count() as f32;
+    ii / uu
 }
 
 /// Calculate the Jaccard index on two iterators using [`jaccard_set`]
@@ -42,7 +43,7 @@ where
 /// generate n-grams for text similarity. See [this wikipedia
 /// page](https://en.wikipedia.org/wiki/N-gram) for descriptions on n-grams.
 ///
-/// Note: If the data are interested in is already in a HashSet, use
+/// Note: If the data are interested in is already in a `HashSet`, use
 /// [`jaccard_set`] to save the collection step.
 ///
 /// # Example
@@ -71,15 +72,16 @@ where
 ///
 /// ```
 ///
+#[inline]
 pub fn jaccard<I, T>(a: I, b: I) -> f32
 where
     I: IntoIterator<Item = T>,
     T: Hash + Eq,
 {
-    let aa = HashSet::from_iter(a.into_iter());
-    let bb = HashSet::from_iter(b.into_iter());
+    let aa: HashSet<_> = a.into_iter().collect();
+    let bb: HashSet<_> = b.into_iter().collect();
     // let bb: HashSet<T>::from_iter(b.into_iter());
-    jaccard_set(aa, bb)
+    jaccard_set(&aa, &bb)
 }
 
 #[cfg(test)]

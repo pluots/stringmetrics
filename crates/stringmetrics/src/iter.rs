@@ -9,6 +9,7 @@ use std::cmp::min;
 ///
 /// Unfortunately, we return an ugly tuple rather than a struct since that is
 /// about 5% faster. Use this via destructuring rather than indexing.
+///
 #[inline]
 pub fn find_eq_end_items<I, T, D>(a: I, b: I) -> (usize, usize, usize, usize)
 where
@@ -39,9 +40,9 @@ where
             (Some(a_v), Some(b_v)) => {
                 r_iter.next();
                 if counting && a_v == b_v {
-                    start_same += 1
+                    start_same += 1;
                 } else if counting {
-                    counting = false
+                    counting = false;
                 }
             }
             (Some(_), None) => {
@@ -72,7 +73,7 @@ where
             break;
         }
         if a_char == b_char {
-            end_same += 1
+            end_same += 1;
         } else {
             break;
         }

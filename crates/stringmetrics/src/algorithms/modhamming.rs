@@ -20,6 +20,12 @@ use crate::errors::LengthMismatchError;
 /// assert_eq!(hamming("abcdefg", "aaadefa"), Ok(3));
 /// assert_eq!(hamming("abcdefg", "xaaadefa"), Err(LengthMismatchError));
 /// ```
+///
+/// # Errors
+///
+/// Returns a [`LengthMismatchError`] if the two elements are not of the same
+/// length
+#[inline]
 pub fn hamming(a: &str, b: &str) -> Result<u32, LengthMismatchError> {
     // Error case already handled
     hamming_iter(a.chars(), b.chars())
@@ -44,6 +50,12 @@ pub fn hamming(a: &str, b: &str) -> Result<u32, LengthMismatchError> {
 ///
 /// assert_eq!(hamming_iter(1..3, 2..4), Ok(2));
 /// ```
+///
+/// # Errors
+///
+/// Returns a [`LengthMismatchError`] if the two iterators are not of the same
+/// length
+#[inline]
 pub fn hamming_iter<I: IntoIterator<Item = T>, T: PartialEq>(
     a: I,
     b: I,

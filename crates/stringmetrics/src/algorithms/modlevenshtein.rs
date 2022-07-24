@@ -3,13 +3,13 @@
 //! This module contains functions for applying various closeness algorithms.
 
 // use crate::iter::{find_eq_end_items, IterPairInfo};
-use std::{cmp::min, convert::TryInto, fmt::Debug, iter::Skip};
+use std::{cmp::min, convert::TryInto, fmt::Debug};
 
 use crate::iter::find_eq_end_items;
 
 /// A struct that holds the costs of insertion, deletion, and substitution. Used
 /// for levenshthein algorithms that require weight specifications.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct LevWeights {
     insertion: u32,
     deletion: u32,
@@ -17,8 +17,9 @@ pub struct LevWeights {
 }
 
 impl LevWeights {
-    pub fn new(w_ins: u32, w_del: u32, w_sub: u32) -> LevWeights {
-        LevWeights {
+    #[inline]
+    pub const fn new(w_ins: u32, w_del: u32, w_sub: u32) -> Self {
+        Self {
             insertion: w_ins,
             deletion: w_del,
             substitution: w_sub,
@@ -27,8 +28,9 @@ impl LevWeights {
 }
 
 impl Default for LevWeights {
-    fn default() -> LevWeights {
-        LevWeights::new(1, 1, 1)
+    #[inline]
+    fn default() -> Self {
+        Self::new(1, 1, 1)
     }
 }
 
@@ -130,6 +132,7 @@ pub fn levenshtein_weight(a: &str, b: &str, limit: u32, weights: &LevWeights) ->
 /// let weights = LevWeights::default();
 /// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
 /// ```
+#[inline]
 pub fn levenshtein_limit_iter<I, T, D>(a: I, b: I, limit: u32) -> u32
 where
     I: IntoIterator<IntoIter = D>,
@@ -153,24 +156,24 @@ where
         .try_into()
         .expect("Critical: > u32::MAX items");
 
-    let a_wrk: Skip<D>;
-    let b_wrk: Skip<D>;
-    let a_len: u32;
-    let b_len: u32;
-
     // We want the longer string in the inner loop
     // B will be the longer string from this point on
-    if a_len_u > b_len_u {
-        a_wrk = b_iter_base.skip(start_same);
-        b_wrk = a_iter_base.skip(start_same);
-        a_len = b_len_u;
-        b_len = a_len_u;
+    let swap = a_len_u > b_len_u;
+    let (a_wrk, b_wrk, a_len, b_len) = if swap {
+        (
+            b_iter_base.skip(start_same),
+            a_iter_base.skip(start_same),
+            b_len_u,
+            a_len_u,
+        )
     } else {
-        a_wrk = a_iter_base.skip(start_same);
-        b_wrk = b_iter_base.skip(start_same);
-        a_len = a_len_u;
-        b_len = b_len_u;
-    }
+        (
+            a_iter_base.skip(start_same),
+            b_iter_base.skip(start_same),
+            a_len_u,
+            b_len_u,
+        )
+    };
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
@@ -181,7 +184,7 @@ where
         return limit;
     }
 
-    let mut work_vec: Vec<u32> = (1..(b_len + 1)).collect();
+    let mut work_vec: Vec<u32> = (1..=b_len).collect();
 
     let mut tmp_res = b_len;
 
@@ -209,10 +212,10 @@ where
             // i.e., the value to the left or above plus 1
             // Substitution cost is equal to the up-left (sub_base) cost if equal,
             // otherwise up-left value + 1.
-            if a_item != b_item {
-                tmp_res = min(min(tmp_res, del_base), sub_base) + 1;
-            } else {
+            if a_item == b_item {
                 tmp_res = min(min(tmp_res, del_base) + 1, sub_base);
+            } else {
+                tmp_res = min(min(tmp_res, del_base), sub_base) + 1;
             }
 
             // As we shift to the right, our deletion square becomes our
@@ -244,6 +247,7 @@ where
 /// let weights = LevWeights::default();
 /// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
 /// ```
+#[inline]
 pub fn levenshtein_weight_iter<I, T, D>(a: I, b: I, limit: u32, weights: &LevWeights) -> u32
 where
     I: IntoIterator<IntoIter = D>,
@@ -256,39 +260,37 @@ where
     let (a_len, b_len, start_same, end_same) =
         find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
 
-    let a_len_u: u32 = (a_len - start_same - end_same)
+    // Lengths of the different parts of the string (start & end trimmed)
+    let a_len_diff: u32 = (a_len - start_same - end_same)
         .try_into()
         .expect("Critical: > u32::MAX items");
-    let b_len_u: u32 = (b_len - start_same - end_same)
+    let b_len_diff: u32 = (b_len - start_same - end_same)
         .try_into()
         .expect("Critical: > u32::MAX items");
-
-    let a_wrk: Skip<D>;
-    let b_wrk: Skip<D>;
-    let a_len: u32;
-    let b_len: u32;
-
-    let w_sub = weights.substitution;
-    let w_ins;
-    let w_del;
 
     // We want the longer string in the inner loop
     // B will be the longer string from this point on
-    if a_len_u > b_len_u {
-        a_wrk = b_iter_base.skip(start_same);
-        b_wrk = a_iter_base.skip(start_same);
-        a_len = b_len_u;
-        b_len = a_len_u;
-        w_ins = weights.deletion;
-        w_del = weights.insertion;
+    let w_sub = weights.substitution;
+    let swap = a_len_diff > b_len_diff;
+    let (a_wrk, b_wrk, a_len, b_len, w_ins, w_del) = if swap {
+        (
+            b_iter_base.skip(start_same),
+            a_iter_base.skip(start_same),
+            b_len_diff,
+            a_len_diff,
+            weights.deletion,
+            weights.insertion,
+        )
     } else {
-        a_wrk = a_iter_base.skip(start_same);
-        b_wrk = b_iter_base.skip(start_same);
-        a_len = a_len_u;
-        b_len = b_len_u;
-        w_ins = weights.insertion;
-        w_del = weights.deletion;
-    }
+        (
+            a_iter_base.skip(start_same),
+            b_iter_base.skip(start_same),
+            a_len_diff,
+            b_len_diff,
+            weights.insertion,
+            weights.deletion,
+        )
+    };
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
@@ -301,9 +303,7 @@ where
 
     let equal_weights = w_ins == w_del && w_del == w_sub;
 
-    let mut work_vec: Vec<u32> = (w_ins..((b_len * w_ins) + 1))
-        .step_by(w_ins as usize)
-        .collect();
+    let mut work_vec: Vec<u32> = (w_ins..=(b_len * w_ins)).step_by(w_ins as usize).collect();
     let mut tmp_res = b_len * w_ins;
 
     for (i, a_item) in a_wrk.enumerate() {
@@ -330,15 +330,15 @@ where
             // Insertion costs and deletion costs are their bases + 1
             // i.e., the value to the left or above plus 1
             if equal_weights {
-                if a_item != b_item {
-                    tmp_res = min(min(tmp_res, del_base), sub_base) + w_ins;
-                } else {
+                if a_item == b_item {
                     tmp_res = min(min(tmp_res, del_base) + w_ins, sub_base);
+                } else {
+                    tmp_res = min(min(tmp_res, del_base), sub_base) + w_ins;
                 }
-            } else if a_item != b_item {
-                tmp_res = min(min(tmp_res + w_ins, del_base + w_del), sub_base + w_sub);
-            } else {
+            } else if a_item == b_item {
                 tmp_res = min(min(tmp_res + w_ins, del_base + w_del), sub_base);
+            } else {
+                tmp_res = min(min(tmp_res + w_ins, del_base + w_del), sub_base + w_sub);
             }
 
             // As we shift to the right, our deletion square becomes our
