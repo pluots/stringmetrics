@@ -22,8 +22,11 @@ jobs:
           command: check
 
   test:
-    name: "cargo-test: Test Suite"
-    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          os: [ubuntu-latest, windows-latest, macos-latest]
+    name: "cargo-test: Test Suite ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
