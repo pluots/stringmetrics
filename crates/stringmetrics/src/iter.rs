@@ -1,6 +1,6 @@
 //! Tools to help with processing iterators
 
-use std::{cmp::min};
+use std::cmp::min;
 
 /// This function has an unstable API
 ///
@@ -66,7 +66,6 @@ where
         }
     }
 
-
     // Get characters at the end that are the same using iterators
     let end_same = a_iter2
         .rev()
@@ -74,9 +73,8 @@ where
         // Limit to this difference
         .take(min(a_len, b_len) - start_same)
         // Count if items are equal, break if not
-        .take_while(|(a_char, b_char)| a_char == b_char)
+        .take_while(|a_b_chars| a_b_chars.0 == a_b_chars.1)
         .count();
-    
 
     (a_len, b_len, start_same, end_same)
 }
@@ -118,10 +116,25 @@ mod tests {
 
     #[test]
     fn test_tricky() {
-        assert_eq!(find_eq_end_items("notate".chars(), "to ate".chars()), (6,6,0,3));
-        assert_eq!(find_eq_end_items("to ate".chars(), "notate".chars()), (6,6,0,3));
-        assert_eq!(find_eq_end_items("to be a".chars(), "not to".chars()), (7,6,0,0));
-        assert_eq!(find_eq_end_items("not to".chars(), "to be a".chars()), (6,7,0,0));
-        assert_eq!(find_eq_end_items("abccc".chars(), "accc".chars()), (5,4,1,3));
+        assert_eq!(
+            find_eq_end_items("notate".chars(), "to ate".chars()),
+            (6, 6, 0, 3)
+        );
+        assert_eq!(
+            find_eq_end_items("to ate".chars(), "notate".chars()),
+            (6, 6, 0, 3)
+        );
+        assert_eq!(
+            find_eq_end_items("to be a".chars(), "not to".chars()),
+            (7, 6, 0, 0)
+        );
+        assert_eq!(
+            find_eq_end_items("not to".chars(), "to be a".chars()),
+            (6, 7, 0, 0)
+        );
+        assert_eq!(
+            find_eq_end_items("abccc".chars(), "accc".chars()),
+            (5, 4, 1, 3)
+        );
     }
 }
