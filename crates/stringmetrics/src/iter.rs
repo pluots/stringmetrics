@@ -1,11 +1,11 @@
 //! Tools to help with processing iterators
 
-use std::cmp::min;
+use std::{cmp::min};
 
 /// This function has an unstable API
 ///
 /// It is designed to identify the longest similar start and end sequences in a
-/// pair of iterators.
+/// pair of iterators, as well as their total length.
 ///
 /// Unfortunately, we return an ugly tuple rather than a struct since that is
 /// about 5% faster. Use this via destructuring rather than indexing.
@@ -21,7 +21,7 @@ where
     let b_len;
 
     let mut start_same = 0usize;
-    let mut end_same = 0usize;
+    // let mut end_same = 0usize;
     let mut counting = true;
 
     // Weirdly, this outperformed manual += 1 counting
@@ -66,18 +66,17 @@ where
         }
     }
 
-    let end_max_iters = min(a_len, b_len) - start_same;
 
-    for (i, (a_char, b_char)) in a_iter2.rev().zip(b_iter2.rev()).enumerate() {
-        if i >= end_max_iters {
-            break;
-        }
-        if a_char == b_char {
-            end_same += 1;
-        } else {
-            break;
-        }
-    }
+    // Get characters at the end that are the same using iterators
+    let end_same = a_iter2
+        .rev()
+        .zip(b_iter2.rev())
+        // Limit to this difference
+        .take(min(a_len, b_len) - start_same)
+        // Count if items are equal, break if not
+        .take_while(|(a_char, b_char)| a_char == b_char)
+        .count();
+    
 
     (a_len, b_len, start_same, end_same)
 }
@@ -115,5 +114,14 @@ mod tests {
             find_eq_end_items("aaaa".chars(), "bbbb".chars()),
             (4, 4, 0, 0)
         );
+    }
+
+    #[test]
+    fn test_tricky() {
+        assert_eq!(find_eq_end_items("notate".chars(), "to ate".chars()), (6,6,0,3));
+        assert_eq!(find_eq_end_items("to ate".chars(), "notate".chars()), (6,6,0,3));
+        assert_eq!(find_eq_end_items("to be a".chars(), "not to".chars()), (7,6,0,0));
+        assert_eq!(find_eq_end_items("not to".chars(), "to be a".chars()), (6,7,0,0));
+        assert_eq!(find_eq_end_items("abccc".chars(), "accc".chars()), (5,4,1,3));
     }
 }
