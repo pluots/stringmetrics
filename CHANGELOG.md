@@ -4,6 +4,16 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+### Changed
+
+### Removed
+
+
+
+## [2.1.3] - 2022-08-26
+
 ### Changed
 
 - Simplify algorithms to be more rustastic
@@ -66,7 +76,8 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.1.2...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.1.3...HEAD
+[2.1.3]: https://github.com/pluots/stringmetrics/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/pluots/stringmetrics/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/pluots/stringmetrics/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/pluots/stringmetrics/compare/v2.0.7...v2.1.0
