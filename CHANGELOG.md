@@ -4,11 +4,10 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Added
-
 ### Changed
 
-### Removed
+- Simplify algorithms to be more rustastic
+- Update Github workflows
 
 
 
