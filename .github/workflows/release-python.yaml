@@ -1,4 +1,4 @@
-name: "Python wheels: build & release"
+name: Python Release
 
 on:
   push:

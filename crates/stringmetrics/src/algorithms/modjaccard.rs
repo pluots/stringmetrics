@@ -1,4 +1,5 @@
-//! # Jaccard Similarty tools
+//! # Jaccard Similarty tools (module not reexported)
+
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 
@@ -13,7 +14,7 @@ use std::hash::{BuildHasher, Hash};
 ///
 /// ```
 /// use std::collections::HashSet;
-/// use stringmetrics::algorithms::jaccard_set;
+/// use stringmetrics::jaccard_set;
 ///
 /// let crew1 = HashSet::from(["Einar", "Olaf", "Harald"]);
 /// let crew2 = HashSet::from(["Olaf", "Harald", "Birger"]);
@@ -22,7 +23,7 @@ use std::hash::{BuildHasher, Hash};
 ///
 /// ```
 ///
-/// [`HashSet`]: std::collections::HashMap
+/// [`HashSet`]: std::collections::HashSet
 /// [`jaccard`]: crate::algorithms::jaccard
 #[allow(clippy::cast_precision_loss)]
 #[inline]
@@ -49,7 +50,7 @@ where
 /// # Example
 ///
 /// ```
-/// use stringmetrics::algorithms::jaccard;
+/// use stringmetrics::jaccard;
 ///
 /// let crew1 = ["Einar", "Olaf", "Harald"];
 /// let crew2 = ["Olaf", "Harald", "Birger"];
@@ -63,7 +64,7 @@ where
 /// for an in-depth explanation of Jaccard Index for k-grams/n-grams.
 ///
 /// ```
-/// use stringmetrics::algorithms::jaccard;
+/// use stringmetrics::jaccard;
 ///
 /// let a = [["to", "be"], ["be", "or"], ["or", "not"]];
 /// let b = [["who", "wants"], ["wants", "to"], ["to", "be"]];
@@ -80,7 +81,7 @@ where
 {
     let aa: HashSet<_> = a.into_iter().collect();
     let bb: HashSet<_> = b.into_iter().collect();
-    // let bb: HashSet<T>::from_iter(b.into_iter());
+
     jaccard_set(&aa, &bb)
 }
 

@@ -30,6 +30,7 @@
 //! differences. Hamming distance is implemented by [`hamming`] and
 //! [`hamming_iter`]
 //!
+//!
 //! ## Levenshtein distance Algorithm
 //!
 // The funcition [levenshtein][crate::algorithms::levenshtein] implements the
@@ -83,6 +84,10 @@
 //! page](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows)
 //! but adapted to use a single vector. Main memory usage is only that of a
 //! `Vec<u32>` in the same length as the shortest string.
+//!
+//! Please note: this library eventually aims to replace the current algorithm
+//! with one that is more performant across varying lengths of strings. The
+//! interface will not change.
 //!
 //! ### Limited Levenshtein algorithm
 //!
@@ -167,6 +172,23 @@
 //! segmentation
 //! crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/)
 //! can be used to split on the iterable `graphemes(true)`.
+//!
+//! ## Jaccard Similarity
+//!
+//! Jaccard similarity or the Jaccard Index of two sets is the number of items
+//! found in both sets, divided by the number of unique items in the two sets.
+//! This is often used for things like n-gram string similarity. Relevant
+//! functions are [`jaccard`] and [`jaccard_set`]
+//!
+//! ```
+//! use stringmetrics::jaccard;
+//!
+//! let crew1 = ["Einar", "Olaf", "Harald"];
+//! let crew2 = ["Olaf", "Harald", "Birger"];
+//!
+//! assert_eq!(jaccard(crew1.iter(), crew2.iter()), 0.5);
+//!
+//! ```
 
 mod modhamming;
 // mod damerau;

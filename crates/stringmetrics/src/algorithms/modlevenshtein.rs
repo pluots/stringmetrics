@@ -1,6 +1,6 @@
 //! # Levenshtein text distance calculations module
 //!
-//! This module contains functions for applying various closeness algorithms.
+//! This module contains functions for applying various closeness algorithms. It is not reexporeted.
 
 // use crate::iter::{find_eq_end_items, IterPairInfo};
 use std::{cmp::min, convert::TryInto, fmt::Debug};
@@ -188,11 +188,7 @@ where
 
     let mut tmp_res = b_len;
 
-    for (i, a_item) in a_wrk.enumerate() {
-        // Exit the loop if we are at the end
-        if i as u32 >= a_len {
-            break;
-        }
+    for (i, a_item) in a_wrk.enumerate().take_while(|&(i, _)| i < a_len as usize) {
         // Our "horizontal" iterations always start with the leftmost column,
         // which is the insertion cost (or substitution above)
         // temp_res is also our insertion cost base
@@ -201,11 +197,11 @@ where
 
         // Go through and do our calculations. we need to preserve the "up left"
         // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
-        for (j, b_item) in b_wrk.clone().enumerate() {
-            if j as u32 >= b_len {
-                break;
-            }
-
+        for (j, b_item) in b_wrk
+            .clone()
+            .enumerate()
+            .take_while(|&(j, _)| j < b_len as usize)
+        {
             let del_base = work_vec[j];
 
             // Insertion costs and deletion costs are their bases + 1
@@ -306,12 +302,7 @@ where
     let mut work_vec: Vec<u32> = (w_ins..=(b_len * w_ins)).step_by(w_ins as usize).collect();
     let mut tmp_res = b_len * w_ins;
 
-    for (i, a_item) in a_wrk.enumerate() {
-        // Reuse the casted variable as our loop exit if we are at the end
-        if i as u32 >= a_len {
-            break;
-        }
-
+    for (i, a_item) in a_wrk.enumerate().take_while(|&(i, _)| i < a_len as usize) {
         // Our "horizontal" iterations always start with the leftmost column,
         // which is the insertion cost (or substitution above)
         // temp_res is also our insertion cost base
@@ -320,11 +311,11 @@ where
 
         // Go through and do our calculations. we need to preserve the "up left"
         // (sub_base) and "left" (tmp_res) values, the rest can be overwritten
-        for (j, b_item) in b_wrk.clone().enumerate() {
-            if j as u32 >= b_len {
-                break;
-            }
-
+        for (j, b_item) in b_wrk
+            .clone()
+            .enumerate()
+            .take_while(|&(j, _)| j < b_len as usize)
+        {
             let del_base = work_vec[j];
 
             // Insertion costs and deletion costs are their bases + 1
