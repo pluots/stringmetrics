@@ -12,7 +12,7 @@ Here are some useful quick links:
 - Crate source: <https://github.com/pluots/stringmetrics>
 
 
-## Stringmetric Algorithms
+## Algorithms
 
 The main purpose of this library is to provide a variety of string
 metric functions. Included algorithms are:
@@ -57,6 +57,18 @@ let b = "aaadefa";
 assert_eq!(hamming(a, b), Ok(3));
 ```
 
+## Future Algorithms & Direction
+
+Eventually, this library aims to add support for more algorithms. Intended work
+includes:
+
+1. Update levenshtein distance to have a more performant algorithm for short
+   (<64 characters) and long (>100 characters) strings
+2. Add the Damerau–Levenshtein distance
+3. Add the Jaro–Winkler distance
+4. Add the Tversky index
+5. Add Cosine similarity
+6. Add some useful tokenizers with examples
 
 ## License
 
