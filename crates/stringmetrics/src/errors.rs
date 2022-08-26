@@ -1,4 +1,4 @@
-//! This module includes errors used by [`stringmetrics`].
+//! This module includes errors used by this crate.
 
 use std::fmt;
 

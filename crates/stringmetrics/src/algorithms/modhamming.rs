@@ -60,22 +60,20 @@ pub fn hamming_iter<I: IntoIterator<Item = T>, T: PartialEq>(
     a: I,
     b: I,
 ) -> Result<u32, LengthMismatchError> {
-    let mut distance = 0;
+    let mut distance = 0u32;
     let mut a_iter = a.into_iter();
     let mut b_iter = b.into_iter();
 
     loop {
-        let aa = a_iter.next();
-        let bb = b_iter.next();
-
-        if aa == None && bb == None {
-            break;
-        } else if aa == None || bb == None {
-            return Err(LengthMismatchError);
-        } else if aa != bb {
-            distance += 1;
+        match (a_iter.next(), b_iter.next()) {
+            (Some(aa), Some(bb)) => {
+                if aa != bb {
+                    distance += 1;
+                }
+            }
+            (Some(_), None) | (None, Some(_)) => return Err(LengthMismatchError),
+            (None, None) => break,
         }
-        // Final case of aa == bb, do nothing
     }
 
     Ok(distance)
@@ -88,6 +86,9 @@ mod tests {
     #[test]
     fn test_err_not_equal() {
         assert_eq!(hamming("abc", "ab"), Err(LengthMismatchError));
+        assert_eq!(hamming("abcd", "ab"), Err(LengthMismatchError));
+        assert_eq!(hamming("ab", "abc"), Err(LengthMismatchError));
+        assert_eq!(hamming("ab", "abcd"), Err(LengthMismatchError));
     }
 
     #[test]

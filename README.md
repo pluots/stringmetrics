@@ -4,25 +4,26 @@ This is a Rust library for approximate string matching that implements simple
 algorithms such has Hamming distance, Levenshtein distance, Jaccard similarity,
 and more.
 
-Crate info:
-[https://crates.io/crates/stringmetrics](https://crates.io/crates/stringmetrics)
+Here are some useful quick links:
 
-Crate docs:
-[https://docs.rs/stringmetrics/](https://docs.rs/stringmetrics/).
-
-Crate source:
-[https://github.com/pluots/stringmetrics](https://github.com/pluots/stringmetrics)
-
-Note that spellcheck features have been moved to
-[https://crates.io/crates/zspell](https://crates.io/crates/zspell)
+- Crate info: <https://crates.io/crates/stringmetrics>
+- Crate docs: <https://docs.rs/stringmetrics/>
+- Python library page: <https://pypi.org/project/stringmetrics/>
+- Crate source: <https://github.com/pluots/stringmetrics>
 
 
 ## Stringmetric Algorithms
 
-One of the main purposes of this library is to provide a variety of string
-metric functions. These include a few Levenshtein implementations (including
-limit/max, weighted, and generic), Jaccard index, and a Hamming implementation.
-These are all found in the `algorithms` module. Quick example:
+The main purpose of this library is to provide a variety of string
+metric functions. Included algorithms are:
+
+- Levenshtein Distance
+- Limited & Weighted Levenshtein Distance
+- Jaccard Similarity
+- Hamming Distance
+
+See [the documentation](https://docs.rs/stringmetrics/) for full information.
+Some examples are below:
 
 ```rs
 // Basic levenshtein distance
@@ -55,8 +56,6 @@ let a = "abcdefg";
 let b = "aaadefa";
 assert_eq!(hamming(a, b), Ok(3));
 ```
-
-See [the documentation](https://docs.rs/stringmetrics/) for more details.
 
 
 ## License

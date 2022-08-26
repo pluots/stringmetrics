@@ -67,13 +67,14 @@ where
     }
 
     // Get characters at the end that are the same using iterators
+    #[allow(clippy::pattern_type_mismatch)]
     let end_same = a_iter2
         .rev()
         .zip(b_iter2.rev())
         // Limit to this difference
         .take(min(a_len, b_len) - start_same)
         // Count if items are equal, break if not
-        .take_while(|a_b_chars| a_b_chars.0 == a_b_chars.1)
+        .take_while(|(a_item, b_item)| a_item == b_item)
         .count();
 
     (a_len, b_len, start_same, end_same)
