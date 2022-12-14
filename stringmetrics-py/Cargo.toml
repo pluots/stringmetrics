@@ -1,5 +1,5 @@
 [package]
-name = "stringmetrics_py"
+name = "stringmetrics-py"
 version = "2.1.3"
 edition = "2021"
 publish = false
