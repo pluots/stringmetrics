@@ -65,7 +65,7 @@ replace = "...{{tag_name}}"
 exactly = 1
 
 [[package.metadata.release.pre-release-replacements]]
-file = "../../CHANGELOG.md"
+file = "../CHANGELOG.md"
 search = "ReleaseDate"
 replace = "{{date}}"
 
