@@ -1,9 +1,9 @@
 [workspace]
 
 members = [
-    "crates/stringmetrics",
-    "crates/stringmetrics_py",
-    "crates/profiling"
+    "stringmetrics",
+    "stringmetrics-py",
+    "profiling"
     ]
 
 

@@ -30,6 +30,9 @@ criterion = "0.3"
 assert_cmd = "2.0"
 predicates = "2.1"
 
+[features]
+bench = [] # expose internal APIs for benchmarking
+
 [[bench]]
 name = "lev_bench"
 harness = false

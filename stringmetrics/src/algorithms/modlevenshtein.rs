@@ -146,32 +146,33 @@ where
     let a_iter_base = a.into_iter();
     let b_iter_base = b.into_iter();
 
-    let (a_len, b_len, start_same, end_same) =
-        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
+    let iter_info = find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
 
-    let a_len_u: u32 = (a_len - start_same - end_same)
+    let a_len_diff: u32 = iter_info
+        .a_diff_len()
         .try_into()
         .expect("Critical: > u32::MAX items");
-    let b_len_u: u32 = (b_len - start_same - end_same)
+    let b_len_diff: u32 = iter_info
+        .b_diff_len()
         .try_into()
         .expect("Critical: > u32::MAX items");
 
     // We want the longer string in the inner loop
     // B will be the longer string from this point on
-    let swap = a_len_u > b_len_u;
+    let swap = a_len_diff > b_len_diff;
     let (a_wrk, b_wrk, a_len, b_len) = if swap {
         (
-            b_iter_base.skip(start_same),
-            a_iter_base.skip(start_same),
-            b_len_u,
-            a_len_u,
+            b_iter_base.skip(iter_info.start_same),
+            a_iter_base.skip(iter_info.start_same),
+            b_len_diff,
+            a_len_diff,
         )
     } else {
         (
-            a_iter_base.skip(start_same),
-            b_iter_base.skip(start_same),
-            a_len_u,
-            b_len_u,
+            a_iter_base.skip(iter_info.start_same),
+            b_iter_base.skip(iter_info.start_same),
+            a_len_diff,
+            b_len_diff,
         )
     };
 
@@ -253,14 +254,15 @@ where
     let a_iter_base = a.into_iter();
     let b_iter_base = b.into_iter();
 
-    let (a_len, b_len, start_same, end_same) =
-        find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
+    let iter_info = find_eq_end_items(a_iter_base.clone(), b_iter_base.clone());
 
     // Lengths of the different parts of the string (start & end trimmed)
-    let a_len_diff: u32 = (a_len - start_same - end_same)
+    let a_len_diff: u32 = iter_info
+        .a_diff_len()
         .try_into()
         .expect("Critical: > u32::MAX items");
-    let b_len_diff: u32 = (b_len - start_same - end_same)
+    let b_len_diff: u32 = iter_info
+        .b_diff_len()
         .try_into()
         .expect("Critical: > u32::MAX items");
 
@@ -270,8 +272,8 @@ where
     let swap = a_len_diff > b_len_diff;
     let (a_wrk, b_wrk, a_len, b_len, w_ins, w_del) = if swap {
         (
-            b_iter_base.skip(start_same),
-            a_iter_base.skip(start_same),
+            b_iter_base.skip(iter_info.start_same),
+            a_iter_base.skip(iter_info.start_same),
             b_len_diff,
             a_len_diff,
             weights.deletion,
@@ -279,8 +281,8 @@ where
         )
     } else {
         (
-            a_iter_base.skip(start_same),
-            b_iter_base.skip(start_same),
+            a_iter_base.skip(iter_info.start_same),
+            b_iter_base.skip(iter_info.start_same),
             a_len_diff,
             b_len_diff,
             weights.insertion,

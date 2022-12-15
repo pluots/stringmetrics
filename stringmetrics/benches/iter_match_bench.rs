@@ -1,7 +1,10 @@
+// Need to feature gate since we benchmark internal modules
+#![cfg(feature = "bench")]
+
 use std::cmp::min;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use stringmetrics::iter::find_eq_end_items;
+use stringmetrics::iter::find_eq_end_items_bench as find_eq_end_items;
 
 #[derive(Debug, PartialEq)]
 pub struct IterPairInfo {

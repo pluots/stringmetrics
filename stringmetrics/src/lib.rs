@@ -1,20 +1,26 @@
-//! # Stringmetric Algorithms
+//! # Stringmetrics library
 //!
-//! This module includes the various implementations for Levenshthein and
-//! Hamming distance, as well as the Jaccard index. See these modules for
-//! in-depth explanation of how the algorithms work, or the function docs for
-//! usage information
+//! `Stringmetrics` is a library for applying text- and token- based comparison
+//! algorithms to determine the similarity of two strings or sets. It currently
+//! includes a variety of implementations of [Levenshtein
+//! distance](https://en.wikipedia.org/wiki/Levenshtein_distance), [Hamming
+//! distance](https://en.wikipedia.org/wiki/Hamming_distance), and [Jaccard
+//! Similarity](https://en.wikipedia.org/wiki/Jaccard_index), with more string
+//! metrics expected to be added in the future. It also includes helpful
+//! tokenizers for things like splitting sentences into words.
 //!
-//! All relevant functions can be directly imported from `stringmetrics`, no
-//! need to access them nested modules (see the example below).
+//! [`algorithms`] contains the basic string metrics. All of its functions are
+//! re-exported here; please see [`algorithms`] for further details.
 //!
-//! ## Example
+//! The [`tokenizers`] module is currently sparse, but will contain various
+//! common methods of splitting strings up into words for further processing.
+//!
+//! # Example
 //!
 //! ```
 //! use stringmetrics::levenshtein;
-//! let a = "this is a book";
-//! let b = "i am a cook";
-//! assert_eq!(levenshtein(a, b), 6);
+//!
+//! assert_eq!(levenshtein("kitten", "sitting"), 3);
 //! ```
 //!
 //! # Algorithm Descriptions
@@ -190,15 +196,36 @@
 //!
 //! ```
 
-mod modhamming;
-// mod damerau;
-mod modjaccard;
-mod modlevenshtein;
+// Strict clippy
+#![warn(
+    clippy::pedantic,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::str_to_string,
+    clippy::missing_inline_in_public_items,
+    clippy::exhaustive_enums,
+    clippy::pattern_type_mismatch
+)]
+// Pedantic config
+#![allow(
+    clippy::missing_panics_doc,
+    clippy::must_use_candidate,
+    clippy::cast_possible_truncation,
+    // Below items are from "restriction"
+    clippy::missing_docs_in_private_items,
+    clippy::expect_used,
+    clippy::unwrap_used,
+    clippy::implicit_return,
+    clippy::integer_arithmetic,
+    clippy::exhaustive_structs,
+    clippy::shadow_unrelated,
+)]
 
-pub use self::modhamming::{hamming, hamming_iter};
-// pub use self::damerau::damerau_levenshtein;
-pub use self::modjaccard::{jaccard, jaccard_set};
-pub use self::modlevenshtein::{
-    levenshtein, levenshtein_limit, levenshtein_limit_iter, levenshtein_weight,
-    levenshtein_weight_iter, LevWeights,
-};
+pub mod algorithms;
+pub mod errors;
+#[doc(hidden)]
+pub mod iter;
+pub mod tokenizers;
+
+#[doc(inline)]
+pub use algorithms::*;
