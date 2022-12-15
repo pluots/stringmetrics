@@ -1,6 +1,6 @@
 [package]
 name = "stringmetrics"
-version = "2.1.3"
+version = "2.2.0"
 edition = "2021"
 authors = ["Trevor Gross <tmgross@umich.edu>"]
 description = "Rust library for approximate string matching"

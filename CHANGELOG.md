@@ -6,6 +6,16 @@
 
 ### Added
 
+### Changed
+
+### Removed
+
+
+
+## [2.2.0] - 2022-12-15
+
+### Added
+
 - Added `try_levenshtein_x` functions to allow returning an `Option` if a limit
   is hit
 
@@ -81,7 +91,8 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.1.3...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/pluots/stringmetrics/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/pluots/stringmetrics/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/pluots/stringmetrics/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/pluots/stringmetrics/compare/v2.1.0...v2.1.1
