@@ -45,7 +45,6 @@ harness = false
 name = "iter_match_bench"
 harness = false
 
-
 [package.metadata.docs.rs]
 rustdoc-args = [ "--html-in-header", "katex-header.html" ]
 
