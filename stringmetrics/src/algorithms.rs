@@ -18,15 +18,15 @@
 //! ```
 
 mod hamming_impl;
-// mod damerau;
 mod jaccard_impl;
 mod lev_impl;
+mod osa_impl;
 
 pub use self::hamming_impl::{hamming, hamming_iter};
-// pub use self::damerau::damerau_levenshtein;
 pub use self::jaccard_impl::{jaccard, jaccard_set};
 pub use self::lev_impl::{
     levenshtein, levenshtein_limit, levenshtein_limit_iter, levenshtein_weight,
     levenshtein_weight_iter, try_levenshtein, try_levenshtein_iter, try_levenshtein_weight,
     try_levenshtein_weight_iter, LevWeights,
 };
+pub use self::osa_impl::{osa_distance, osa_limit, try_osa, try_osa_iter};

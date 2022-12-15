@@ -35,12 +35,14 @@ impl Default for LevWeights {
     }
 }
 
+/// Representation of a string for lev parsing after stipping start & end
 #[derive(Debug)]
 pub struct LevState<D: DoubleEndedIterator> {
     pub a_iter: Skip<D>,
     pub b_iter: Skip<D>,
-    pub a_diff_len: u32,
-    pub b_diff_len: u32,
+    /// Lengths after trimming
+    pub a_len: u32,
+    pub b_len: u32,
 }
 
 impl<D: DoubleEndedIterator<Item = T> + Clone, T: PartialEq> LevState<D> {
@@ -50,8 +52,8 @@ impl<D: DoubleEndedIterator<Item = T> + Clone, T: PartialEq> LevState<D> {
         Self {
             a_iter: a_iter.skip(skip),
             b_iter: b_iter.skip(skip),
-            a_diff_len: iter_info.a_diff_len(),
-            b_diff_len: iter_info.b_diff_len(),
+            a_len: iter_info.a_diff_len(),
+            b_len: iter_info.b_diff_len(),
         }
     }
 
@@ -79,12 +81,12 @@ impl<D: DoubleEndedIterator<Item = T> + Clone, T: PartialEq> LevState<D> {
     /// We want the longer string in B so it's in the inner loop
     #[inline]
     pub const fn should_swap(&self) -> bool {
-        self.a_diff_len > self.b_diff_len
+        self.a_len > self.b_len
     }
 
     #[inline]
     pub fn swap_inner(&mut self) {
         mem::swap(&mut self.a_iter, &mut self.b_iter);
-        mem::swap(&mut self.a_diff_len, &mut self.b_diff_len);
+        mem::swap(&mut self.a_len, &mut self.b_len);
     }
 }

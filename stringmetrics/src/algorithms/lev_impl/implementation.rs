@@ -23,13 +23,14 @@ where
     D: DoubleEndedIterator<Item = T> + Clone,
     T: PartialEq,
 {
-    // Identical implementation to levenshtein_weight_iter, just avoiding
+    // Identical implementation to levenshtein_weight_iter, just saving some ops
+    // from the weight calculations
     let state = LevState::new(a.into_iter(), b.into_iter());
     let LevState {
         a_iter,
         b_iter,
-        a_diff_len: a_len,
-        b_diff_len: b_len,
+        a_len,
+        b_len,
     } = state;
 
     // Only check b_len because if a_len is 0, the loop won't happen
@@ -132,8 +133,8 @@ where
     let LevState {
         a_iter,
         b_iter,
-        a_diff_len: a_len,
-        b_diff_len: b_len,
+        a_len,
+        b_len,
     } = state;
     let LevWeights {
         insertion: w_ins,
