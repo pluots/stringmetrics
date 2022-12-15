@@ -6,6 +6,9 @@
 
 ### Added
 
+- Added `try_levenshtein_x` functions to allow returning an `Option` if a limit
+  is hit
+
 ### Changed
 
 - (internal) crate structure reorganization

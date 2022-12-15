@@ -26,7 +26,7 @@ path = "src/lib.rs"
 [dependencies]
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 assert_cmd = "2.0"
 predicates = "2.1"
 

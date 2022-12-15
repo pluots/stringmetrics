@@ -50,6 +50,7 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 ///
 /// ```
 /// use stringmetrics::levenshtein_limit;
+///
 /// let a = "abcdefg";
 /// let b = "mmmmmmm";
 /// assert_eq!(levenshtein_limit(a, b, 3), 3);
@@ -57,6 +58,21 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 #[inline]
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
     levenshtein_limit_iter(a.bytes(), b.bytes(), limit)
+}
+
+/// The same alrogithm as [`levenshtein_limit`] but return an `Option` to
+/// indicate if the limit is exceeded
+///
+/// ```
+/// use stringmetrics::try_levenshtein;
+///
+/// let a = "abcdefg";
+/// let b = "mmmmmmmmm";
+/// assert_eq!(try_levenshtein(a, b, 3), None);
+/// ```
+#[inline]
+pub fn try_levenshtein(a: &str, b: &str, limit: u32) -> Option<u32> {
+    try_levenshtein_iter(a.bytes(), b.bytes(), limit)
 }
 
 /// Levenshtein distance computations with adjustable weights and a limit
@@ -74,6 +90,7 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
 ///
 /// ```
 /// use stringmetrics::{levenshtein_weight, LevWeights};
+///
 /// let weights = LevWeights::new(4, 3, 2);
 /// assert_eq!(levenshtein_weight("kitten", "sitting", 6, &weights), 6);
 /// ```
@@ -83,6 +100,7 @@ pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
 ///
 /// ```
 /// use stringmetrics::{levenshtein_weight, LevWeights};
+///
 /// let weights = LevWeights::new(4, 3, 2);
 /// assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
 /// ```
@@ -91,20 +109,52 @@ pub fn levenshtein_weight(a: &str, b: &str, limit: u32, weights: &LevWeights) ->
     levenshtein_weight_iter(a.bytes(), b.bytes(), limit, weights)
 }
 
+/// The same algorithm as [`levenshtein_weight`] but return an `Option` to
+/// indicate if the limit is exceeded
+#[inline]
+pub fn try_levenshtein_weight(a: &str, b: &str, limit: u32, weights: &LevWeights) -> Option<u32> {
+    try_levenshtein_weight_iter(a.bytes(), b.bytes(), limit, weights)
+}
+
 /// Levenshthein distance computation on anything with [`Iterator`] with items
 /// that have [`PartialEq`].
 ///
 /// This can be used when Levenshthein distance is applicable to something other
-/// than strings that has not yet been collected to a vector.
+/// than strings. It wraps [`try_levenshtein_iter`].
 ///
 /// # Example
 ///
 /// ```
-/// use stringmetrics::{levenshtein_weight_iter, LevWeights};
-/// let weights = LevWeights::default();
-/// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
+/// use stringmetrics::levenshtein_limit_iter;
+///
+/// assert_eq!(levenshtein_limit_iter("abc".bytes(), "def".bytes(), 10), 3);
+/// assert_eq!(levenshtein_limit_iter("abc".bytes(), "def".bytes(), 10), 3);
 /// ```
+#[inline]
 pub fn levenshtein_limit_iter<I, T, D>(a: I, b: I, limit: u32) -> u32
+where
+    I: IntoIterator<IntoIter = D>,
+    D: DoubleEndedIterator<Item = T> + Clone,
+    T: PartialEq,
+{
+    try_levenshtein_iter(a, b, limit).unwrap_or(limit)
+}
+
+/// The same algorithm as [`levenshtein_limit_iter`] but return an `Option` to
+/// indicate if the limit is exceeded
+///
+/// Returns `Some(u32)` if a distance is found, `None` if a limit is hit
+///
+/// # Example
+///
+/// ```
+/// use stringmetrics::try_levenshtein_iter;
+///
+/// assert_eq!(try_levenshtein_iter("abc".bytes(), "abd".bytes(), 10), Some(1));
+/// assert_eq!(try_levenshtein_iter("abcdef".bytes(), "wxyz".bytes(), 3), None);
+/// ```
+#[inline]
+pub fn try_levenshtein_iter<I, T, D>(a: I, b: I, limit: u32) -> Option<u32>
 where
     I: IntoIterator<IntoIter = D>,
     D: DoubleEndedIterator<Item = T> + Clone,
@@ -121,11 +171,14 @@ where
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
-        return min(a_len, limit);
+        return Some(min(a_len, limit));
     }
 
+    if b_len - a_len > limit {
+        return None;
+    }
     if b_len - a_len >= limit {
-        return limit;
+        return Some(limit);
     }
 
     let mut work_vec: Vec<u32> = (1..=b_len).collect();
@@ -167,11 +220,11 @@ where
         }
 
         if tmp_res > limit {
-            return limit;
+            return None;
         }
     }
 
-    tmp_res
+    Some(tmp_res)
 }
 
 /// Weighted Levenshthein distance computation on anything with [`Iterator`]
@@ -184,10 +237,29 @@ where
 ///
 /// ```
 /// use stringmetrics::{levenshtein_weight_iter, LevWeights};
+///
 /// let weights = LevWeights::default();
 /// assert_eq!(levenshtein_weight_iter("abc".bytes(), "def".bytes(), 10, &weights), 3);
 /// ```
+#[inline]
 pub fn levenshtein_weight_iter<I, T, D>(a: I, b: I, limit: u32, weights: &LevWeights) -> u32
+where
+    I: IntoIterator<IntoIter = D>,
+    D: DoubleEndedIterator<Item = T> + Clone,
+    T: PartialEq,
+{
+    try_levenshtein_weight_iter(a, b, limit, weights).unwrap_or(limit)
+}
+
+/// The same algorithm as [`levenshtein_weight_iter`] but return an `Option` to
+/// indicate if the limit is exceeded
+#[inline]
+pub fn try_levenshtein_weight_iter<I, T, D>(
+    a: I,
+    b: I,
+    limit: u32,
+    weights: &LevWeights,
+) -> Option<u32>
 where
     I: IntoIterator<IntoIter = D>,
     D: DoubleEndedIterator<Item = T> + Clone,
@@ -209,11 +281,15 @@ where
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
-        return min(a_len * w_del, limit);
+        return Some(min(a_len * w_del, limit));
+    }
+
+    if b_len - a_len > limit {
+        return None;
     }
 
     if b_len - a_len >= limit {
-        return limit;
+        return Some(limit);
     }
 
     let equal_weights = w_ins == w_del && w_del == w_sub;
@@ -260,11 +336,11 @@ where
         }
 
         if tmp_res > limit {
-            return limit;
+            return None;
         }
     }
 
-    tmp_res
+    Some(tmp_res)
 }
 
 /// A struct that holds the costs of insertion, deletion, and substitution. Used

@@ -17,15 +17,16 @@
 //! assert_eq!(levenshtein(a, b), 6);
 //! ```
 
-mod modhamming;
+mod hamming_impl;
 // mod damerau;
-mod modjaccard;
-mod modlevenshtein;
+mod jaccard_impl;
+mod lev_impl;
 
-pub use self::modhamming::{hamming, hamming_iter};
+pub use self::hamming_impl::{hamming, hamming_iter};
 // pub use self::damerau::damerau_levenshtein;
-pub use self::modjaccard::{jaccard, jaccard_set};
-pub use self::modlevenshtein::{
+pub use self::jaccard_impl::{jaccard, jaccard_set};
+pub use self::lev_impl::{
     levenshtein, levenshtein_limit, levenshtein_limit_iter, levenshtein_weight,
-    levenshtein_weight_iter, LevWeights,
+    levenshtein_weight_iter, try_levenshtein, try_levenshtein_iter, try_levenshtein_weight,
+    try_levenshtein_weight_iter, LevWeights,
 };

@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 doc = false
 
 [dependencies]
-pyo3 = { version = "0.16", features = ["extension-module"] }
+pyo3 = { version = "0.17", features = ["extension-module"] }
 stringmetrics = { path = "../stringmetrics" }
 
 [build-dependencies]
