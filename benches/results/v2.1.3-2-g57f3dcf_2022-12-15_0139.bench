@@ -1,0 +1,433 @@
+Benchmark from 2022-12-15_0139 on commit v2.1.3-2-g57f3dcf
+rustc 1.65.0 (897e37553 2022-11-02)
+
+CPU information:
+Architecture:                    x86_64
+CPU(s):                          16
+On-line CPU(s) list:             0-15
+Model name:                      12th Gen Intel(R) Core(TM) i5-12600K
+Thread(s) per core:              2
+Socket(s):                       1
+
+
+
+
+running 22 tests
+test algorithms::modhamming::tests::test_basic ... ignored
+test algorithms::modhamming::tests::test_empty_string ... ignored
+test algorithms::modhamming::tests::test_err_not_equal ... ignored
+test algorithms::modhamming::tests::test_iter ... ignored
+test algorithms::modjaccard::tests::test_jaccard_a_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_b_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_empty ... ignored
+test algorithms::modjaccard::tests::test_jaccard_str_sets ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_basic ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_empty ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_equal ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_limit ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_limit_one_empty ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_trick_skips ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_deletion ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_insertion ... ignored
+test algorithms::modlevenshtein::tests::test_levenshtein_weight_substitution ... ignored
+test iter::tests::test_find_eq_items ... ignored
+test iter::tests::test_tricky ... ignored
+test tokenizers::main::tests::test_remove_chars ... ignored
+test tokenizers::main::tests::test_split ... ignored
+test tokenizers::main::tests::test_trim_end ... ignored
+
+test result: ok. 0 passed; 0 failed; 22 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
+This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
+
+Gnuplot not found, using plotters backend
+Benchmarking Collect chars
+Benchmarking Collect chars: Warming up for 3.0000 s
+Benchmarking Collect chars: Collecting 100 samples in estimated 5.0003 s (68M iterations)
+Benchmarking Collect chars: Analyzing
+Collect chars           time:   [74.050 ns 75.675 ns 77.455 ns]
+                        change: [-6.4752% -4.5775% -2.8161%] (p = 0.00 < 0.05)
+                        Performance has improved.
+
+Benchmarking Iterate collected chars
+Benchmarking Iterate collected chars: Warming up for 3.0000 s
+Benchmarking Iterate collected chars: Collecting 100 samples in estimated 5.0000 s (44B iterations)
+Benchmarking Iterate collected chars: Analyzing
+Iterate collected chars time:   [113.92 ps 115.63 ps 117.37 ps]
+                        change: [-7.1371% -5.4676% -3.7594%] (p = 0.00 < 0.05)
+                        Performance has improved.
+
+Benchmarking Iterate collected chars deref
+Benchmarking Iterate collected chars deref: Warming up for 3.0000 s
+Benchmarking Iterate collected chars deref: Collecting 100 samples in estimated 5.0000 s (43B iterations)
+Benchmarking Iterate collected chars deref: Analyzing
+Iterate collected chars deref
+                        time:   [114.53 ps 115.48 ps 116.34 ps]
+                        change: [-1.7514% -0.7123% +0.3934%] (p = 0.21 > 0.05)
+                        No change in performance detected.
+Found 15 outliers among 100 measurements (15.00%)
+  13 (13.00%) low mild
+  2 (2.00%) high mild
+
+Benchmarking Iterate uncollected chars
+Benchmarking Iterate uncollected chars: Warming up for 3.0000 s
+Benchmarking Iterate uncollected chars: Collecting 100 samples in estimated 5.0000 s (755M iterations)
+Benchmarking Iterate uncollected chars: Analyzing
+Iterate uncollected chars
+                        time:   [6.4693 ns 6.5814 ns 6.6837 ns]
+                        change: [+1.9523% +4.0456% +6.2338%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 17 outliers among 100 measurements (17.00%)
+  14 (14.00%) low mild
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking Iterate uncollected bytes
+Benchmarking Iterate uncollected bytes: Warming up for 3.0000 s
+Benchmarking Iterate uncollected bytes: Collecting 100 samples in estimated 5.0000 s (44B iterations)
+Benchmarking Iterate uncollected bytes: Analyzing
+Iterate uncollected bytes
+                        time:   [114.00 ps 116.22 ps 118.30 ps]
+                        change: [-4.0670% -1.9949% +0.3948%] (p = 0.08 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+
+WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
+This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
+
+Gnuplot not found, using plotters backend
+Benchmarking Iterate single-pass implementation
+Benchmarking Iterate single-pass implementation: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation: Collecting 100 samples in estimated 5.0001 s (430M iterations)
+Benchmarking Iterate single-pass implementation: Analyzing
+Iterate single-pass implementation
+                        time:   [10.460 ns 10.703 ns 10.947 ns]
+                        change: [-10.272% -7.8561% -5.3284%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+Benchmarking Iterate double-pass implementation
+Benchmarking Iterate double-pass implementation: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation: Collecting 100 samples in estimated 5.0001 s (319M iterations)
+Benchmarking Iterate double-pass implementation: Analyzing
+Iterate double-pass implementation
+                        time:   [14.691 ns 14.912 ns 15.164 ns]
+                        change: [-8.0966% -5.7063% -3.3096%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate single-pass implementation empty
+Benchmarking Iterate single-pass implementation empty: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation empty: Collecting 100 samples in estimated 5.0000 s (2.2B iterations)
+Benchmarking Iterate single-pass implementation empty: Analyzing
+Iterate single-pass implementation empty
+                        time:   [2.1981 ns 2.2489 ns 2.3016 ns]
+                        change: [-13.056% -10.955% -8.7626%] (p = 0.00 < 0.05)
+                        Performance has improved.
+
+Benchmarking Iterate double-pass implementation empty
+Benchmarking Iterate double-pass implementation empty: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation empty: Collecting 100 samples in estimated 5.0000 s (1.3B iterations)
+Benchmarking Iterate double-pass implementation empty: Analyzing
+Iterate double-pass implementation empty
+                        time:   [3.8028 ns 3.8945 ns 3.9890 ns]
+                        change: [+3.7696% +5.8129% +7.8788%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 8 outliers among 100 measurements (8.00%)
+  1 (1.00%) low mild
+  6 (6.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate single-pass implementation left
+Benchmarking Iterate single-pass implementation left: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation left: Collecting 100 samples in estimated 5.0000 s (812M iterations)
+Benchmarking Iterate single-pass implementation left: Analyzing
+Iterate single-pass implementation left
+                        time:   [6.2086 ns 6.3139 ns 6.4083 ns]
+                        change: [-6.3129% -4.2717% -2.2329%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 15 outliers among 100 measurements (15.00%)
+  12 (12.00%) low mild
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate double-pass implementation left
+Benchmarking Iterate double-pass implementation left: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation left: Collecting 100 samples in estimated 5.0000 s (721M iterations)
+Benchmarking Iterate double-pass implementation left: Analyzing
+Iterate double-pass implementation left
+                        time:   [7.0620 ns 7.1684 ns 7.2612 ns]
+                        change: [+0.1313% +2.7125% +5.1482%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Found 14 outliers among 100 measurements (14.00%)
+  6 (6.00%) low severe
+  2 (2.00%) low mild
+  5 (5.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate single-pass implementation right
+Benchmarking Iterate single-pass implementation right: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation right: Collecting 100 samples in estimated 5.0000 s (323M iterations)
+Benchmarking Iterate single-pass implementation right: Analyzing
+Iterate single-pass implementation right
+                        time:   [15.417 ns 15.650 ns 15.853 ns]
+                        change: [-7.5317% -5.7197% -3.9468%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 18 outliers among 100 measurements (18.00%)
+  9 (9.00%) low severe
+  6 (6.00%) low mild
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate double-pass implementation right
+Benchmarking Iterate double-pass implementation right: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation right: Collecting 100 samples in estimated 5.0001 s (227M iterations)
+Benchmarking Iterate double-pass implementation right: Analyzing
+Iterate double-pass implementation right
+                        time:   [22.044 ns 22.346 ns 22.610 ns]
+                        change: [-3.8124% -1.9794% -0.0838%] (p = 0.05 < 0.05)
+                        Change within noise threshold.
+Found 16 outliers among 100 measurements (16.00%)
+  1 (1.00%) low severe
+  10 (10.00%) low mild
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking Iterate single-pass implementation dbl
+Benchmarking Iterate single-pass implementation dbl: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation dbl: Collecting 100 samples in estimated 5.0000 s (335M iterations)
+Benchmarking Iterate single-pass implementation dbl: Analyzing
+Iterate single-pass implementation dbl
+                        time:   [14.444 ns 14.768 ns 15.104 ns]
+                        change: [+0.7909% +2.9911% +5.3664%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 13 outliers among 100 measurements (13.00%)
+  7 (7.00%) low mild
+  6 (6.00%) high mild
+
+Benchmarking Iterate double-pass implementation dbl
+Benchmarking Iterate double-pass implementation dbl: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation dbl: Collecting 100 samples in estimated 5.0000 s (299M iterations)
+Benchmarking Iterate double-pass implementation dbl: Analyzing
+Iterate double-pass implementation dbl
+                        time:   [16.551 ns 16.858 ns 17.146 ns]
+                        change: [+1.1898% +3.2066% +5.2705%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 16 outliers among 100 measurements (16.00%)
+  1 (1.00%) low severe
+  11 (11.00%) low mild
+  4 (4.00%) high mild
+
+Benchmarking Iterate single-pass implementation long
+Benchmarking Iterate single-pass implementation long: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation long: Collecting 100 samples in estimated 5.0002 s (76M iterations)
+Benchmarking Iterate single-pass implementation long: Analyzing
+Iterate single-pass implementation long
+                        time:   [63.707 ns 64.809 ns 65.812 ns]
+                        change: [-3.0331% -0.5567% +1.7469%] (p = 0.65 > 0.05)
+                        No change in performance detected.
+Found 17 outliers among 100 measurements (17.00%)
+  9 (9.00%) low severe
+  6 (6.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate double-pass implementation long
+Benchmarking Iterate double-pass implementation long: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation long: Collecting 100 samples in estimated 5.0002 s (87M iterations)
+Benchmarking Iterate double-pass implementation long: Analyzing
+Iterate double-pass implementation long
+                        time:   [57.690 ns 58.096 ns 58.443 ns]
+                        change: [+15.890% +17.443% +19.068%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 10 outliers among 100 measurements (10.00%)
+  5 (5.00%) low severe
+  4 (4.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate single-pass implementation xlong
+Benchmarking Iterate single-pass implementation xlong: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation xlong: Collecting 100 samples in estimated 5.0015 s (12M iterations)
+Benchmarking Iterate single-pass implementation xlong: Analyzing
+Iterate single-pass implementation xlong
+                        time:   [422.56 ns 429.30 ns 435.61 ns]
+                        change: [-2.4309% -0.5357% +1.5164%] (p = 0.60 > 0.05)
+                        No change in performance detected.
+Found 10 outliers among 100 measurements (10.00%)
+  8 (8.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate double-pass implementation xlong
+Benchmarking Iterate double-pass implementation xlong: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation xlong: Collecting 100 samples in estimated 5.0007 s (23M iterations)
+Benchmarking Iterate double-pass implementation xlong: Analyzing
+Iterate double-pass implementation xlong
+                        time:   [217.62 ns 221.25 ns 224.64 ns]
+                        change: [-2.9010% -1.2493% +0.4214%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 18 outliers among 100 measurements (18.00%)
+  15 (15.00%) low mild
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Iterate single-pass implementation diff short
+Benchmarking Iterate single-pass implementation diff short: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation diff short: Collecting 100 samples in estimated 5.0000 s (578M iterations)
+Benchmarking Iterate single-pass implementation diff short: Analyzing
+Iterate single-pass implementation diff short
+                        time:   [8.6005 ns 8.6967 ns 8.7827 ns]
+                        change: [-3.1781% -1.2055% +1.0373%] (p = 0.27 > 0.05)
+                        No change in performance detected.
+Found 13 outliers among 100 measurements (13.00%)
+  3 (3.00%) low severe
+  7 (7.00%) low mild
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking Iterate double-pass implementation diff short
+Benchmarking Iterate double-pass implementation diff short: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation diff short: Collecting 100 samples in estimated 5.0000 s (536M iterations)
+Benchmarking Iterate double-pass implementation diff short: Analyzing
+Iterate double-pass implementation diff short
+                        time:   [9.5292 ns 9.6265 ns 9.7069 ns]
+                        change: [+12.295% +14.222% +16.107%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) low severe
+  4 (4.00%) low mild
+  1 (1.00%) high mild
+
+Benchmarking Iterate single-pass implementation diff
+Benchmarking Iterate single-pass implementation diff: Warming up for 3.0000 s
+Benchmarking Iterate single-pass implementation diff: Collecting 100 samples in estimated 5.0001 s (293M iterations)
+Benchmarking Iterate single-pass implementation diff: Analyzing
+Iterate single-pass implementation diff
+                        time:   [16.824 ns 17.012 ns 17.182 ns]
+                        change: [-4.1829% -2.2523% -0.3213%] (p = 0.02 < 0.05)
+                        Change within noise threshold.
+Found 15 outliers among 100 measurements (15.00%)
+  2 (2.00%) low severe
+  10 (10.00%) low mild
+  3 (3.00%) high mild
+
+Benchmarking Iterate double-pass implementation diff
+Benchmarking Iterate double-pass implementation diff: Warming up for 3.0000 s
+Benchmarking Iterate double-pass implementation diff: Collecting 100 samples in estimated 5.0000 s (442M iterations)
+Benchmarking Iterate double-pass implementation diff: Analyzing
+Iterate double-pass implementation diff
+                        time:   [11.142 ns 11.295 ns 11.440 ns]
+                        change: [-3.1804% -1.1952% +0.7093%] (p = 0.24 > 0.05)
+                        No change in performance detected.
+Found 17 outliers among 100 measurements (17.00%)
+  14 (14.00%) low mild
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+
+WARNING: HTML report generation will become a non-default optional feature in Criterion.rs 0.4.0.
+This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
+
+Gnuplot not found, using plotters backend
+Benchmarking Levenshtein
+Benchmarking Levenshtein: Warming up for 3.0000 s
+Benchmarking Levenshtein: Collecting 100 samples in estimated 5.0004 s (58M iterations)
+Benchmarking Levenshtein: Analyzing
+Levenshtein             time:   [88.356 ns 89.243 ns 89.984 ns]
+                        change: [+329.93% +337.76% +345.60%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 10 outliers among 100 measurements (10.00%)
+  1 (1.00%) low severe
+  8 (8.00%) low mild
+  1 (1.00%) high mild
+
+Benchmarking Levenshtein Limit (no hit)
+Benchmarking Levenshtein Limit (no hit): Warming up for 3.0000 s
+Benchmarking Levenshtein Limit (no hit): Collecting 100 samples in estimated 5.0004 s (57M iterations)
+Benchmarking Levenshtein Limit (no hit): Analyzing
+Levenshtein Limit (no hit)
+                        time:   [84.961 ns 86.316 ns 87.502 ns]
+                        change: [+308.23% +319.37% +330.49%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Levenshtein Different Lengths
+Benchmarking Levenshtein Different Lengths: Warming up for 3.0000 s
+Benchmarking Levenshtein Different Lengths: Collecting 100 samples in estimated 5.0019 s (11M iterations)
+Benchmarking Levenshtein Different Lengths: Analyzing
+Levenshtein Different Lengths
+                        time:   [428.22 ns 438.92 ns 450.43 ns]
+                        change: [+2445.1% +2493.0% +2539.3%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+Benchmarking Levenshtein Empty A
+Benchmarking Levenshtein Empty A: Warming up for 3.0000 s
+Benchmarking Levenshtein Empty A: Collecting 100 samples in estimated 5.0001 s (370M iterations)
+Benchmarking Levenshtein Empty A: Analyzing
+Levenshtein Empty A     time:   [13.694 ns 13.971 ns 14.240 ns]
+                        change: [+442.51% +453.58% +465.03%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+
+Benchmarking Levenshtein Empty B
+Benchmarking Levenshtein Empty B: Warming up for 3.0000 s
+Benchmarking Levenshtein Empty B: Collecting 100 samples in estimated 5.0000 s (363M iterations)
+Benchmarking Levenshtein Empty B: Analyzing
+Levenshtein Empty B     time:   [13.101 ns 13.373 ns 13.633 ns]
+                        change: [-25.207% -23.662% -21.999%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 22 outliers among 100 measurements (22.00%)
+  1 (1.00%) low severe
+  16 (16.00%) low mild
+  1 (1.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking Levenshtein Long
+Benchmarking Levenshtein Long: Warming up for 3.0000 s
+Benchmarking Levenshtein Long: Collecting 100 samples in estimated 5.4764 s (10k iterations)
+Benchmarking Levenshtein Long: Analyzing
+Levenshtein Long        time:   [549.69 µs 561.50 µs 572.82 µs]
+                        change: [+53266% +54377% +55583%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+Benchmarking Levenshtein Limit Long (hit limit)
+Benchmarking Levenshtein Limit Long (hit limit): Warming up for 3.0000 s
+Benchmarking Levenshtein Limit Long (hit limit): Collecting 100 samples in estimated 5.0022 s (3.4M iterations)
+Benchmarking Levenshtein Limit Long (hit limit): Analyzing
+Levenshtein Limit Long (hit limit)
+                        time:   [1.4287 µs 1.4528 µs 1.4754 µs]
+                        change: [+40.421% +42.597% +45.165%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 16 outliers among 100 measurements (16.00%)
+  12 (12.00%) low mild
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Levenshtein Long Flip
+Benchmarking Levenshtein Long Flip: Warming up for 3.0000 s
+Benchmarking Levenshtein Long Flip: Collecting 100 samples in estimated 5.5593 s (10k iterations)
+Benchmarking Levenshtein Long Flip: Analyzing
+Levenshtein Long Flip   time:   [544.25 µs 557.38 µs 569.94 µs]
+                        change: [+54362% +55389% +56450%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

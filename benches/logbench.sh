@@ -11,7 +11,7 @@ cmd=${cmd}"printf '\n';"
 cmd=${cmd}"echo CPU information:;"
 cmd=${cmd}"lscpu | grep -E 'Architecture|Model name|Socket|Thread|CPU\(s\)|MHz';"
 cmd=${cmd}"printf '\n\n\n';"
-cmd=${cmd}"cargo bench $*;"
+cmd=${cmd}"cargo bench --features bench $*;"
 
 eval "$cmd" | tee "$fname"
 
