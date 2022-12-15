@@ -54,12 +54,12 @@ shared-version = true
 
 # Can't run replacements at workspace root. Need to use this "hacky" sort of way.
 [[package.metadata.release.pre-release-replacements]]
-file = "../../CHANGELOG.md"
+file = "../CHANGELOG.md"
 search = "Unreleased"
 replace = "{{version}}"
 
 [[package.metadata.release.pre-release-replacements]]
-file = "../../CHANGELOG.md"
+file = "../CHANGELOG.md"
 search = "\\.\\.\\.HEAD"
 replace = "...{{tag_name}}"
 exactly = 1
@@ -70,7 +70,7 @@ search = "ReleaseDate"
 replace = "{{date}}"
 
 [[package.metadata.release.pre-release-replacements]]
-file = "../../CHANGELOG.md"
+file = "../CHANGELOG.md"
 search = "<!-- next-header -->"
 replace = """\
   <!-- next-header -->\n\n\
@@ -82,7 +82,7 @@ replace = """\
 exactly = 1
 
 [[package.metadata.release.pre-release-replacements]]
-file = "../../CHANGELOG.md"
+file = "../CHANGELOG.md"
 search = "<!-- next-url -->"
 replace = """\
   <!-- next-url -->\n\

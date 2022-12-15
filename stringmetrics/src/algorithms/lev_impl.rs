@@ -182,7 +182,6 @@ where
     }
 
     let mut work_vec: Vec<u32> = (1..=b_len).collect();
-
     let mut tmp_res = b_len;
 
     for (i, a_item) in a_iter.enumerate().take_while(|&(i, _)| i < a_len as usize) {
