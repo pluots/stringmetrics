@@ -8,6 +8,8 @@
 
 ### Changed
 
+- (internal) crate structure reorganization
+
 ### Removed
 
 

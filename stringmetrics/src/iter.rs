@@ -5,24 +5,24 @@ use std::cmp::min;
 #[cfg(not(feature = "bench"))]
 #[derive(Debug, PartialEq)]
 pub(crate) struct IterPairInfo {
-    pub(crate) a_len: usize,
-    pub(crate) b_len: usize,
-    pub(crate) start_same: usize,
-    pub(crate) end_same: usize,
+    pub(crate) a_len: u32,
+    pub(crate) b_len: u32,
+    pub(crate) start_same: u32,
+    pub(crate) end_same: u32,
 }
 
 #[cfg(feature = "bench")]
 #[derive(Debug, PartialEq)]
 pub struct IterPairInfo {
-    pub(crate) a_len: usize,
-    pub(crate) b_len: usize,
-    pub(crate) start_same: usize,
-    pub(crate) end_same: usize,
+    pub(crate) a_len: u32,
+    pub(crate) b_len: u32,
+    pub(crate) start_same: u32,
+    pub(crate) end_same: u32,
 }
 
 impl IterPairInfo {
     #[allow(dead_code)]
-    const fn new(a_len: usize, b_len: usize, start_same: usize, end_same: usize) -> Self {
+    pub(crate) const fn new(a_len: u32, b_len: u32, start_same: u32, end_same: u32) -> Self {
         Self {
             a_len,
             b_len,
@@ -33,13 +33,13 @@ impl IterPairInfo {
 
     /// Length of `a` that is different from `b`
     #[inline]
-    pub const fn a_diff_len(&self) -> usize {
+    pub const fn a_diff_len(&self) -> u32 {
         self.a_len - self.start_same - self.end_same
     }
 
     /// Length of `b` that is different from `a`
     #[inline]
-    pub const fn b_diff_len(&self) -> usize {
+    pub const fn b_diff_len(&self) -> u32 {
         self.b_len - self.start_same - self.end_same
     }
 }
@@ -109,10 +109,10 @@ where
     let end_same = end_same(a_iter2, b_iter2, a_len, b_len, start_same);
 
     IterPairInfo {
-        a_len,
-        b_len,
-        start_same,
-        end_same,
+        a_len: a_len.try_into().expect("> u32::MAX items"),
+        b_len: b_len.try_into().expect("> u32::MAX items"),
+        start_same: start_same as u32,
+        end_same: end_same as u32,
     }
 }
 
@@ -148,6 +148,13 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_iterpair_difflen() {
+        let info = IterPairInfo::new(10, 20, 5, 4);
+        assert_eq!(info.a_diff_len(), 1);
+        assert_eq!(info.b_diff_len(), 11);
+    }
 
     #[test]
     fn test_find_eq_items() {
