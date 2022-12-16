@@ -12,6 +12,7 @@ pub struct LevWeights {
 }
 
 impl LevWeights {
+    /// Create a new `LevWeights` object
     #[inline]
     pub const fn new(w_ins: u32, w_del: u32, w_sub: u32) -> Self {
         Self {
@@ -23,7 +24,7 @@ impl LevWeights {
 
     // Swap insertion and deletion terms
     #[inline]
-    pub fn swap(&mut self) {
+    pub(crate) fn swap(&mut self) {
         mem::swap(&mut self.insertion, &mut self.deletion);
     }
 }

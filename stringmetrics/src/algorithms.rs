@@ -17,11 +17,13 @@
 //! assert_eq!(levenshtein(a, b), 6);
 //! ```
 
+mod damerau_impl;
 mod hamming_impl;
 mod jaccard_impl;
 mod lev_impl;
 mod osa_impl;
 
+pub use self::damerau_impl::DamerauWeights;
 pub use self::hamming_impl::{hamming, hamming_iter};
 pub use self::jaccard_impl::{jaccard, jaccard_set};
 pub use self::lev_impl::{

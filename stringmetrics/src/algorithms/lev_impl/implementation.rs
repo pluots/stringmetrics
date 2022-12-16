@@ -3,7 +3,7 @@
 use super::{LevState, LevWeights};
 use std::cmp::min;
 
-/// The same algorithm as [`levenshtein_limit_iter`] but return an `Option` to
+/// The same algorithm as [`levenshtein_limit_iter`](crate::levenshtein_limit_iter) but return an `Option` to
 /// indicate if the limit is exceeded
 ///
 /// Returns `Some(u32)` if a distance is found, `None` if a limit is hit

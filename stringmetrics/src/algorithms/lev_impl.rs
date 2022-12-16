@@ -18,7 +18,7 @@ pub use structures::*;
 /// better to use [`levenshtein_limit`] to avoid unnecessary computation.
 ///
 /// Behind the scenes, this wraps [`levenshtein_limit_iter`]. For details on
-/// operation, see the [algorithms](crate::algorithms) page.
+/// operation, see the [module-level documentation](crate).
 ///
 /// # Example
 ///

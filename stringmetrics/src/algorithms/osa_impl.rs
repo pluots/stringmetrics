@@ -1,5 +1,6 @@
 mod implementation;
 pub use implementation::*;
+use std::mem;
 
 #[inline]
 pub fn osa_distance(a: &str, b: &str) -> u32 {
