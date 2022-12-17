@@ -31,4 +31,7 @@ pub use self::lev_impl::{
     levenshtein_weight_iter, try_levenshtein, try_levenshtein_iter, try_levenshtein_weight,
     try_levenshtein_weight_iter, LevWeights,
 };
-pub use self::osa_impl::{osa_distance, osa_limit, try_osa, try_osa_iter};
+pub use self::osa_impl::{
+    osa_distance, osa_limit, osa_limit_iter, osa_weight, osa_weight_iter, try_osa, try_osa_iter,
+    try_osa_weight, try_osa_weight_iter,
+};

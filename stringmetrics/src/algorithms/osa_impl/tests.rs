@@ -77,13 +77,24 @@ fn test_osa_limit() {
 #[test]
 fn test_osa_transpose() {
     // Target the transpose cost
-    assert_eq!(osa_distance("ab", "ba"), 1);
+    // assert_eq!(osa_distance("ab", "ba"), 1);
+    assert_eq!(osa_distance("ab", "bac"), 2);
+    assert_eq!(osa_distance("xcb", "abc"), 2);
     assert_eq!(osa_distance("sitting", "sittign"), 1);
     assert_eq!(osa_distance("sitting", "istting"), 1);
     assert_eq!(osa_distance("sitting", "isttign"), 2);
+    assert_eq!(osa_distance("siting", "isteign"), 4);
     assert_eq!(osa_distance("kitten", "kitetn"), 1);
     // damerau will be different here
     assert_eq!(osa_distance("abc", "ca"), 3);
+}
+
+#[test]
+fn test_osa_weights() {
+    assert_eq!(
+        osa_weight("ab", "ba", 50, &DamerauWeights::new(100, 100, 100, 5)),
+        5
+    );
 }
 
 // #[test]

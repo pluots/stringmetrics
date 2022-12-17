@@ -2,6 +2,11 @@ use crate::iter::find_eq_end_items;
 use std::iter::Skip;
 use std::mem;
 
+///
+pub trait WeightsSwap {
+    fn swap(&mut self);
+}
+
 /// A struct that holds the costs of insertion, deletion, and substitution. Used
 /// for levenshthein algorithms that require weight specifications.
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -21,10 +26,11 @@ impl LevWeights {
             substitution: w_sub,
         }
     }
-
+}
+impl WeightsSwap for LevWeights {
     // Swap insertion and deletion terms
     #[inline]
-    pub(crate) fn swap(&mut self) {
+    fn swap(&mut self) {
         mem::swap(&mut self.insertion, &mut self.deletion);
     }
 }
@@ -70,7 +76,7 @@ impl<D: DoubleEndedIterator<Item = T> + Clone, T: PartialEq> LevState<D> {
 
     /// Create a new structure and swap weights if needed
     #[inline]
-    pub fn new_weights(a_iter: D, b_iter: D, weights: &mut LevWeights) -> Self {
+    pub fn new_weights<W: WeightsSwap>(a_iter: D, b_iter: D, weights: &mut W) -> Self {
         let mut ret = Self::new_inner(a_iter, b_iter);
         if ret.should_swap() {
             ret.swap_inner();

@@ -35,6 +35,7 @@ fn test_levenshtein_empty() {
 
 #[test]
 fn test_levenshtein_basic() {
+    assert_eq!(levenshtein("ab", "ba"), 2);
     assert_eq!(levenshtein("abcd", "ab"), 2);
     assert_eq!(levenshtein("ab", "abcd"), 2);
     assert_eq!(levenshtein("abcd", "ad"), 2);

@@ -1,3 +1,4 @@
+use crate::algorithms::lev_impl::WeightsSwap;
 use std::mem;
 
 /// A struct that holds
@@ -20,10 +21,12 @@ impl DamerauWeights {
             transposition: w_tspn,
         }
     }
+}
 
+impl WeightsSwap for DamerauWeights {
     // Swap insertion and deletion terms
     #[inline]
-    pub(crate) fn swap(&mut self) {
+    fn swap(&mut self) {
         mem::swap(&mut self.insertion, &mut self.deletion);
     }
 }
