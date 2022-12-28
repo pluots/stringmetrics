@@ -4,11 +4,9 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Added
+### Fixed
 
-### Changed
-
-### Removed
+- Levenshtein limit functions now follow the limit if short circuited
 
 
 

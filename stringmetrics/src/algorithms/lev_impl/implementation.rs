@@ -34,7 +34,11 @@ where
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
-        return Some(min(a_len, limit));
+        if a_len < limit {
+            return Some(a_len);
+        } else {
+            return None;
+        }
     }
 
     if b_len - a_len > limit {
@@ -143,7 +147,12 @@ where
 
     // Only check b_len because if a_len is 0, the loop won't happen
     if b_len == 0 {
-        return Some(min(a_len * w_del, limit));
+        let tmp = a_len * w_del;
+        if tmp < limit {
+            return Some(tmp);
+        } else {
+            return None;
+        }
     }
 
     if b_len - a_len > limit {

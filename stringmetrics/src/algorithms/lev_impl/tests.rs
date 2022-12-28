@@ -119,3 +119,16 @@ fn test_levenshtein_weight_substitution() {
     let weights = LevWeights::new(4, 3, 2);
     assert_eq!(levenshtein_weight("kitten", "sitting", 100, &weights), 8);
 }
+
+#[test]
+fn test_try_levenshtein() {
+    assert_eq!(try_levenshtein("abcd", "ab", 2), Some(2));
+    assert_eq!(try_levenshtein("abcde", "ab", 2), None);
+    assert_eq!(try_levenshtein("abcdef", "", 3), None);
+    assert_eq!(try_levenshtein("", "abcdef", 3), None);
+    assert_eq!(try_levenshtein("", "abc", 3), Some(3));
+    assert_eq!(try_levenshtein("abcdef", "", 8), Some(6));
+    assert_eq!(try_levenshtein("", "abcdef", 8), Some(6));
+    assert_eq!(try_levenshtein("", "abcdef", 8), Some(6));
+    assert_eq!(try_levenshtein("ab", "0000", 3), None);
+}
