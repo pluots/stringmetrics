@@ -4,6 +4,16 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+### Changed
+
+### Removed
+
+
+
+## [2.2.1] - 2022-12-28
+
 ### Fixed
 
 - Levenshtein limit functions now follow the limit if short circuited
@@ -89,7 +99,8 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/pluots/stringmetrics/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/pluots/stringmetrics/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/pluots/stringmetrics/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/pluots/stringmetrics/compare/v2.1.1...v2.1.2
