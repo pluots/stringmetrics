@@ -44,9 +44,6 @@ where
     if b_len - a_len > limit {
         return None;
     }
-    if b_len - a_len >= limit {
-        return Some(limit);
-    }
 
     let mut work_vec: Vec<u32> = (1..=b_len).collect();
     let mut tmp_res = b_len;
@@ -157,10 +154,6 @@ where
 
     if b_len - a_len > limit {
         return None;
-    }
-
-    if b_len - a_len >= limit {
-        return Some(limit);
     }
 
     let equal_weights = w_ins == w_del && w_del == w_sub;

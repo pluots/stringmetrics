@@ -131,4 +131,6 @@ fn test_try_levenshtein() {
     assert_eq!(try_levenshtein("", "abcdef", 8), Some(6));
     assert_eq!(try_levenshtein("", "abcdef", 8), Some(6));
     assert_eq!(try_levenshtein("ab", "0000", 3), None);
+    assert_eq!(try_levenshtein("abcd", "wxya", 1), None);
+    assert_eq!(try_levenshtein("angelica", "tortise", 1), None);
 }

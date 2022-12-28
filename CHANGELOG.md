@@ -4,12 +4,9 @@
 
 ## [Unreleased] - ReleaseDate
 
-### Added
+### Fixed
 
-### Changed
-
-### Removed
-
+- Second correction to `try_levenshtein` internals
 
 
 ## [2.2.1] - 2022-12-28
