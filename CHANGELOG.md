@@ -4,6 +4,16 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+### Changed
+
+### Removed
+
+
+
+## [2.2.2] - 2022-12-28
+
 ### Fixed
 
 - Second correction to `try_levenshtein` internals
@@ -96,7 +106,8 @@
 ## [2.0.5] - 2022-07-13
 
 <!-- next-url -->
-[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/pluots/stringmetrics/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/pluots/stringmetrics/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/pluots/stringmetrics/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/pluots/stringmetrics/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/pluots/stringmetrics/compare/v2.1.2...v2.1.3
