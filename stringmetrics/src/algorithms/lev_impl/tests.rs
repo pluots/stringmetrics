@@ -17,8 +17,8 @@ fn test_levstate_new() {
     let a = "aaxxxxxc";
     let b = "aaabbbccc";
     let state = LevState::new(a.bytes(), b.bytes());
-    assert_eq!(state.a_diff_len, 5);
-    assert_eq!(state.b_diff_len, 6);
+    assert_eq!(state.a_len, 5);
+    assert_eq!(state.b_len, 6);
 }
 
 #[test]
@@ -35,6 +35,7 @@ fn test_levenshtein_empty() {
 
 #[test]
 fn test_levenshtein_basic() {
+    assert_eq!(levenshtein("ab", "ba"), 2);
     assert_eq!(levenshtein("abcd", "ab"), 2);
     assert_eq!(levenshtein("ab", "abcd"), 2);
     assert_eq!(levenshtein("abcd", "ad"), 2);

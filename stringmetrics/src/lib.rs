@@ -4,12 +4,9 @@
 //! algorithms to determine the similarity of two strings or sets. It currently
 //! includes a variety of implementations of [Levenshtein
 //! distance](https://en.wikipedia.org/wiki/Levenshtein_distance), [Hamming
-//! distance](https://en.wikipedia.org/wiki/Hamming_distance), and [Jaccard
-//! Similarity](https://en.wikipedia.org/wiki/Jaccard_index), with more string
-//! metrics expected to be added in the future. It also includes helpful
-//! tokenizers for things like splitting sentences into words.
-//!
-//! # Example
+//! distance](https://en.wikipedia.org/wiki/Hamming_distance), OSA distance, and
+//! [Jaccard Similarity](https://en.wikipedia.org/wiki/Jaccard_index), with more
+//! metrics expected to be added in the future.
 //!
 //! ```
 //! use stringmetrics::levenshtein;
@@ -17,10 +14,12 @@
 //! assert_eq!(levenshtein("kitten", "sitting"), 3);
 //! ```
 //!
-//! # Algorithm Descriptions
+//! # String / Sequence Comparison Algorithms
 //!
-//! This section seeks to give an overview of the different algorithms contained
-//! in this module. See individual functions for usage guidelines.
+//! Hamming distance, levenshtein distance and optimal string alignment (OSA)
+//! fall into the category of "string comparison algorithms", which give a rough
+//! estimate of how similar two sequences (usually strings) are.
+//!
 //!
 //! ## Hamming Distance Algorithm
 //!
@@ -47,9 +46,9 @@
 // _(erm... I can't seem to get KaTeX working. Let me know on GitHub if you can
 // help!)_
 //!
-//! The funcition [levenshtein][crate::algorithms::levenshtein] implements the
-//! following algorithm. Basically, the tool parses from top left to bottom
-//! right to create a table like follows, for the classic example:
+//! The funcition [levenshtein][crate::levenshtein] implements the following
+//! algorithm. Basically, the tool parses from top left to bottom right to
+//! create a table like follows, for the classic example:
 //!
 //! ```text
 //!      j → 0  1  2  3  4  5  6  7
@@ -84,6 +83,10 @@
 //! page](https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows)
 //! but adapted to use a single vector. Main memory usage is only that of a
 //! `Vec<u32>` in the same length as the shortest string.
+//!
+//! There is also a generic function, named
+//! [`levenshtein_limit_iter`](crate::levenshtein_limit_iter) and similar, that
+//! can be used for any iterator.
 //!
 //! Please note: this library eventually aims to replace the current algorithm
 //! with one that is more performant across varying lengths of strings. The
@@ -147,9 +150,12 @@
 //! since the cost would be much higher (4+3=7 when the substitution cost is
 //! only 2).)
 //!
-//! ### Note on string comparisons
 //!
-//! All string-based levenshtein algorithms use bytes rather than characters by
+//!
+//!
+//! ## Note on string comparisons
+//!
+//! All string-based comparison algorithms use bytes rather than characters by
 //! default. This speeds things up significantly, and usually the difference is
 //! unimportant. However, if you are working with CJK character sets or emojis,
 //! you may prefer the somewhat more accurate (but slower) `chars()` usage. This
@@ -172,6 +178,8 @@
 //! segmentation
 //! crate](https://docs.rs/unicode-segmentation/latest/unicode_segmentation/)
 //! can be used to split on the iterable `graphemes(true)`.
+//!
+//! # Set / Token Comparison Algorithms
 //!
 //! ## Jaccard Similarity
 //!

@@ -18,7 +18,7 @@ pub use structures::*;
 /// better to use [`levenshtein_limit`] to avoid unnecessary computation.
 ///
 /// Behind the scenes, this wraps [`levenshtein_limit_iter`]. For details on
-/// operation, see the [algorithms](crate::algorithms) page.
+/// operation, see the [module-level documentation](crate).
 ///
 /// # Example
 ///
@@ -34,7 +34,7 @@ pub use structures::*;
 /// if you need that functionality, please use [`levenshtein_weight`].
 #[inline]
 pub fn levenshtein(a: &str, b: &str) -> u32 {
-    levenshtein_limit_iter(a.bytes(), b.bytes(), u32::MAX)
+    try_levenshtein_iter(a.bytes(), b.bytes(), u32::MAX).unwrap_or(u32::MAX)
 }
 
 /// Levenshtein distance computation with a limit
@@ -56,7 +56,7 @@ pub fn levenshtein(a: &str, b: &str) -> u32 {
 /// ```
 #[inline]
 pub fn levenshtein_limit(a: &str, b: &str, limit: u32) -> u32 {
-    levenshtein_limit_iter(a.bytes(), b.bytes(), limit)
+    try_levenshtein_iter(a.bytes(), b.bytes(), limit).unwrap_or(limit)
 }
 
 /// The same alrogithm as [`levenshtein_limit`] but return an `Option` to
